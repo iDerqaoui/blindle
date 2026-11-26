@@ -43,6 +43,23 @@ export const FR: Record<string, string> = {
   'home.classicTitle': 'Parties à indices',
   'home.classicMeta': '{theme} · {rounds} rounds · {budget} or',
 
+  'home.eyebrow': 'Le jeu de cartes anime aux enchères à l’aveugle',
+  'home.allUniverses': 'Tous les univers',
+  'home.universeTagline': 'Anime Blind Bid · {n} personnages',
+  'home.modes': 'Modes de jeu',
+  'home.moreTitle': 'Autres univers',
+  'mode.friends': 'Jouer entre amis',
+  'mode.friendsSub': 'Crée une room et partage le code',
+  'mode.bots': 'Jouer contre des bots',
+  'mode.botsSub': 'Entraîne-toi seul contre 1 à 3 bots',
+  'mode.botCount': '{n} bot(s)',
+  'mode.go': 'Jouer',
+  'mode.join': 'Rejoindre un ami',
+  'mode.joinSub': 'Entre le code de la room',
+  'mode.daily': 'Défi du jour',
+  'mode.dailySub': 'Les mêmes cartes pour tous, une fois par jour',
+  'mode.soon': 'Bientôt',
+
   // Salon
   'lobby.shareCode': 'Code à partager',
   'lobby.clickToCopy': 'Clique pour copier',

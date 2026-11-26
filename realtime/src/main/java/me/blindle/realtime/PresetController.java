@@ -24,6 +24,7 @@ import java.util.List;
 public class PresetController {
 
     private static final int LEADERBOARD_SIZE = 10;
+    private static final int FACES = 6;
 
     private final GameFactory factory;
     private final DailyChallenge daily;
@@ -44,7 +45,7 @@ public class PresetController {
 
     public record PresetSummary(String id, String name, String description, String themeName,
                                 String bidMode, String verdictMode, boolean daily, Preset.Settings settings,
-                                String disclaimer, Views.ArtView art, int cards) {
+                                String disclaimer, Views.ArtView art, int cards, List<String> faces) {
     }
 
     public record DailySummary(String presetId, String name, String description, String themeName, String date,
@@ -59,7 +60,7 @@ public class PresetController {
             var setup = factory.setup(p.id());
             return new PresetSummary(p.id(), p.name(), p.description(), setup.theme().name(),
                     p.bidMode(), p.verdictMode(), p.daily(), p.settings(), setup.theme().rights().disclaimer(),
-                    art(setup.theme()), setup.theme().cards().size());
+                    art(setup.theme()), setup.theme().cards().size(), faces(setup.theme()));
         }).toList();
     }
 
@@ -78,6 +79,11 @@ public class PresetController {
         return daily.dailyPresets().stream().filter(p -> access.allows(p, channel)).map(p -> new DailySummary(p.id(), p.name(), p.description(),
                 factory.setup(p.id()).theme().name(), today.toString(), leaderboard.size(today, p.id()),
                 leaderboard.top(today, p.id(), LEADERBOARD_SIZE))).toList();
+    }
+
+    /** Images des premières cartes du thème (les plus populaires d'abord) : médaillons de l'accueil. */
+    private static List<String> faces(me.blindle.content.Theme theme) {
+        return theme.cards().stream().map(c -> c.image()).filter(java.util.Objects::nonNull).limit(FACES).toList();
     }
 
     private static Views.ArtView art(me.blindle.content.Theme theme) {

@@ -43,6 +43,23 @@ export const EN: Record<string, string> = {
   'home.classicTitle': 'Hint-based games',
   'home.classicMeta': '{theme} · {rounds} rounds · {budget} gold',
 
+  'home.eyebrow': 'The anime blind-bid card game',
+  'home.allUniverses': 'All universes',
+  'home.universeTagline': 'Anime Blind Bid · {n} characters',
+  'home.modes': 'Game modes',
+  'home.moreTitle': 'Other universes',
+  'mode.friends': 'Play with friends',
+  'mode.friendsSub': 'Create a room and share the code',
+  'mode.bots': 'Play against bots',
+  'mode.botsSub': 'Train solo against 1 to 3 bots',
+  'mode.botCount': '{n} bot(s)',
+  'mode.go': 'Play',
+  'mode.join': 'Join a friend',
+  'mode.joinSub': 'Enter the room code',
+  'mode.daily': 'Daily challenge',
+  'mode.dailySub': 'Same cards for everyone, once a day',
+  'mode.soon': 'Soon',
+
   // Lobby
   'lobby.shareCode': 'Code to share',
   'lobby.clickToCopy': 'Click to copy',

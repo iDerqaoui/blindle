@@ -1,6 +1,6 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Client, IMessage, StompSubscription } from '@stomp/stompjs';
-import { BotProfile, DailySummary, ErrorMessage, PlayerSummary, PlayerView, PresetSummary, RoomView } from './game.types';
+import { ArtView, BotProfile, DailySummary, ErrorMessage, PlayerSummary, PlayerView, PresetSummary, RoomView } from './game.types';
 import { I18nService } from '../i18n/i18n';
 
 /**
@@ -15,6 +15,9 @@ export class GameService {
   readonly me = signal<PlayerView | null>(null);
   readonly error = signal<string | null>(null);
   readonly presets = signal<PresetSummary[]>([]);
+  /** Univers regardé à l'accueil : son visuel habille le fond de page avant d'entrer en room. */
+  readonly previewArt = signal<ArtView | null>(null);
+  private pendingBots: string[] = [];
   readonly daily = signal<DailySummary[]>([]);
   readonly botProfiles = signal<BotProfile[]>([]);
 
@@ -89,7 +92,9 @@ export class GameService {
 
   // ------------------------------------------------------------------ actions
 
-  createRoom(name: string, presetId: string): void {
+  /** @param bots profils de bots à ajouter dès que la room est créée (partie « contre des bots ») */
+  createRoom(name: string, presetId: string, bots: string[] = []): void {
+    this.pendingBots = [...bots];
     this.send('/app/room.create', { name, presetId });
   }
 
@@ -174,6 +179,11 @@ export class GameService {
       }
       if (first) {
         this.watchRoom(data.code);
+        // Room « contre des bots » : l'hôte vient d'arriver, on ajoute les bots demandés.
+        if (data.host && this.pendingBots.length > 0) {
+          this.pendingBots.forEach(profile => this.send(`/app/room/${data.code}/bot`, { profile }));
+          this.pendingBots = [];
+        }
       }
     } else {
       this.acceptRoom(data);

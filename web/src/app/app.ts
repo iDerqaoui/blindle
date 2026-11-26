@@ -16,6 +16,28 @@ import { ModalComponent } from './ui/modal.component';
   imports: [HomeComponent, LobbyComponent, AuctionComponent, TableComponent, VerdictComponent, ResultsComponent,
     TeamBoardComponent, ModalComponent, TranslatePipe],
   template: `
+    <div class="backdrop" aria-hidden="true">
+      @if (ambiance(); as a) {
+        @for (key of [a.key]; track key) {
+          <div class="backdrop-universe" [class.quiet]="screen() === 'table'" [style.--universe]="a.color">
+            @if (a.image) { <img class="backdrop-art" [src]="a.image" alt="" /> }
+            @if (a.faces.length && screen() !== 'table') {
+              <div class="cast cast-left">
+                @for (f of a.faces.slice(0, 3); track f) { <img [src]="f" alt="" /> }
+              </div>
+              <div class="cast cast-right">
+                @for (f of a.faces.slice(3, 6); track f) { <img [src]="f" alt="" /> }
+              </div>
+            }
+          </div>
+        }
+      } @else {
+        <div class="mosaic">
+          @for (c of mosaic(); track $index) { <img [src]="c" alt="" loading="lazy" /> }
+        </div>
+      }
+    </div>
+
     <header class="topbar">
       <button class="brand" (click)="inRoom() ? confirmLeave.set(true) : null" [disabled]="!inRoom()"
               [attr.aria-label]="'app.home' | t">
@@ -108,6 +130,28 @@ export class App {
       case 'FINISHED': return 'results';
       default: return room!.bidMode === 'drawer' ? 'table' : 'game';
     }
+  });
+
+  /**
+   * Habillage du fond : l'univers de la room, sinon celui regardé à l'accueil.
+   * La clé change avec l'image, ce qui recrée le calque et rejoue le fondu.
+   */
+  readonly ambiance = computed(() => {
+    const room = this.game.room();
+    const art = (this.inRoom() ? room?.art : null) ?? this.game.previewArt();
+    if (!art) {
+      return null;
+    }
+    const presetId = this.inRoom() ? room?.presetId : null;
+    const preset = this.game.presets().find(p => (presetId ? p.id === presetId : p.art?.cover === art.cover));
+    const image = art.banner ?? art.cover;
+    return { key: image ?? art.color ?? 'none', image, color: art.color ?? '#6b5bd6', faces: preset?.faces ?? [] };
+  });
+
+  /** Accueil généraliste : affiches de tous les univers, répétées pour couvrir l'écran. */
+  readonly mosaic = computed(() => {
+    const covers = this.game.presets().map(p => p.art?.cover).filter((c): c is string => !!c);
+    return covers.length ? Array.from({ length: 24 }, (_, i) => covers[i % covers.length]) : [];
   });
 
   readonly log = computed(() => [...(this.game.room()?.log ?? [])].reverse());

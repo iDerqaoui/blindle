@@ -120,6 +120,8 @@ export interface PresetSummary {
   /** Avertissement de droits du thème (§8), affiché aux joueurs. */
   disclaimer: string | null;
   art: ArtView | null;
+  /** Images des personnages les plus populaires (médaillons). */
+  faces: string[];
   /** Nombre de cartes du thème. */
   cards: number;
   settings: { budget: number; rounds: number; teamSize: number; hintLevels: number; bidTimerSec: number };
