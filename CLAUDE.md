@@ -58,5 +58,5 @@ Architecture et protocole STOMP proposés à l'étape 0 : `docs/ARCHITECTURE.md`
 
 ## Étape en cours
 
-Étape 2 terminée (`RuleEngine`, `budget-cap`, `rising-floor`). Prochaine : étape 3 — mode `sealed` + verdict `vote` (voir `docs/PROJECT.md` §11 et §12).
+Étape 3 terminée (mode `sealed`, verdict `vote`, partie complète en test). Prochaine : étape 4 — thèmes JSON + JSON Schema + 30 cartes Manga (voir `docs/PROJECT.md` §11 et §12).
 Mettre à jour cette ligne à chaque étape terminée.

@@ -29,5 +29,10 @@
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>me.blindle</groupId>
+            <artifactId>engine-rules</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 </project>

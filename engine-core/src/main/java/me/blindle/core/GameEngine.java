@@ -140,6 +140,15 @@ public final class GameEngine {
         return tx.done();
     }
 
+    /** Le joueur passe sur le palier courant ; son éventuelle offre est retirée. */
+    public Step pass(GameState s, String playerId) {
+        phases.requirePhase(s.phase(), Phase.BIDDING);
+        if (s.player(playerId).isEmpty()) {
+            throw new GameException("UNKNOWN_PLAYER", "Joueur inconnu");
+        }
+        return new Tx(s.withLot(s.lot().withPass(playerId))).done();
+    }
+
     /**
      * Clôt le palier courant. Gagnant → AWARDED (budget débité). Sinon indice suivant,
      * ou lot invendu après le dernier palier → round suivant / verdict.

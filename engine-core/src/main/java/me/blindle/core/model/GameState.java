@@ -48,6 +48,12 @@ public record GameState(String gameId, long seed, Phase phase, GameSettings sett
         return player(playerId).map(p -> slots.size() - p.team().size()).orElse(0);
     }
 
+    /** Joueurs autorisés à miser sur le lot courant : assez de slots libres pour ses cartes. */
+    public List<String> eligibleBidders() {
+        int needed = lot == null ? 1 : lot.cards().size();
+        return players.stream().map(PlayerState::id).filter(id -> freeSlots(id) >= needed).toList();
+    }
+
     public GameState withPhase(Phase p) {
         return new GameState(gameId, seed, p, settings, slots, players, deck, roundIndex, lot,
                 discarded, log, result, version);
