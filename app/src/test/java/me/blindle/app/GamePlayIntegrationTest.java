@@ -88,6 +88,36 @@ class GamePlayIntegrationTest {
         assertThat(cards).isEqualTo(10);
     }
 
+    @Test
+    void dailyChallengeIsPlayedSoloRankedAndShareable() throws Exception {
+        CountDownLatch finished = new CountDownLatch(1);
+        Player alice = new Player("Alice", finished);
+
+        alice.send("/app/room.create", Map.of("name", "Alice", "presetId", "defi-manga"));
+        Thread.sleep(300);
+        assertThat(errors).anySatisfy(e -> assertThat(((Map<?, ?>) e).get("code")).isEqualTo("DAILY_IS_SOLO"));
+        errors.clear();
+
+        alice.send("/app/daily.start", Map.of("name", "Alice", "presetId", "defi-manga"));
+        alice.watch(alice.code.get(5, TimeUnit.SECONDS));
+
+        assertThat(finished.await(30, TimeUnit.SECONDS)).as("défi terminé").isTrue();
+        assertThat(errors).isEmpty();
+        assertThat(violations).isEmpty();
+        Map<?, ?> end = alice.lastRoom;
+        assertThat(end.get("bidMode")).isEqualTo("market");
+        Map<?, ?> daily = (Map<?, ?>) end.get("daily");
+        assertThat(daily.get("rank")).isEqualTo(1);
+        assertThat((String) daily.get("share")).startsWith("Blindle · Défi du jour").endsWith("blindle.me");
+
+        List<?> summaries = rest.getForObject("/api/daily", List.class);
+        Map<?, ?> manga = (Map<?, ?>) summaries.stream()
+                .filter(d -> "defi-manga".equals(((Map<?, ?>) d).get("presetId"))).findFirst().orElseThrow();
+        assertThat(manga.get("players")).isEqualTo(1);
+        assertThat((List<?>) manga.get("leaderboard"))
+                .singleElement().satisfies(e -> assertThat(((Map<?, ?>) e).get("name")).isEqualTo("Alice"));
+    }
+
     /** Client de test qui joue automatiquement à partir des vues reçues. */
     private final class Player {
         final String name;

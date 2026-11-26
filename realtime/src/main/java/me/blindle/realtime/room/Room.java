@@ -4,10 +4,12 @@ import me.blindle.core.GameEngine;
 import me.blindle.core.GameException;
 import me.blindle.core.Phase;
 import me.blindle.core.Step;
+import me.blindle.core.event.GameEvent;
 import me.blindle.core.model.Bid;
 import me.blindle.core.model.Card;
 import me.blindle.core.model.GameSettings;
 import me.blindle.core.model.GameState;
+import me.blindle.core.model.LotState;
 import me.blindle.core.model.PlayerState;
 import me.blindle.core.model.SlotDef;
 import me.blindle.modes.Vote;
@@ -47,9 +49,21 @@ public final class Room {
     private TimerScheduler.Handle timer;
     private long timerToken;
     private volatile Instant lastActivity;
+    private final List<RoundOutcome> history = new ArrayList<>();
+    private final DailyContext daily;
+    private Integer dailyRank;
 
     public Room(String code, long seed, GameSetup setup, RoomSettings settings, TimerScheduler timers,
                 Broadcaster broadcaster, Clock clock) {
+        this(code, seed, setup, settings, timers, broadcaster, clock, null);
+    }
+
+    /**
+     * @param daily défi du jour (classement en fin de partie), ou null pour une partie normale
+     */
+    public Room(String code, long seed, GameSetup setup, RoomSettings settings, TimerScheduler timers,
+                Broadcaster broadcaster, Clock clock, DailyContext daily) {
+        this.daily = daily;
         this.code = code;
         this.setup = setup;
         this.engine = setup.engine();
@@ -71,7 +85,8 @@ public final class Room {
     }
 
     public synchronized RoomSnapshot snapshot() {
-        return new RoomSnapshot(code, setup, state, hostId, phaseDeadline, votes, clock.instant());
+        return new RoomSnapshot(code, setup, state, hostId, phaseDeadline, votes, clock.instant(), history,
+                daily == null ? null : daily.date(), dailyRank);
     }
 
     public synchronized boolean hasPlayer(String playerId) {
@@ -84,6 +99,10 @@ public final class Room {
         if (state.player(playerId).isPresent()) {
             broadcaster.sendTo(snapshot(), playerId);
             return;
+        }
+        long humans = state.players().stream().filter(p -> !p.bot()).count();
+        if (humans >= settings.maxPlayers()) {
+            throw new GameException("ROOM_FULL", "La partie est complète");
         }
         apply(engine.addPlayer(state, playerId, cleanName(name), false));
         if (hostId == null) {
@@ -310,6 +329,13 @@ public final class Room {
         cancelTimer();
         phaseDeadline = null;
         apply(engine.finish(state, setup.verdictMode().compute(state, votes)));
+        if (daily != null) {
+            try {
+                dailyRank = daily.submit().applyAsInt(snapshot());
+            } catch (RuntimeException e) {
+                LOG.error("Room {} : score du défi du jour non enregistré", code, e);
+            }
+        }
     }
 
     // ------------------------------------------------------------------ minuteries
@@ -351,8 +377,27 @@ public final class Room {
     // ------------------------------------------------------------------ utilitaires
 
     private void apply(Step step) {
+        recordOutcomes(state, step);
         state = step.state();
         lastActivity = clock.instant();
+    }
+
+    /** Relève l'issue des rounds : lot gagné (au palier courant) ou invendu. */
+    private void recordOutcomes(GameState before, Step step) {
+        for (GameEvent event : step.events()) {
+            LotState lot = before.lot();
+            if (lot == null) {
+                continue;
+            }
+            int max = Math.min(lot.maxHintLevel(), before.settings().hintLevels());
+            List<String> ids = lot.cards().stream().map(Card::id).toList();
+            if (event instanceof GameEvent.LotWon won) {
+                history.add(new RoundOutcome(before.roundIndex(), ids, won.playerId(), lot.hintLevel(), max,
+                        won.price()));
+            } else if (event instanceof GameEvent.RoundEnded ended && !ended.sold()) {
+                history.add(new RoundOutcome(before.roundIndex(), ids, null, lot.hintLevel(), max, 0));
+            }
+        }
     }
 
     private void publish() {

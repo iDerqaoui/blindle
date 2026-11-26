@@ -1,25 +1,51 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { GameService } from '../game/game.service';
 import { TeamBoardComponent } from '../ui/team-board.component';
 
-/** Classement final et équipes. */
+/** Classement final et équipes ; en défi du jour, détail du score, rang et résultat à partager. */
 @Component({
   selector: 'app-results',
   imports: [TeamBoardComponent],
   template: `
     @if (game.room()?.result; as result) {
-      <section class="panel narrow">
-        <h2>Résultats</h2>
-        <ol class="ranking">
-          @for (id of result.ranking; track id; let i = $index) {
-            <li [class.winner]="i === 0">
-              <span>{{ medal(i) }} {{ game.playerName(id) }}</span>
-              <span>{{ result.scores[id] }} {{ unit() }}@if (bonusOf(id) > 0) { <small class="muted"> · +{{ bonusOf(id) }} synergie</small> }</span>
-            </li>
+      @if (game.room()?.daily; as daily) {
+        <section class="panel narrow">
+          <h2>☀️ Défi du jour terminé</h2>
+          @if (breakdown(); as b) {
+            <p class="score-line">
+              Valeur de l'équipe <strong>{{ b.value }}</strong> − pièces dépensées <strong>{{ b.spent }}</strong>
+              = <strong class="big">{{ b.score > 0 ? '+' : '' }}{{ b.score }}</strong>
+            </p>
           }
-        </ol>
-        <button class="btn primary" (click)="game.leave()">Nouvelle partie</button>
-      </section>
+          @if (daily.rank) { <p>Classement du jour : <strong>{{ daily.rank }}{{ daily.rank === 1 ? 'er' : 'e' }}</strong></p> }
+          @if (daily.share) {
+            <pre class="share">{{ daily.share }}</pre>
+            <button class="btn" (click)="copy(daily.share)">{{ copied() ? 'Copié ✔' : 'Copier le résultat' }}</button>
+          }
+          @if (board(); as top) {
+            <h3>Top du jour</h3>
+            <ol class="ranking">
+              @for (e of top; track $index; let i = $index) {
+                <li [class.winner]="i === 0"><span>{{ medal(i) }} {{ e.name }}</span><span>{{ e.score > 0 ? '+' : '' }}{{ e.score }}</span></li>
+              }
+            </ol>
+          }
+          <button class="btn primary" (click)="game.leave()">Retour à l'accueil</button>
+        </section>
+      } @else {
+        <section class="panel narrow">
+          <h2>Résultats</h2>
+          <ol class="ranking">
+            @for (id of result.ranking; track id; let i = $index) {
+              <li [class.winner]="i === 0">
+                <span>{{ medal(i) }} {{ game.playerName(id) }}</span>
+                <span>{{ result.scores[id] }} {{ unit() }}@if (bonusOf(id) > 0) { <small class="muted"> · +{{ bonusOf(id) }} synergie</small> }</span>
+              </li>
+            }
+          </ol>
+          <button class="btn primary" (click)="game.leave()">Nouvelle partie</button>
+        </section>
+      }
       <app-team-board />
     }
   `,
@@ -27,6 +53,41 @@ import { TeamBoardComponent } from '../ui/team-board.component';
 export class ResultsComponent {
   readonly game = inject(GameService);
   readonly unit = computed(() => (this.game.room()?.verdictMode === 'vote' ? 'voix' : 'pts'));
+  readonly copied = signal(false);
+
+  /** Détail du score « value » du joueur courant, recalculé pour l'affichage à partir des vues serveur. */
+  readonly breakdown = computed(() => {
+    const room = this.game.room();
+    const me = room?.players.find(p => p.id === this.game.myId());
+    if (!room?.result || !me) {
+      return null;
+    }
+    const value = me.team.reduce((sum, t) => sum + (t.card?.value ?? 0), 0);
+    const score = room.result.scores[me.id] ?? 0;
+    return { value, spent: value - score, score };
+  });
+
+  readonly board = computed(() =>
+    this.game.daily().find(d => d.presetId === this.game.room()?.presetId)?.leaderboard ?? null);
+
+  constructor() {
+    // Le score vient d'être enregistré : on rafraîchit le classement du jour.
+    effect(() => {
+      if (this.game.room()?.daily?.rank) {
+        this.game.loadDaily();
+      }
+    });
+  }
+
+  async copy(text: string): Promise<void> {
+    try {
+      await navigator.clipboard.writeText(text);
+      this.copied.set(true);
+      setTimeout(() => this.copied.set(false), 2000);
+    } catch {
+      // presse-papiers indisponible : le texte reste sélectionnable
+    }
+  }
 
   bonusOf(id: string): number {
     return this.game.room()?.players.find(p => p.id === id)?.bonus ?? 0;

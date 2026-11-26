@@ -3,9 +3,11 @@ package me.blindle.realtime.room;
 import me.blindle.content.ContentRegistry;
 import me.blindle.core.GameException;
 import me.blindle.core.Phase;
+import me.blindle.modes.MarketBidMode;
 import me.blindle.modes.ModeCatalog;
 import me.blindle.modes.OpenBidMode;
 import me.blindle.modes.SealedBidMode;
+import me.blindle.modes.ValueVerdictMode;
 import me.blindle.modes.VoteVerdictMode;
 import me.blindle.realtime.RealtimeConfig.RoomSettings;
 import me.blindle.realtime.game.GameFactory;
@@ -39,7 +41,8 @@ class RoomTest {
             new RuleCatalog(List.of(new BudgetCapRule(), new RisingFloorRule(), new JokerSpyRule(),
                     new JokerStealRule(), new TrapLotsRule(), new TagSynergyRule(), new SlotConstraintRule(),
                     new AntiSnipeRule())),
-            new ModeCatalog(List.of(new SealedBidMode(), new OpenBidMode()), List.of(new VoteVerdictMode())));
+            new ModeCatalog(List.of(new SealedBidMode(), new OpenBidMode(), new MarketBidMode()),
+                    List.of(new VoteVerdictMode(), new ValueVerdictMode())));
 
     /** Minuteries manuelles : on déclenche à la main la dernière programmée. */
     static final class ManualTimers implements TimerScheduler {

@@ -3,6 +3,7 @@ package me.blindle.realtime.stomp;
 import me.blindle.core.GameException;
 import me.blindle.realtime.room.Room;
 import me.blindle.realtime.room.RoomRegistry;
+import me.blindle.realtime.solo.DailyChallenge;
 import me.blindle.realtime.view.Views;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,15 +25,26 @@ public class GameController {
     private static final Logger LOG = LoggerFactory.getLogger(GameController.class);
 
     private final RoomRegistry rooms;
+    private final DailyChallenge daily;
 
-    public GameController(RoomRegistry rooms) {
+    public GameController(RoomRegistry rooms, DailyChallenge daily) {
         this.rooms = rooms;
+        this.daily = daily;
     }
 
     @MessageMapping("/room.create")
     public void create(Requests.CreateRoom req, Principal player) {
+        if (daily.dailyPresets().stream().anyMatch(p -> p.id().equals(req.presetId()))) {
+            throw new GameException("DAILY_IS_SOLO", "Le défi du jour se joue seul");
+        }
         Room room = rooms.create(req.presetId());
         room.join(player.getName(), req.name());
+    }
+
+    /** Lance le défi du jour : room solo créée, rejointe et démarrée d'un coup. */
+    @MessageMapping("/daily.start")
+    public void startDaily(Requests.StartDaily req, Principal player) {
+        daily.start(player.getName(), req.name(), req.presetId());
     }
 
     @MessageMapping("/room.join")

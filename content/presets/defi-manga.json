@@ -1,0 +1,15 @@
+{
+  "id": "defi-manga",
+  "name": "Défi du jour · Manga",
+  "description": "Seul contre le marché : atteins le prix caché pour remporter le lot. Score = valeur de ton équipe − pièces dépensées.",
+  "theme": "manga-shonen",
+  "bidMode": "market",
+  "verdictMode": "value",
+  "daily": true,
+  "channels": ["web"],
+  "settings": { "budget": 1000, "rounds": 10, "teamSize": 5, "hintLevels": 3, "bidTimerSec": 45 },
+  "rules": [
+    { "ref": "budget-cap" },
+    { "ref": "rising-floor", "params": { "base": 50, "stepPerHint": 50 } }
+  ]
+}

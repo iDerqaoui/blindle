@@ -12,6 +12,7 @@ import me.blindle.core.rule.RuleEngine;
 import me.blindle.core.rule.RuleParams;
 import me.blindle.modes.BidMode;
 import me.blindle.modes.ModeCatalog;
+import me.blindle.modes.ValueVerdictMode;
 import me.blindle.modes.VerdictMode;
 import me.blindle.rules.RuleCatalog;
 import org.springframework.stereotype.Component;
@@ -60,11 +61,12 @@ public class GameFactory {
                 .orElseThrow(() -> new IllegalStateException("Thème introuvable : " + preset.theme()));
         BidMode bidMode = modes.bidMode(preset.bidMode());
         VerdictMode verdictMode = modes.verdictMode(preset.verdictMode());
-        for (String field : verdictMode.requiredThemeFields()) {
-            if (!theme.allCardsHave(field)) {
-                throw new IllegalArgumentException("le verdict « " + verdictMode.id()
-                        + " » exige le champ « " + field + " » sur toutes les cartes");
-            }
+        if (preset.daily() && !ValueVerdictMode.ID.equals(verdictMode.id())) {
+            throw new IllegalArgumentException("un défi du jour se joue avec le verdict « value »");
+        }
+        if (!verdictMode.supportsTheme(theme::allCardsHave)) {
+            throw new IllegalArgumentException("le verdict « " + verdictMode.id() + " » exige "
+                    + verdictMode.themeRequirement());
         }
         List<RuleEngine.ActiveRule> active = new ArrayList<>();
         Set<String> refs = new LinkedHashSet<>();

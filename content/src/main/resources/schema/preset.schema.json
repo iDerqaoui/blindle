@@ -12,6 +12,7 @@
     "theme": { "$ref": "#/$defs/slug" },
     "bidMode": { "$ref": "#/$defs/slug" },
     "verdictMode": { "$ref": "#/$defs/slug" },
+    "daily": { "type": "boolean" },
     "channels": {
       "type": "array",
       "uniqueItems": true,

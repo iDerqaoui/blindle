@@ -12,6 +12,8 @@ export interface CardView {
   tags: string[];
   rarity: string | null;
   stats: Record<string, number>;
+  /** Valeur en pièces (verdict « value »). */
+  value: number;
 }
 
 export interface TeamEntry { slotId: string; card: CardView | null; paid: number | null; }
@@ -66,7 +68,11 @@ export interface RoomView {
   log: string[];
   result: ResultView | null;
   votesReceived: number;
+  daily: DailyView | null;
 }
+
+/** Défi du jour : rang et texte à partager une fois la partie terminée. */
+export interface DailyView { date: string; rank: number | null; share: string | null; }
 
 export interface PlayerView {
   type: 'player';
@@ -95,5 +101,18 @@ export interface PresetSummary {
   themeName: string;
   bidMode: string;
   verdictMode: string;
+  daily: boolean;
   settings: { budget: number; rounds: number; teamSize: number; hintLevels: number; bidTimerSec: number };
+}
+
+export interface LeaderboardEntry { name: string; score: number; }
+
+export interface DailySummary {
+  presetId: string;
+  name: string;
+  description: string | null;
+  themeName: string;
+  date: string;
+  players: number;
+  leaderboard: LeaderboardEntry[];
 }

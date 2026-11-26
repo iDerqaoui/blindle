@@ -9,6 +9,9 @@ public final class Requests {
     public record CreateRoom(String name, String presetId) {
     }
 
+    public record StartDaily(String name, String presetId) {
+    }
+
     public record JoinRoom(String code, String name) {
     }
 

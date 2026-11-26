@@ -177,3 +177,13 @@ h3 { font-size: 1rem; margin-top: 16px; }
   padding-top: 10px; border-top: 1px solid var(--border); }
 .slot-card { display: inline-flex; align-items: center; gap: 6px; }
 .slot-card .btn.small { padding: 2px 8px; margin: 0; font-size: 0.75rem; }
+
+/* Défi du jour (étape 9) */
+.panel.daily { border-color: var(--accent); }
+.panel.daily h2 small { font-size: 0.85rem; font-weight: 400; }
+.daily-card { display: grid; gap: 6px; align-content: start; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius); }
+.ranking.compact { margin: 4px 0; font-size: 0.9rem; }
+.ranking.compact li { padding: 2px 0; }
+.share { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; line-height: 1.3; font-size: 1.05rem; white-space: pre; overflow-x: auto; }
+.score-line .big { font-size: 1.5rem; color: var(--accent); }
+.miss { color: var(--danger); margin: 0; }

@@ -38,6 +38,9 @@ import { CardComponent } from '../ui/card.component';
                   <span class="tag" [class.leader]="first">{{ game.playerName(b.playerId) }} : {{ b.amount }} 🪙</span>
                 } @empty { <span class="muted">Aucune offre pour l'instant</span> }
               </div>
+            } @else if (room.bidMode === 'market') {
+              <p class="muted">📈 Seul contre le marché : ton offre doit atteindre un prix caché, qui monte à chaque indice. Tu paies ton offre.</p>
+              @if (missed(); as m) { <p class="miss">Ton offre de {{ m }} 🪙 n'a pas suffi : nouvel indice.</p> }
             } @else {
               <p class="muted">{{ lot.actedCount }} / {{ room.players.length }} joueurs ont joué ce palier · offres secrètes</p>
             }
@@ -46,7 +49,7 @@ import { CardComponent } from '../ui/card.component';
                 <div class="bid-row">
                   <input class="input" type="number" [min]="minBid()" [max]="myBudget()" step="10" [(ngModel)]="amount" />
                   <button class="btn primary" (click)="bid()">Miser</button>
-                  <button class="btn" (click)="game.pass()">Passer</button>
+                  <button class="btn" (click)="pass()">Passer</button>
                 </div>
                 @if (me.myBid !== null) { <p>Ton offre : <strong>{{ me.myBid }} 🪙</strong>@if (room.bidMode === 'sealed') { (modifiable jusqu'à la fin)}</p> }
                 @if (me.passed) { <p class="muted">Tu passes ce palier.</p> }
@@ -72,6 +75,9 @@ import { CardComponent } from '../ui/card.component';
             <div class="revealed">
               <p>🎉 <strong>{{ game.playerName(lot.winnerId) }}</strong> remporte le lot pour <strong>{{ lot.price }} 🪙</strong></p>
               @for (card of lot.cards; track card.id) { <app-card [card]="card" /> }
+              @if (room.verdictMode === 'value') {
+                <p>Valeur : <strong>{{ lotValue() }} 🪙</strong> · {{ lotValue() >= (lot.price ?? 0) ? 'bonne affaire 🟩' : 'payé trop cher 🟥' }}</p>
+              }
               @if (lot.bids && lot.bids.length > 1) {
                 <p class="muted">Offres : @for (b of lot.bids; track b.playerId) { {{ game.playerName(b.playerId) }} {{ b.amount }}@if (!$last) {, } }</p>
               }
@@ -119,9 +125,27 @@ export class AuctionComponent {
     return room?.bidMode === 'open' && top !== undefined ? Math.max(floor, top + 10) : floor;
   });
 
+  readonly lotValue = computed(() =>
+    (this.game.room()?.lot?.cards ?? []).reduce((sum, c) => sum + c.value, 0));
+
+  /** Marché : offre envoyée au palier précédent, refusée (le palier a avancé sans gagnant). */
+  readonly missed = signal<number | null>(null);
+  private lastTier = '';
+  private lastBid: number | null = null;
+
   private readonly lotKey = signal('');
 
   constructor() {
+    effect(() => {
+      const room = this.game.room();
+      const tier = `${room?.round}:${room?.lot?.hintLevel}`;
+      if (tier !== this.lastTier) {
+        const sameRound = this.lastTier.split(':')[0] === String(room?.round);
+        this.missed.set(sameRound ? this.lastBid : null);
+        this.lastTier = tier;
+        this.lastBid = null;
+      }
+    });
     // Nouveau palier, ou offre dépassée en mode ouvert : on propose la mise minimale.
     effect(() => {
       const room = this.game.room();
@@ -134,6 +158,13 @@ export class AuctionComponent {
   }
 
   bid(): void {
-    this.game.bid(Math.floor(Number(this.amount)));
+    // En solo, l'offre est résolue aussitôt : on retient le montant envoyé pour expliquer un échec.
+    this.lastBid = Math.floor(Number(this.amount));
+    this.game.bid(this.lastBid);
+  }
+
+  pass(): void {
+    this.lastBid = null;
+    this.game.pass();
   }
 }

@@ -1,6 +1,6 @@
 import { Injectable, computed, signal } from '@angular/core';
 import { Client, IMessage, StompSubscription } from '@stomp/stompjs';
-import { ErrorMessage, PlayerView, PresetSummary, RoomView } from './game.types';
+import { DailySummary, ErrorMessage, PlayerView, PresetSummary, RoomView } from './game.types';
 
 /**
  * Connexion STOMP au serveur et état reçu. Le client ne fait qu'afficher :
@@ -13,6 +13,7 @@ export class GameService {
   readonly me = signal<PlayerView | null>(null);
   readonly error = signal<string | null>(null);
   readonly presets = signal<PresetSummary[]>([]);
+  readonly daily = signal<DailySummary[]>([]);
 
   /** Horloge locale corrigée de l'écart avec le serveur, rafraîchie 4 fois par seconde. */
   readonly now = signal(Date.now());
@@ -53,6 +54,7 @@ export class GameService {
     this.client.activate();
     setInterval(() => this.now.set(Date.now() + this.clockOffset), 250);
     this.loadPresets();
+    this.loadDaily();
   }
 
   async loadPresets(): Promise<void> {
@@ -66,10 +68,26 @@ export class GameService {
     }
   }
 
+  /** Défis du jour et leur classement (rafraîchi à l'accueil et en fin de défi). */
+  async loadDaily(): Promise<void> {
+    try {
+      const res = await fetch('/api/daily');
+      if (res.ok) {
+        this.daily.set(await res.json());
+      }
+    } catch {
+      // déjà signalé par loadPresets
+    }
+  }
+
   // ------------------------------------------------------------------ actions
 
   createRoom(name: string, presetId: string): void {
     this.send('/app/room.create', { name, presetId });
+  }
+
+  startDaily(name: string, presetId: string): void {
+    this.send('/app/daily.start', { name, presetId });
   }
 
   joinRoom(code: string, name: string): void {
@@ -99,6 +117,7 @@ export class GameService {
     this.roomSub = null;
     this.room.set(null);
     this.me.set(null);
+    this.loadDaily();
     this.client.deactivate().then(() => this.client.activate());
   }
 

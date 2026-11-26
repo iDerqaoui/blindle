@@ -20,7 +20,13 @@ public final class Views {
                            String verdictMode, List<String> rules, String hostId, int round, int totalRounds,
                            List<SlotView> slots, List<PlayerSummary> players, LotView lot,
                            Long deadline, Long serverTime, List<String> log, ResultView result,
-                           int votesReceived) {
+                           int votesReceived, DailyView daily) {
+    }
+
+    /**
+     * Défi du jour : date, puis en fin de partie rang obtenu et texte à partager (sans spoiler).
+     */
+    public record DailyView(String date, Integer rank, String share) {
     }
 
     public record SlotView(String id, String label, Set<String> requiredTags) {
@@ -34,7 +40,9 @@ public final class Views {
     public record TeamEntry(String slotId, CardView card, Integer paid) {
     }
 
-    public record CardView(String id, String name, Set<String> tags, String rarity, Map<String, Integer> stats) {
+    /** @param value valeur en pièces (verdict « value »), dérivée des stats et de la rareté publiques */
+    public record CardView(String id, String name, Set<String> tags, String rarity, Map<String, Integer> stats,
+                           int value) {
     }
 
     public record HintView(int level, String type, String value) {

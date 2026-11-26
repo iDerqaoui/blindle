@@ -1,0 +1,16 @@
+{
+  "id": "defi-pays",
+  "name": "Défi du jour · Pays",
+  "description": "Seul contre le marché : atteins le prix caché pour remporter le lot. Score = valeur de ton équipe − pièces dépensées.",
+  "theme": "pays-du-monde",
+  "bidMode": "market",
+  "verdictMode": "value",
+  "daily": true,
+  "channels": ["web", "discord"],
+  "settings": { "budget": 1000, "rounds": 10, "teamSize": 5, "hintLevels": 4, "bidTimerSec": 45 },
+  "rules": [
+    { "ref": "budget-cap" },
+    { "ref": "rising-floor", "params": { "base": 40, "stepPerHint": 40 } },
+    { "ref": "slot-constraint" }
+  ]
+}

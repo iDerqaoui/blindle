@@ -46,10 +46,19 @@ public class RoomRegistry {
     }
 
     public Room create(String presetId, long seed) {
+        return create(presetId, seed, settings, null);
+    }
+
+    /** Room solo de défi du jour : un seul joueur, seed du jour. */
+    public Room createDaily(String presetId, long seed, DailyContext daily) {
+        return create(presetId, seed, settings.solo(), daily);
+    }
+
+    private Room create(String presetId, long seed, RoomSettings roomSettings, DailyContext daily) {
         var setup = factory.setup(presetId);
         while (true) {
             String code = newCode();
-            Room room = new Room(code, seed, setup, settings, timers, broadcaster, clock);
+            Room room = new Room(code, seed, setup, roomSettings, timers, broadcaster, clock, daily);
             if (rooms.putIfAbsent(code, room) == null) {
                 return room;
             }

@@ -5,9 +5,13 @@ import me.blindle.core.model.GameSettings;
 import java.util.List;
 import java.util.Map;
 
-/** Preset : thème + règles + mode d'enchère + mode de verdict + paramètres (§6). */
+/**
+ * Preset : thème + règles + mode d'enchère + mode de verdict + paramètres (§6).
+ * {@code daily} : preset de défi du jour, joué seul avec une seed par jour (§7).
+ */
 public record Preset(String id, String name, String description, String theme, String bidMode,
-                     String verdictMode, List<String> channels, Settings settings, List<RuleRef> rules) {
+                     String verdictMode, List<String> channels, boolean daily, Settings settings,
+                     List<RuleRef> rules) {
 
     public Preset {
         channels = channels == null ? List.of() : List.copyOf(channels);

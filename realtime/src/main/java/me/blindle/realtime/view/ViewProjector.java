@@ -7,9 +7,11 @@ import me.blindle.core.model.GameState;
 import me.blindle.core.model.LotState;
 import me.blindle.core.model.PlayerState;
 import me.blindle.core.model.SlotDef;
+import me.blindle.modes.CardValuation;
 import me.blindle.modes.Vote;
 import me.blindle.realtime.room.Room;
 import me.blindle.realtime.room.RoomSnapshot;
+import me.blindle.realtime.solo.DailyShare;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -65,7 +67,7 @@ public final class ViewProjector {
                 r.setup().preset().rules().stream().map(x -> x.ref()).toList(), r.hostId(),
                 s.roundIndex(), s.settings().rounds(), slots, players, lot(s, r.setup().bidMode().bidsVisible()),
                 deadline == null ? null : deadline.toEpochMilli(), r.now().toEpochMilli(),
-                List.copyOf(log), result, r.votes().size());
+                List.copyOf(log), result, r.votes().size(), daily(r));
     }
 
     public static Views.PlayerView player(RoomSnapshot r, String playerId) {
@@ -121,10 +123,20 @@ public final class ViewProjector {
                 RESOLVED.contains(s.phase()) ? lot.price() : null);
     }
 
+    /** Défi du jour : partie solo, le texte à partager est celui de son unique joueur humain. */
+    private static Views.DailyView daily(RoomSnapshot r) {
+        if (r.dailyDate() == null) {
+            return null;
+        }
+        String share = r.state().players().stream().filter(p -> !p.bot()).findFirst()
+                .map(p -> DailyShare.text(r, p.id())).orElse(null);
+        return new Views.DailyView(r.dailyDate().toString(), r.dailyRank(), share);
+    }
+
     private static Views.CardView card(Card c) {
         if (c == null) {
             return null;
         }
-        return new Views.CardView(c.id(), c.name(), c.tags(), c.rarity(), c.stats());
+        return new Views.CardView(c.id(), c.name(), c.tags(), c.rarity(), c.stats(), CardValuation.of(c));
     }
 }

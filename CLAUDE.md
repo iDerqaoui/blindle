@@ -61,7 +61,7 @@ Architecture et protocole STOMP proposés à l'étape 0 : `docs/ARCHITECTURE.md`
 
 ## Étape en cours
 
-Étape 8 terminée (thème pays-du-monde, 40 cartes, moteur inchangé). Prochaine : étape 9 — mode solo (`market`, défi du jour, puis bots) (voir `docs/PROJECT.md` §11 et §12).
+Étape 9 en cours : défi du jour fait (`market`, verdict `value`, seed du jour, classement, partage emoji). Reste : bots (`BotStrategy`, 5 profils) (voir `docs/PROJECT.md` §11 et §12).
 Mettre à jour cette ligne à chaque étape terminée.
 
 ## Notes de passation (2026-11-26)

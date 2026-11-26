@@ -61,6 +61,7 @@ joueur par la session (`Principal` attribué au `join`), jamais par un champ du 
 |---|---|---|
 | `/app/room.create` | `{ name, presetId }` | Crée une room, renvoie le code |
 | `/app/room.join` | `{ code, name }` | Rejoint une room |
+| `/app/daily.start` | `{ name, presetId }` | Défi du jour : room solo créée avec la seed du jour, rejointe et démarrée (`room.create` refuse un preset `daily`) |
 | `/app/room/{code}/sync` | `{}` | Renvoie au joueur ses deux vues (après abonnement au topic) |
 | `/app/room/{code}/settings` | `{ budget?, rounds?, bidTimerSec? }` | Hôte seulement, en LOBBY |
 | `/app/room/{code}/start` | `{}` | Hôte seulement |
@@ -78,6 +79,7 @@ joueur par la session (`Principal` attribué au `join`), jamais par un champ du 
 | `/topic/room/{code}` | `RoomView` public (`type: "room"`) : phase, joueurs (pseudo, budget restant, équipe, a agi ou non), indices révélés, prix plancher, `deadline` et `serverTime` (epoch ms), nombre d'offres reçues (pas leur montant en `sealed`), journal, résultat |
 | `/user/queue/room` | `PlayerView` privé (`type: "player"`) : mon id, mon offre, passe, `canBid`, `mustPlace`, slots libres, mon vote. Reçoit aussi la `RoomView` lors d'un `sync` |
 | `/user/queue/errors` | `{ code, message }` : offre rejetée, action interdite |
+| `GET /api/daily` (REST) | Défis du jour : preset, thème, date, nombre de parties, top 10 du classement |
 
 Chaque message porte `type` et `version` (numéro monotone de l'état) pour que le client
 ignore les messages obsolètes. Les vues sont calculées par `ViewProjector` côté serveur
@@ -152,3 +154,27 @@ Chaque tâche est testable seule.
   « Île paradisiaque » réservé aux cartes taguées `ile`. Preset `pays-classique`.
 - Vérification : `git diff` sur `engine-core`, `engine-rules`, `engine-modes` entre l'étape 7
   et l'étape 8 est vide. Aucune dette de conception relevée.
+
+## 9. Mode solo (étape 9)
+
+### Défi du jour
+
+- Mode d'enchère `market` : chaque offre secrète affronte un prix du marché caché ; une offre
+  au moins égale gagne et paie son montant, sinon indice suivant. Prix = valeur du lot ×
+  ratio (0,5 au 1er palier → 0,9 au dernier) × bruit seedé ±15 %, jamais sous le plancher.
+- `CardValuation` (engine-modes) : valeur = 2 × moyenne des `stats` + bonus de `rarity`
+  (25 / 50 / 100 / 150), valeurs neutres si un champ manque. Ne lit que le format générique
+  de thème : aucun contenu de thème dans le moteur.
+- Verdict `value` : valeur de l'équipe − pièces dépensées (défausses comprises). Exige
+  `stats` **ou** `rarity` : `VerdictMode.supportsTheme` remplace le simple « tous les champs
+  requis » (extension générique de l'interface, pas de besoin propre à un thème).
+- Presets `daily: true` (`defi-manga`, `defi-pays`) : verdict `value` imposé au démarrage.
+  Seed = FNV-1a de « date|preset » → même deck et mêmes prix du marché pour tout le monde.
+  Jour en `Europe/Paris` (`blindle.daily.zone`).
+- Room solo (`RoomSettings.solo()` : 1 humain, démarrage seul). `Room` relève l'issue de
+  chaque round (`RoundOutcome`) depuis les événements du moteur ; en fin de partie, la
+  `DailyContext` enregistre le score au `DailyLeaderboard` (mémoire, jour courant et veille)
+  et le rang est renvoyé dans `RoomView.daily`.
+- Partage sans spoiler (`DailyShare`) : une ligne par round, une case par palier —
+  ⬜ palier joué, 🟩 achat rentable, 🟥 achat à perte, ⬛ palier non atteint.
+- Limite connue : pas de compte, donc rien n'empêche de rejouer le défi (nouvelle connexion).
