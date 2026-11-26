@@ -2,20 +2,66 @@ import { Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { GameService } from '../game/game.service';
 
-/** Accueil : créer une room (choix du preset) ou en rejoindre une avec un code. */
+/**
+ * Accueil : pseudo, choix de l'univers (mode principal Anime Blind Bid), rejoindre par code,
+ * puis les autres modes (défi du jour, parties à indices).
+ */
 @Component({
   selector: 'app-home',
   imports: [FormsModule],
   template: `
-    <section class="panel narrow">
-      <h2>Ton pseudo</h2>
-      <input class="input" [(ngModel)]="name" maxlength="20" placeholder="Ex. Yassine" autocomplete="nickname" />
+    <section class="hero">
+      <h1>Anime <span>Blind Bid</span></h1>
+      <p>Pioche un personnage que toi seul vois, fais monter les enchères à l'aveugle, et monte la meilleure équipe de 5.</p>
+      <label class="name-field">
+        <span>Ton pseudo</span>
+        <input class="input" [(ngModel)]="name" maxlength="20" placeholder="Ex. Yassine" autocomplete="nickname" />
+      </label>
     </section>
 
-    @if (game.daily().length > 0) {
-      <section class="panel daily">
-        <h2>☀️ Défi du jour <small class="muted">· seul contre le marché</small></h2>
-        <p class="muted">Mêmes lots pour tout le monde aujourd'hui. Ton offre doit atteindre un prix du marché caché, plus bas aux premiers indices. Score = valeur de ton équipe − pièces dépensées.</p>
+    <section class="section">
+      <div class="section-head">
+        <h2>Choisis un univers</h2>
+        <p class="muted">Une partie = un seul univers, on ne mélange pas les licences.</p>
+      </div>
+      @if (universes().length === 0) {
+        <div class="empty-state">
+          <p><strong>Aucun univers illustré installé.</strong></p>
+          <p class="muted">Lance <code>node tools/import-anilist.mjs</code> puis redémarre le serveur.</p>
+        </div>
+      } @else {
+        <div class="universe-grid">
+          @for (u of universes(); track u.id) {
+            <button type="button" class="universe" [class.selected]="selected() === u.id" (click)="selected.set(u.id)"
+                    [style.--universe]="u.art?.color ?? '#6b5bd6'">
+              @if (u.art?.cover; as cover) { <img [src]="cover" [alt]="u.name" loading="lazy" /> }
+              <span class="universe-name">{{ u.name }}</span>
+              <span class="universe-meta">{{ u.cards }} personnages</span>
+            </button>
+          }
+        </div>
+        <div class="cta-row">
+          <button class="btn primary big" [disabled]="!hasName() || !selected()" (click)="create(selected()!)">
+            Créer la partie
+          </button>
+          @if (!hasName()) { <span class="muted">Choisis d'abord un pseudo.</span> }
+        </div>
+      }
+    </section>
+
+    <section class="section join">
+      <h2>Rejoindre une partie</h2>
+      <div class="join-row">
+        <input class="input code-input" [(ngModel)]="code" maxlength="4" placeholder="CODE" aria-label="Code de la room" />
+        <button class="btn" [disabled]="!canJoin()" (click)="join()">Rejoindre</button>
+      </div>
+    </section>
+
+    <details class="section other-modes">
+      <summary><h2>Autres modes</h2></summary>
+
+      @if (game.daily().length > 0) {
+        <h3>☀️ Défi du jour <small class="muted">· seul contre le marché</small></h3>
         <div class="columns">
           @for (d of game.daily(); track d.presetId) {
             <div class="daily-card">
@@ -28,61 +74,48 @@ import { GameService } from '../game/game.service';
                   }
                 </ol>
               }
-              <button class="btn primary" [disabled]="!hasName()" (click)="playDaily(d.presetId)">Jouer</button>
+              <button class="btn" [disabled]="!hasName()" (click)="playDaily(d.presetId)">Jouer</button>
             </div>
           }
         </div>
-      </section>
-    }
+      }
 
-    <div class="columns">
-      <section class="panel">
-        <h2>Créer une partie</h2>
-        <div class="presets">
-          @for (p of multiPresets(); track p.id) {
-            <button type="button" class="preset" [class.selected]="presetId() === p.id" (click)="presetId.set(p.id)">
-              <strong>{{ p.name }}</strong>
-              <span>{{ p.themeName }} · {{ p.settings.rounds }} rounds · {{ p.settings.budget }} 🪙</span>
-              @if (p.description) { <small>{{ p.description }}</small> }
-            </button>
-          } @empty {
-            <p class="muted">Chargement des presets…</p>
-          }
-        </div>
-        <button class="btn primary" [disabled]="!canCreate()" (click)="create()">Créer la room</button>
-      </section>
-
-      <section class="panel">
-        <h2>Rejoindre</h2>
-        <input class="input code-input" [(ngModel)]="code" maxlength="4" placeholder="CODE" />
-        <button class="btn" [disabled]="!canJoin()" (click)="join()">Rejoindre</button>
-      </section>
-    </div>
+      <h3>Parties à indices</h3>
+      <div class="presets">
+        @for (p of classic(); track p.id) {
+          <button type="button" class="preset" (click)="create(p.id)" [disabled]="!hasName()">
+            <strong>{{ p.name }}</strong>
+            <span>{{ p.themeName }} · {{ p.settings.rounds }} rounds · {{ p.settings.budget }} or</span>
+            @if (p.description) { <small>{{ p.description }}</small> }
+          </button>
+        }
+      </div>
+    </details>
   `,
 })
 export class HomeComponent {
   readonly game = inject(GameService);
   readonly name = signal(localStorageGet('blindle.name'));
   readonly code = signal('');
-  readonly presetId = signal<string | null>(null);
+  readonly selected = signal<string | null>(null);
 
-  readonly multiPresets = computed(() => this.game.presets().filter(p => !p.daily));
+  readonly universes = computed(() => this.game.presets().filter(p => p.bidMode === 'drawer'));
+  readonly classic = computed(() => this.game.presets().filter(p => p.bidMode !== 'drawer' && !p.daily));
   readonly hasName = computed(() => this.name().trim().length > 0);
-  readonly canCreate = computed(() => this.name().trim().length > 0 && this.presetId() !== null);
-  readonly canJoin = computed(() => this.name().trim().length > 0 && this.code().trim().length === 4);
+  readonly canJoin = computed(() => this.hasName() && this.code().trim().length === 4);
 
   constructor() {
     effect(() => {
-      const presets = this.multiPresets();
-      if (this.presetId() === null && presets.length > 0) {
-        this.presetId.set(presets[0].id);
+      const first = this.universes()[0];
+      if (this.selected() === null && first) {
+        this.selected.set(first.id);
       }
     });
   }
 
-  create(): void {
+  create(presetId: string): void {
     this.remember();
-    this.game.createRoom(this.name().trim(), this.presetId()!);
+    this.game.createRoom(this.name().trim(), presetId);
   }
 
   playDaily(presetId: string): void {

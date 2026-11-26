@@ -14,7 +14,12 @@ export interface CardView {
   stats: Record<string, number>;
   /** Valeur en pièces (verdict « value »). */
   value: number;
+  /** Image du personnage (thèmes illustrés), sinon null. */
+  image: string | null;
 }
+
+/** Habillage de l'univers : affiche, bannière, couleur dominante (dos de carte). */
+export interface ArtView { cover: string | null; banner: string | null; color: string | null; }
 
 export interface TeamEntry { slotId: string; card: CardView | null; paid: number | null; }
 
@@ -70,6 +75,11 @@ export interface RoomView {
   result: ResultView | null;
   votesReceived: number;
   daily: DailyView | null;
+  /** Joueur qui a pioché la carte en cours (mode Blind Bid), tant qu'elle est cachée. */
+  drawerId: string | null;
+  /** Poubelle : cartes que personne n'a voulues, visibles par tous. */
+  trash: CardView[];
+  art: ArtView | null;
 }
 
 /** Défi du jour : rang et texte à partager une fois la partie terminée. */
@@ -91,6 +101,8 @@ export interface PlayerView {
   jokers: Record<string, number>;
   privateHints: HintView[];
   votedFor: string | null;
+  /** Carte piochée : envoyée au seul piocheur. */
+  drawnCard: CardView | null;
 }
 
 export interface ErrorMessage { type: 'error'; code: string; message: string; }
@@ -105,6 +117,9 @@ export interface PresetSummary {
   daily: boolean;
   /** Avertissement de droits du thème (§8), affiché aux joueurs. */
   disclaimer: string | null;
+  art: ArtView | null;
+  /** Nombre de cartes du thème. */
+  cards: number;
   settings: { budget: number; rounds: number; teamSize: number; hintLevels: number; bidTimerSec: number };
 }
 

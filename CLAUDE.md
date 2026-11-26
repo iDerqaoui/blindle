@@ -53,7 +53,8 @@ Jeu d'enchères à l'aveugle multijoueur en ligne (3 à 8 joueurs, ou solo contr
 - Lancer le back : `mvn -pl app -am spring-boot:run` (port 8080, STOMP sur `/ws`)
 - Jar exécutable : `mvn clean install -DskipTests` puis `java -jar app/target/app-0.1.0-SNAPSHOT.jar --blindle.content.dir=content` (le `clean` évite un jar embarquant d'anciens modules)
 - Front : `cd web && npm install && npm start` → http://localhost:4200 (proxy `/api` et `/ws` vers 8080) ; build : `npx ng build`
-- Dev à moins de 3 joueurs : `--blindle.room.min-players=1`
+- Minimum de joueurs par défaut : 2 ; solo : `--blindle.room.min-players=1`
+- Thèmes anime illustrés (non commités) : `node tools/import-anilist.mjs`
 
 Java 17 retenu (décision du 2026-11-26) : pas de pattern matching dans `switch` ni de record patterns.
 
@@ -61,7 +62,7 @@ Architecture et protocole STOMP proposés à l'étape 0 : `docs/ARCHITECTURE.md`
 
 ## Étape en cours
 
-Étape 10 terminée (droits validés, canal déduit de l'authentification, filtrage, retrait à chaud). Prochaine : étape 11 — Discord Activity (voir `docs/PROJECT.md` §11 et §12).
+Étape 10 terminée. Hors feuille de route : mode principal « Anime Blind Bid » (mode `drawer`, thèmes AniList privés, front refait — voir ARCHITECTURE §11). Prochaine : retours de test du mode, puis étape 11 — Discord Activity (voir `docs/PROJECT.md` §11 et §12).
 Mettre à jour cette ligne à chaque étape terminée.
 
 ## Notes de passation (2026-11-26)

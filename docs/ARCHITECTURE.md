@@ -220,3 +220,20 @@ Chaque tâche est testable seule.
 - Retrait à chaud : API admin ci-dessus, ou `blindle.rights.blocked=theme:canal,…` au démarrage.
   Retraits en mémoire ; les parties en cours vont à leur terme, plus personne n'y entre.
 - `visibility` est validée mais pas encore exploitée (toutes les rooms sont sur code).
+
+## 11. Mode principal « Anime Blind Bid »
+
+- Demande produit (2026-11-26) : mode principal en tour par tour, visuel, un univers par partie.
+- Mode d'enchère `drawer` : le piocheur tourne à chaque round (en sautant les équipes pleines),
+  il est **seul à voir la carte** (`PlayerView.drawnCard`), ouvre l'enchère ; les autres
+  surenchérissent (offres visibles) ou laissent. Personne ne mise : poubelle (défausse publique,
+  `RoomView.trash`). Gagnée : révélation 4 s puis pose automatique dans le tableau.
+- `BidMode.drawerId(state)` et `BidMode.autoPlace()` : extensions génériques ; les vues masquent
+  les indices quand un piocheur existe. La partie se termine dès que toutes les équipes sont pleines.
+- Contenu : `tools/import-anilist.mjs` génère un thème + un preset par univers depuis l'API
+  publique AniList (Jikan était injoignable). Images en URL uniquement, fichiers
+  `content/{themes,presets}/anime-*.json` ignorés par git, profil `private`, web seulement.
+  Champ de thème optionnel `art` (affiche, bannière, couleur) pour le dos de carte.
+- Front refait : barre du haut (code, univers, Quitter avec confirmation), accueil par affiches
+  d'univers, salon avec bannière, table (pioche animée, retournement, enchère, tableaux de 5,
+  poubelle en modale), vote sur les tableaux illustrés. Minimum de joueurs par défaut : 2.

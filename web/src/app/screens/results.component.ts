@@ -1,11 +1,11 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { GameService } from '../game/game.service';
-import { TeamBoardComponent } from '../ui/team-board.component';
+import { BoardComponent } from '../ui/board.component';
 
 /** Classement final et équipes ; en défi du jour, détail du score, rang et résultat à partager. */
 @Component({
   selector: 'app-results',
-  imports: [TeamBoardComponent],
+  imports: [BoardComponent],
   template: `
     @if (game.room()?.result; as result) {
       @if (game.room()?.daily; as daily) {
@@ -46,7 +46,7 @@ import { TeamBoardComponent } from '../ui/team-board.component';
           <button class="btn primary" (click)="game.leave()">Nouvelle partie</button>
         </section>
       }
-      <app-team-board />
+      <section class="boards">@for (p of game.room()?.players ?? []; track p.id) { <app-board [player]="p" /> }</section>
     }
   `,
 })

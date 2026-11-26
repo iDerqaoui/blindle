@@ -26,7 +26,7 @@ public class RealtimeConfig {
     }
 
     @Bean
-    public RoomSettings roomSettings(@Value("${blindle.room.min-players:3}") int minPlayers,
+    public RoomSettings roomSettings(@Value("${blindle.room.min-players:2}") int minPlayers,
                                      @Value("${blindle.room.slot-timeout-sec:20}") int slotTimeoutSec,
                                      @Value("${blindle.room.vote-timeout-sec:60}") int voteTimeoutSec) {
         return new RoomSettings(minPlayers, slotTimeoutSec, voteTimeoutSec);
