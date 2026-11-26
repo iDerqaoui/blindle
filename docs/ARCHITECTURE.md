@@ -144,3 +144,11 @@ Chaque tâche est testable seule.
   et le timer serveur est reprogrammé).
 - Verdict `vote` : égalité départagée par le bonus des règles, puis le budget, puis la seed.
 - Le thème manga-shonen compte 33 cartes, dont 3 pièges (Yamcha, Hercule, Baggy).
+
+## 8. Deuxième thème (étape 8)
+
+- Thème `pays-du-monde` (profil `free`, web + discord, public, sans image) : 40 pays,
+  4 indices texte (climat → plat → langues → monument décrit), slots propres dont
+  « Île paradisiaque » réservé aux cartes taguées `ile`. Preset `pays-classique`.
+- Vérification : `git diff` sur `engine-core`, `engine-rules`, `engine-modes` entre l'étape 7
+  et l'étape 8 est vide. Aucune dette de conception relevée.

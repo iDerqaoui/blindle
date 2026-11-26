@@ -39,6 +39,19 @@ class ContentLoaderTest {
     }
 
     @Test
+    void countriesThemeIsValid() {
+        ContentLoader.Content content = loader.load(ContentRegistry.resolveDir(""));
+
+        Theme pays = content.themes().get("pays-du-monde");
+        assertThat(pays.cards()).hasSize(40);
+        assertThat(pays.rights().profile()).isEqualTo("free");
+        assertThat(pays.rights().channels()).containsExactly("web", "discord");
+        assertThat(pays.toCards()).allMatch(c -> c.hints().size() == 4);
+        assertThat(pays.cards().stream().filter(c -> c.tags().contains("ile"))).hasSizeGreaterThanOrEqualTo(5);
+        assertThat(content.presets().get("pays-classique").settings().hintLevels()).isEqualTo(4);
+    }
+
+    @Test
     void schemaErrorsAreReportedWithFileName(@TempDir Path dir) throws IOException {
         write(dir, "themes/bad.json", """
                 { "id": "Bad Id", "name": "x", "defaultSlots": [], "cards": [] }

@@ -61,5 +61,5 @@ Architecture et protocole STOMP proposés à l'étape 0 : `docs/ARCHITECTURE.md`
 
 ## Étape en cours
 
-Étape 7 terminée (jokers espion/vol, lots pièges, synergies, contrainte de slot, anti-snipe, mode `open`, preset manga-chaos). Prochaine : étape 8 — 2ᵉ thème (Pays ou Football texte) (voir `docs/PROJECT.md` §11 et §12).
+Étape 8 terminée (thème pays-du-monde, 40 cartes, moteur inchangé). Prochaine : étape 9 — mode solo (`market`, défi du jour, puis bots) (voir `docs/PROJECT.md` §11 et §12).
 Mettre à jour cette ligne à chaque étape terminée.

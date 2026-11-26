@@ -1,0 +1,16 @@
+{
+  "id": "pays-classique",
+  "name": "Tour du monde",
+  "description": "Quatre indices par pays, enchères scellées, bonus pour trois pays d'un même continent ou d'une même langue.",
+  "theme": "pays-du-monde",
+  "bidMode": "sealed",
+  "verdictMode": "vote",
+  "channels": ["web", "discord"],
+  "settings": { "budget": 1000, "rounds": 10, "teamSize": 5, "hintLevels": 4, "bidTimerSec": 30 },
+  "rules": [
+    { "ref": "budget-cap" },
+    { "ref": "rising-floor", "params": { "base": 40, "stepPerHint": 40 } },
+    { "ref": "slot-constraint" },
+    { "ref": "tag-synergy", "params": { "minCount": 3, "bonus": 1 } }
+  ]
+}
