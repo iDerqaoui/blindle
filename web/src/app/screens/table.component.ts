@@ -101,7 +101,10 @@ import { TimerComponent } from '../ui/timer.component';
                 <button class="btn primary" [disabled]="amount < minBid() || amount > myGold()" (click)="bid()">
                   {{ (situation() === 'my-draw' ? 'table.open' : 'table.bid') | t: { amount: amount } }}
                 </button>
-                <button class="btn" (click)="game.pass()">{{ 'table.pass' | t }}</button>
+                <button class="btn" (click)="game.pass()"
+                        [attr.title]="situation() === 'my-draw' && discardFee() ? ('table.passDrawHint' | t) : null">
+                  {{ (situation() === 'my-draw' && discardFee() ? 'table.passDraw' : 'table.pass') | t }}
+                </button>
               }
             </div>
           }
@@ -147,6 +150,9 @@ export class TableComponent {
   readonly iLead = computed(() => this.leader()?.playerId === this.game.myId());
   readonly myGold = computed(() => this.game.room()?.players.find(p => p.id === this.game.myId())?.budget ?? 0);
   readonly minBid = computed(() => (this.leader()?.amount ?? 0) + 10);
+
+  /** Jeter une carte coûte de l'or au piocheur (règle discard-fee). */
+  readonly discardFee = computed(() => this.game.room()?.rules.includes('discard-fee') ?? false);
 
   /** Ce que la table raconte en ce moment. */
   readonly situation = computed(() => {

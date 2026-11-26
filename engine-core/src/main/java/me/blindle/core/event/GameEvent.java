@@ -44,9 +44,21 @@ public sealed interface GameEvent {
         }
     }
 
-    record LotWon(String playerId, int price) implements GameEvent {
+    /** @param sellerId vendeur du lot (ex. le piocheur), null si la banque vend */
+    record LotWon(String playerId, int price, String sellerId) implements GameEvent {
+        public LotWon(String playerId, int price) {
+            this(playerId, price, null);
+        }
+
         public GameHook hook() {
             return GameHook.ON_LOT_WON;
+        }
+    }
+
+    /** Lot invendu, parti à la défausse. @param sellerId vendeur du lot, null si la banque vend */
+    record LotDiscarded(int round, String sellerId) implements GameEvent {
+        public GameHook hook() {
+            return GameHook.ON_LOT_DISCARDED;
         }
     }
 

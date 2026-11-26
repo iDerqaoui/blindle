@@ -40,6 +40,12 @@ public interface BidMode extends BidResolver {
     }
 
     /** La carte gagnée est-elle posée d'office dans l'équipe (sans choix de slot) ? */
+    /** Le vendeur d'un lot est son piocheur, s'il y en a un. */
+    @Override
+    default String sellerId(GameState state) {
+        return drawerId(state);
+    }
+
     default boolean autoPlace() {
         return false;
     }

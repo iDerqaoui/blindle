@@ -24,6 +24,10 @@ public final class BotViews {
     }
 
     public static BotView of(GameState s, String botId, BidMode mode) {
+        return of(s, botId, mode, null);
+    }
+
+    public static BotView of(GameState s, String botId, BidMode mode, String verdictMode) {
         PlayerState me = s.player(botId).orElseThrow();
         LotState lot = s.lot();
         List<Hint> hints = new ArrayList<>();
@@ -66,6 +70,6 @@ public final class BotViews {
         long botSeed = GameRandom.derive(s.seed(), "bot:" + botId).nextLong();
         return new BotView(botId, botSeed, mode.id(), mode.bidsVisible(), s.roundIndex(), s.settings().rounds(),
                 me.budget(), s.settings().budget(), s.freeSlots(botId), s.slots().size(), hintLevel, maxHint,
-                hints, lotSize, floor, myBid, visible, unseen, drawn);
+                hints, lotSize, floor, myBid, visible, unseen, drawn, verdictMode);
     }
 }

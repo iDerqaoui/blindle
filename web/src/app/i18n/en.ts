@@ -72,7 +72,9 @@ export const EN: Record<string, string> = {
   'lobby.rule1': 'Players take turns drawing a card: only the drawer sees the character.',
   'lobby.rule2': 'The drawer opens the bidding; the others outbid or let it go, blind.',
   'lobby.rule3': 'The card joins the winner’s board. If nobody wants it, it goes to the trash, visible to all.',
-  'lobby.rule4points': 'Once every team of {n} is complete, the team with the most points wins (ties: most gold left).',
+  'lobby.ruleSale': 'The drawer is the seller: the winner pays the drawer. If nobody outbids the opening, the drawer keeps the card and pays the bank.',
+  'lobby.ruleDiscard': 'If nobody wants the card, it goes to the trash, visible to all, and the drawer pays 50 gold.',
+  'lobby.rule4points': 'Once every team of {n} is complete, score = card points + 1 point per 20 gold left − 25 per empty slot.',
   'lobby.rule5points': 'Points by rarity: Common 10 · Rare 20 · Epic 35 · Legendary 60. Characters are ranked by popularity or power.',
   'lobby.rule4': 'Once every team of {n} is complete, everyone votes for the best one.',
   'lobby.gold': 'Gold per player',
@@ -119,6 +121,8 @@ export const EN: Record<string, string> = {
   'table.gold': 'gold',
   'table.open': 'Open at {amount} gold',
   'table.bid': 'Bid {amount} gold',
+  'table.passDraw': 'Let it go (−50 if unsold)',
+  'table.passDrawHint': 'The others can still buy it from you. If nobody does, it goes to the trash and you pay 50 gold.',
   'table.pass': 'Let it go',
 
   // Board
@@ -143,6 +147,7 @@ export const EN: Record<string, string> = {
   'verdict.yourTeam': 'Your team',
   'results.title': 'Results',
   'results.votes': 'votes',
+  'results.pointsDetail': 'cards {cards} + gold {gold} − empty {empty}',
   'results.points': 'pts',
   'results.synergy': '+{n} synergy',
   'results.newGame': 'New game',

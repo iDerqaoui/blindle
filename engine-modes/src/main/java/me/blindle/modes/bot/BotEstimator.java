@@ -4,6 +4,8 @@ import me.blindle.core.GameRandom;
 import me.blindle.core.model.Card;
 import me.blindle.core.model.Hint;
 import me.blindle.modes.CardValuation;
+import me.blindle.modes.PointsVerdictMode;
+import me.blindle.modes.RarityPoints;
 
 import java.util.List;
 
@@ -23,15 +25,15 @@ public final class BotEstimator {
     public static double estimate(BotView v) {
         if (v.drawnCard() != null) {
             GameRandom random = GameRandom.derive(v.botSeed(), "estimate:" + v.round());
-            return CardValuation.of(v.drawnCard()) * (1 - NOISE + 2 * NOISE * random.nextDouble());
+            return value(v.drawnCard(), v) * (1 - NOISE + 2 * NOISE * random.nextDouble());
         }
         List<Card> pool = v.unseen();
         if (pool.isEmpty()) {
             return 0;
         }
-        double prior = mean(pool);
+        double prior = mean(pool, v);
         List<Card> candidates = v.lotSize() == 1 ? candidates(v) : List.of();
-        double informed = candidates.isEmpty() ? prior : mean(candidates);
+        double informed = candidates.isEmpty() ? prior : mean(candidates, v);
         double confidence = v.maxHintLevel() <= 0 ? 0 : (double) v.hintLevel() / v.maxHintLevel();
         double perCard = confidence * informed + (1 - confidence) * prior;
         GameRandom random = GameRandom.derive(v.botSeed(), "estimate:" + v.round());
@@ -56,7 +58,20 @@ public final class BotEstimator {
         return true;
     }
 
-    private static double mean(List<Card> cards) {
-        return cards.stream().mapToInt(CardValuation::of).average().orElse(0);
+    /**
+     * Valeur d'une carte en pièces pour le bot. Verdict {@code points} : {@link #GOLD_PER_RARITY_POINT}
+     * pièces par point de rareté (commune 100 … légendaire 600, à l'échelle d'un budget de 1000 pour
+     * 5 slots) ; sinon {@link CardValuation}.
+     */
+    static double value(Card card, BotView v) {
+        return PointsVerdictMode.ID.equals(v.verdictMode())
+                ? RarityPoints.of(card) * GOLD_PER_RARITY_POINT
+                : CardValuation.of(card);
+    }
+
+    static final int GOLD_PER_RARITY_POINT = 10;
+
+    private static double mean(List<Card> cards, BotView v) {
+        return cards.stream().mapToDouble(c -> value(c, v)).average().orElse(0);
     }
 }

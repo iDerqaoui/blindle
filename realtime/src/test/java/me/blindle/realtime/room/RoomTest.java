@@ -18,6 +18,8 @@ import me.blindle.realtime.view.ViewProjector;
 import me.blindle.realtime.view.Views;
 import me.blindle.rules.AntiSnipeRule;
 import me.blindle.rules.BudgetCapRule;
+import me.blindle.rules.DiscardFeeRule;
+import me.blindle.rules.SellerCollectsRule;
 import me.blindle.rules.JokerSpyRule;
 import me.blindle.rules.JokerStealRule;
 import me.blindle.rules.SlotConstraintRule;
@@ -42,7 +44,7 @@ class RoomTest {
     static final GameFactory FACTORY = new GameFactory(new ContentRegistry(""),
             new RuleCatalog(List.of(new BudgetCapRule(), new RisingFloorRule(), new JokerSpyRule(),
                     new JokerStealRule(), new TrapLotsRule(), new TagSynergyRule(), new SlotConstraintRule(),
-                    new AntiSnipeRule())),
+                    new AntiSnipeRule(), new SellerCollectsRule(), new DiscardFeeRule())),
             new ModeCatalog(List.of(new SealedBidMode(), new OpenBidMode(), new MarketBidMode(), new DrawerBidMode()),
                     List.of(new VoteVerdictMode(), new ValueVerdictMode(), new PointsVerdictMode())));
 

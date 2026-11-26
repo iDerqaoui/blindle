@@ -192,8 +192,9 @@ public final class GameEngine {
                 "bid:" + s.roundIndex() + ":" + lot.hintLevel());
         Optional<LotResult> result = resolver.resolve(lot, random);
         Tx tx = new Tx(s);
+        String seller = resolver.sellerId(s);
         if (result.isPresent()) {
-            award(tx, result.get());
+            award(tx, result.get(), seller);
         } else if (lot.hintLevel() < maxHintLevel(s)) {
             tx.to(Phase.HINT);
             revealHint(tx, lot.hintLevel() + 1);
@@ -202,6 +203,7 @@ public final class GameEngine {
             List<Card> discarded = new ArrayList<>(s.discarded());
             discarded.addAll(lot.cards());
             tx.state = tx.state.withDiscarded(discarded);
+            tx.emit(new GameEvent.LotDiscarded(s.roundIndex(), seller));
             tx.emit(new GameEvent.RoundEnded(s.roundIndex(), false));
             tx.state = tx.state.withLot(null);
             drawOrVerdict(tx);
@@ -326,7 +328,7 @@ public final class GameEngine {
         tx.emit(new GameEvent.HintRevealed(tx.state.roundIndex(), level));
     }
 
-    private void award(Tx tx, LotResult result) {
+    private void award(Tx tx, LotResult result, String sellerId) {
         PlayerState winner = tx.state.player(result.winnerId())
                 .orElseThrow(() -> new GameException("UNKNOWN_PLAYER", "Gagnant inconnu"));
         if (result.price() > winner.budget()) {
@@ -337,7 +339,7 @@ public final class GameEngine {
                 .withPlayer(winner.id(), p -> p.withBudget(p.budget() - result.price()))
                 .withLot(tx.state.lot().withWinner(winner.id(), result.price()))
                 .withLog(winner.name() + " remporte le lot pour " + result.price() + " pièces");
-        tx.emit(new GameEvent.LotWon(winner.id(), result.price()));
+        tx.emit(new GameEvent.LotWon(winner.id(), result.price(), sellerId));
     }
 
     /** Transaction locale à une action : accumule état et événements. */

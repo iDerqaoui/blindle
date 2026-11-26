@@ -53,7 +53,12 @@ import { TranslatePipe } from '../i18n/i18n';
             <ul class="rules">
               <li>{{ 'lobby.rule1' | t }}</li>
               <li>{{ 'lobby.rule2' | t }}</li>
-              <li>{{ 'lobby.rule3' | t }}</li>
+              @if (room.rules.includes('seller-collects')) { <li>{{ 'lobby.ruleSale' | t }}</li> }
+              @if (room.rules.includes('discard-fee')) {
+                <li>{{ 'lobby.ruleDiscard' | t }}</li>
+              } @else {
+                <li>{{ 'lobby.rule3' | t }}</li>
+              }
               @if (room.verdictMode === 'points') {
                 <li>{{ 'lobby.rule4points' | t: { n: room.slots.length } }}</li>
                 <li>{{ 'lobby.rule5points' | t }}</li>

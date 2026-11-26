@@ -7,6 +7,7 @@ public enum GameHook {
     ON_HINT_REVEAL,
     ON_BID_PLACED,
     ON_LOT_WON,
+    ON_LOT_DISCARDED,
     ON_CARD_REVEALED,
     ON_SLOT_ASSIGNED,
     ON_JOKER_USED,

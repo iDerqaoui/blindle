@@ -136,16 +136,21 @@ async function importUniverse(u) {
   };
   await writeFile(path.join(CONTENT_DIR, 'themes', `${theme.id}.json`), JSON.stringify(theme, null, 2) + '\n', 'utf8');
   // Mode principal « Anime Blind Bid » : le piocheur voit la carte, les autres surenchérissent à l'aveugle.
-  // Verdict aux points de rareté (PointsVerdictMode).
+  // Verdict aux points (PointsVerdictMode) ; le piocheur vend la carte (seller-collects) et paie pour la jeter (discard-fee).
   const preset = {
     id: theme.id,
     name: u.name,
-    description: 'Anime Blind Bid: only the drawer sees the character and opens the bidding; the others outbid or let it go. Each card scores by rarity.',
+    description: 'Anime Blind Bid: the drawer secretly sees the character and sells it; the others outbid blind. Score: rarity points + leftover gold − empty slots.',
     theme: theme.id,
     bidMode: 'drawer',
     verdictMode: 'points',
     settings: { budget: 1000, rounds: cards.length, teamSize: 5, hintLevels: 1, bidTimerSec: 20 },
-    rules: [{ ref: 'budget-cap' }, { ref: 'anti-snipe', params: { extendSeconds: 5 } }],
+    rules: [
+      { ref: 'budget-cap' },
+      { ref: 'anti-snipe', params: { extendSeconds: 5 } },
+      { ref: 'seller-collects' },
+      { ref: 'discard-fee', params: { amount: 50 } },
+    ],
   };
   await writeFile(path.join(CONTENT_DIR, 'presets', `${preset.id}.json`), JSON.stringify(preset, null, 2) + '\n', 'utf8');
   const count = r => cards.filter(c => c.rarity === r).length;

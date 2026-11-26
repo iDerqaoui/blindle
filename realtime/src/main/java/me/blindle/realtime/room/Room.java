@@ -317,7 +317,7 @@ public final class Room {
                         || (!mode.bidsVisible() && lot.hasActed(id)) || id.equals(leaderId(lot))) {
                     continue;
                 }
-                acted |= botActs(id, bot.getValue().decide(BotViews.of(state, id, mode)));
+                acted |= botActs(id, bot.getValue().decide(BotViews.of(state, id, mode, setup.verdictMode().id())));
             }
             if (!acted || !mode.bidsVisible()) {
                 return;

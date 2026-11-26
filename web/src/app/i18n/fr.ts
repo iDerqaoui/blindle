@@ -72,7 +72,9 @@ export const FR: Record<string, string> = {
   'lobby.rule1': 'Chaque joueur pioche à tour de rôle : lui seul voit le personnage.',
   'lobby.rule2': 'Il ouvre l’enchère, les autres surenchérissent ou laissent, à l’aveugle.',
   'lobby.rule3': 'La carte rejoint le tableau du gagnant. Si personne n’en veut, elle part à la poubelle, visible par tous.',
-  'lobby.rule4points': 'Quand toutes les équipes de {n} sont complètes, l’équipe qui a le plus de points gagne (égalité : le plus d’or restant).',
+  'lobby.ruleSale': 'Le piocheur est le vendeur : le gagnant le paie. Si personne ne dépasse son ouverture, il garde la carte et paie la banque.',
+  'lobby.ruleDiscard': 'Si personne n’en veut, la carte part à la poubelle, visible par tous, et le piocheur paie 50 d’or.',
+  'lobby.rule4points': 'Quand toutes les équipes de {n} sont complètes : score = points des cartes + 1 point par 20 d’or restant − 25 par place vide.',
   'lobby.rule5points': 'Points par rareté : Commune 10 · Rare 20 · Épique 35 · Légendaire 60. Les personnages sont classés par popularité ou puissance.',
   'lobby.rule4': 'Quand les équipes de {n} sont complètes, on vote pour la meilleure.',
   'lobby.gold': 'Or par joueur',
@@ -119,6 +121,8 @@ export const FR: Record<string, string> = {
   'table.gold': 'or',
   'table.open': 'Ouvrir à {amount} or',
   'table.bid': 'Miser {amount} or',
+  'table.passDraw': 'Laisser (−50 si invendue)',
+  'table.passDrawHint': 'Les autres peuvent encore te l’acheter. Sinon elle part à la poubelle et tu paies 50 d’or.',
   'table.pass': 'Laisser',
 
   // Tableau
@@ -143,6 +147,7 @@ export const FR: Record<string, string> = {
   'verdict.yourTeam': 'Ton équipe',
   'results.title': 'Résultats',
   'results.votes': 'voix',
+  'results.pointsDetail': 'cartes {cards} + or {gold} − vides {empty}',
   'results.points': 'pts',
   'results.synergy': '+{n} synergie',
   'results.newGame': 'Nouvelle partie',

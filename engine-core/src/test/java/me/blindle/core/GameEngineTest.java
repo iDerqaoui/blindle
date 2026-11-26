@@ -106,7 +106,7 @@ class GameEngineTest {
         assertThat(step.state().phase()).isEqualTo(Phase.DRAW);
         assertThat(step.state().roundIndex()).isEqualTo(2);
         assertThat(step.state().discarded()).containsExactly(lotCard);
-        assertThat(step.events()).first().isEqualTo(new GameEvent.RoundEnded(1, false));
+        assertThat(step.events()).containsSequence(new GameEvent.LotDiscarded(1, null), new GameEvent.RoundEnded(1, false));
     }
 
     @Test

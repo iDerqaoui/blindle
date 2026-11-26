@@ -242,6 +242,16 @@ Chaque tâche est testable seule.
   A=85, B=70, C=50, D=25). Popularité = favoris MAL en échelle log 0–100 dans l'univers. Score =
   max(popularité, puissance) + 0,25 × min. Top 40 par score, rareté par quotas fixes : 10 %
   légendaires, 20 % épiques, 30 % rares, 40 % communes (4/8/12/16), identiques pour tous les univers.
-- Verdict `points` (`PointsVerdictMode`, générique) : somme des points de rareté de l'équipe
-  (`RarityPoints` : 10 / 20 / 35 / 60) ; pièces hors score ; égalité : bonus de règles, puis or
-  restant, puis seed. `CardView.points` exposé ; total affiché sur chaque tableau.
+- Verdict `points` (`PointsVerdictMode`, générique) : points de rareté de l'équipe
+  (`RarityPoints` : 10 / 20 / 35 / 60) + 1 point par 20 pièces restantes − 25 par slot vide ;
+  égalité : bonus de règles, puis or restant, puis seed. `CardView.points` exposé.
+- Refonte de l'économie (2026-11-26), contre l'attentisme « tout laisser filer, n'acheter que les
+  légendaires » : le piocheur **vend** la carte (inspiré de *Modern Art*).
+  - `BidResolver.sellerId(state)` (par défaut null, `BidMode` → `drawerId`) ; `LotWon` porte le
+    vendeur ; nouvel événement `LotDiscarded` / hook `ON_LOT_DISCARDED` pour un lot invendu.
+  - Règle `seller-collects` : le gagnant paie le piocheur ; si le piocheur garde sa carte (personne
+    n'a dépassé son ouverture), il paie la banque.
+  - Règle `discard-fee` (`amount`, défaut 50) : le piocheur paie pour jeter une carte invendue.
+  - Bots : en verdict `points`, une carte vaut 10 pièces par point de rareté (`BotEstimator`).
+  - Les montants affichés dans les règles du salon (50, 20, 25) sont écrits dans les textes i18n :
+    à aligner si on change les paramètres.

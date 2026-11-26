@@ -18,13 +18,15 @@ import java.util.Optional;
  * @param totalSlots  taille d'une équipe
  * @param visibleBids offres visibles (mode open), vide sinon
  * @param drawnCard   carte piochée par ce bot (mode à piocheur), null sinon : seul le piocheur la voit
+ * @param verdictMode verdict de la partie (ex. {@code points}) : fixe la valeur d'une carte pour le bot
  * @param unseen      cartes du thème que personne n'a encore gagnées ni vues défaussées :
  *                    connaissance publique d'un joueur qui connaît l'univers, sans l'ordre du deck
  */
 public record BotView(String botId, long botSeed, String bidMode, boolean bidsVisible,
                       int round, int totalRounds, int budget, int startBudget, int freeSlots, int totalSlots,
                       int hintLevel, int maxHintLevel, List<Hint> hints, int lotSize, int floorPrice,
-                      Integer myBid, List<Bid> visibleBids, List<Card> unseen, Card drawnCard) {
+                      Integer myBid, List<Bid> visibleBids, List<Card> unseen, Card drawnCard,
+                      String verdictMode) {
 
     public BotView {
         hints = List.copyOf(hints);

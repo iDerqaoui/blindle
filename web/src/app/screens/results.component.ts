@@ -40,7 +40,8 @@ import { BoardComponent } from '../ui/board.component';
             @for (id of result.ranking; track id; let i = $index) {
               <li [class.winner]="i === 0">
                 <span>{{ medal(i) }} {{ game.playerName(id) }}</span>
-                <span>{{ result.scores[id] }} {{ unit() | t }}@if (bonusOf(id) > 0) {
+                <span>{{ result.scores[id] }} {{ unit() | t }}@if (pointsDetail(id); as d) {
+                  <small class="muted"> · {{ 'results.pointsDetail' | t: d }}</small> }@if (bonusOf(id) > 0) {
                   <small class="muted"> · {{ 'results.synergy' | t: { n: bonusOf(id) } }}</small> }</span>
               </li>
             }
@@ -68,6 +69,18 @@ export class ResultsComponent {
     const score = room.result.scores[me.id] ?? 0;
     return { value, spent: value - score, score };
   });
+
+  /** Détail du verdict « points » : cartes + or restant / 20 − 25 par slot vide (calcul serveur : PointsVerdictMode). */
+  pointsDetail(playerId: string): { cards: number; gold: number; empty: number } | null {
+    const room = this.game.room();
+    const p = room?.players.find(x => x.id === playerId);
+    if (room?.verdictMode !== 'points' || !p) {
+      return null;
+    }
+    const cards = p.team.reduce((sum, t) => sum + (t.card?.points ?? 0), 0);
+    const filled = p.team.filter(t => t.card).length;
+    return { cards, gold: Math.floor(Math.max(0, p.budget) / 20), empty: 25 * Math.max(0, room.slots.length - filled) };
+  }
 
   readonly board = computed(() =>
     this.game.daily().find(d => d.presetId === this.game.room()?.presetId)?.leaderboard ?? null);
