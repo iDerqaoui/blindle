@@ -59,5 +59,5 @@ Architecture et protocole STOMP proposés à l'étape 0 : `docs/ARCHITECTURE.md`
 
 ## Étape en cours
 
-Étape 4 terminée (contenu JSON validé au démarrage, thème manga-shonen, preset manga-classique). Prochaine : étape 5 — `realtime` (voir `docs/PROJECT.md` §11 et §12).
+Étape 5 terminée (rooms, STOMP, timers serveur, vues filtrées, partie à 3 clients testée). Prochaine : étape 6 — front Angular (voir `docs/PROJECT.md` §11 et §12).
 Mettre à jour cette ligne à chaque étape terminée.

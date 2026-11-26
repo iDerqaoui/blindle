@@ -61,20 +61,21 @@ joueur par la session (`Principal` attribué au `join`), jamais par un champ du 
 |---|---|---|
 | `/app/room.create` | `{ name, presetId }` | Crée une room, renvoie le code |
 | `/app/room.join` | `{ code, name }` | Rejoint une room |
-| `/app/room/{code}/settings` | `{ budget?, rounds?, teamSize? }` | Hôte seulement, en LOBBY |
+| `/app/room/{code}/sync` | `{}` | Renvoie au joueur ses deux vues (après abonnement au topic) |
+| `/app/room/{code}/settings` | `{ budget?, rounds?, bidTimerSec? }` | Hôte seulement, en LOBBY |
 | `/app/room/{code}/start` | `{}` | Hôte seulement |
 | `/app/room/{code}/bid` | `{ amount }` | Offre sur le lot courant |
 | `/app/room/{code}/pass` | `{}` | Passe sur ce palier |
 | `/app/room/{code}/slot` | `{ slotId }` | Place la carte gagnée |
-| `/app/room/{code}/joker` | `{ jokerId, target? }` | Active un joker |
+| `/app/room/{code}/joker` | `{ jokerId, target? }` | Active un joker (étape 7) |
 | `/app/room/{code}/vote` | `{ teamOwnerId }` | Vote (verdict `vote`) |
 
 ### Serveur → client
 
 | Destination | Contenu |
 |---|---|
-| `/topic/room/{code}` | `RoomView` public : phase, joueurs (pseudo, budget restant, équipe), indice courant, prix plancher, `deadline` (Instant, heure de fin), nombre d'offres reçues (pas leur montant en `sealed`), journal |
-| `/user/queue/room` | `PlayerView` privé : ma dernière offre, mes jokers, indices privés (`joker-spy`), actions possibles |
+| `/topic/room/{code}` | `RoomView` public (`type: "room"`) : phase, joueurs (pseudo, budget restant, équipe, a agi ou non), indices révélés, prix plancher, `deadline` et `serverTime` (epoch ms), nombre d'offres reçues (pas leur montant en `sealed`), journal, résultat |
+| `/user/queue/room` | `PlayerView` privé (`type: "player"`) : mon id, mon offre, passe, `canBid`, `mustPlace`, slots libres, mon vote. Reçoit aussi la `RoomView` lors d'un `sync` |
 | `/user/queue/errors` | `{ code, message }` : offre rejetée, action interdite |
 
 Chaque message porte `type` et `version` (numéro monotone de l'état) pour que le client
@@ -113,3 +114,17 @@ Chaque tâche est testable seule.
 ## 5. Points à trancher
 
 - **Dépôt GitLab** : le dépôt git est local ; ajouter le remote GitLab.
+
+## 6. Implémentation temps réel (étape 5)
+
+- `Room` (realtime) tient l'état courant et enchaîne les phases toute seule : tirage, indice 1,
+  enchères ; palier clos dès que tous les joueurs éligibles ont misé ou passé, sinon à l'heure
+  de fin ; carte révélée puis placement par le gagnant (automatique après
+  `blindle.room.slot-timeout-sec`, 20 s) ; verdict par vote (clos quand tous ont voté ou après
+  `blindle.room.vote-timeout-sec`, 60 s).
+- Dates envoyées en epoch ms (`deadline`, `serverTime`) : le client calcule le temps restant
+  en corrigeant l'écart entre son horloge et `serverTime`.
+- Identité : `PlayerHandshakeHandler` attribue un id serveur à chaque connexion WebSocket.
+  Une reconnexion crée un nouveau joueur (reprise de session : plus tard).
+- Rooms en mémoire, code de 4 lettres, purge après 2 h d'inactivité.
+- `blindle.room.min-players` (défaut 3) peut être abaissé en dev.
