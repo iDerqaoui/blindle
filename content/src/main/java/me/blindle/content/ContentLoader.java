@@ -132,23 +132,7 @@ public final class ContentLoader {
                 errors.add(file + " : carte « " + card.id() + " » a une image alors que imagePolicy vaut « none »");
             }
         }
-        checkRights(file, theme.rights(), errors);
-    }
-
-    /** Combinaisons de droits incohérentes (§8). */
-    static void checkRights(String file, Theme.Rights rights, List<String> errors) {
-        boolean isPublic = "public".equals(rights.visibility());
-        String profile = rights.profile();
-        String images = rights.imagePolicy();
-        if (isPublic && "any".equals(images) && !"free".equals(profile)) {
-            errors.add(file + " : profil « " + profile + " » public avec imagePolicy « any » interdit");
-        }
-        if ("private".equals(profile) && isPublic) {
-            errors.add(file + " : un thème au profil « private » ne peut pas être public");
-        }
-        if ("fictional-ip".equals(profile) && rights.channels().contains("discord")) {
-            errors.add(file + " : un thème « fictional-ip » reste sur le canal web");
-        }
+        RightsPolicy.check(theme.rights()).forEach(e -> errors.add(file + " : " + e));
     }
 
     private void checkPreset(String file, Preset preset, Map<String, Theme> themes, List<String> errors) {

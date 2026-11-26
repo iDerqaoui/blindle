@@ -1,6 +1,8 @@
 package me.blindle.realtime;
 
 import me.blindle.core.GameEngine;
+import me.blindle.realtime.channel.ChannelAuthenticator;
+import me.blindle.realtime.channel.WebChannelAuthenticator;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,6 +17,12 @@ public class RealtimeConfig {
     @Bean
     public Clock clock() {
         return Clock.systemUTC();
+    }
+
+    /** Canal de chaque connexion : web seulement tant que l'authentification Discord (étape 11) n'existe pas. */
+    @Bean
+    public ChannelAuthenticator channelAuthenticator() {
+        return new WebChannelAuthenticator();
     }
 
     @Bean

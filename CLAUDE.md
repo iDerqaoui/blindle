@@ -61,7 +61,7 @@ Architecture et protocole STOMP proposés à l'étape 0 : `docs/ARCHITECTURE.md`
 
 ## Étape en cours
 
-Étape 9 terminée (défi du jour `market` + verdict `value` + classement + partage emoji ; bots `BotStrategy`, 5 profils). Prochaine : étape 10 — droits et canaux (voir `docs/PROJECT.md` §11 et §12).
+Étape 10 terminée (droits validés, canal déduit de l'authentification, filtrage, retrait à chaud). Prochaine : étape 11 — Discord Activity (voir `docs/PROJECT.md` §11 et §12).
 Mettre à jour cette ligne à chaque étape terminée.
 
 ## Notes de passation (2026-11-26)

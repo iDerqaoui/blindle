@@ -188,3 +188,4 @@ h3 { font-size: 1rem; margin-top: 16px; }
 .score-line .big { font-size: 1.5rem; color: var(--accent); }
 .miss { color: var(--danger); margin: 0; }
 .bot-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 8px 0; }
+.disclaimer { font-size: 0.8rem; color: var(--muted); font-style: italic; }

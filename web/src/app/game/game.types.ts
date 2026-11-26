@@ -103,6 +103,8 @@ export interface PresetSummary {
   bidMode: string;
   verdictMode: string;
   daily: boolean;
+  /** Avertissement de droits du thème (§8), affiché aux joueurs. */
+  disclaimer: string | null;
   settings: { budget: number; rounds: number; teamSize: number; hintLevels: number; bidTimerSec: number };
 }
 

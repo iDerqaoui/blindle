@@ -1,5 +1,6 @@
 package me.blindle.realtime.room;
 
+import me.blindle.content.Preset;
 import me.blindle.core.GameEngine;
 import me.blindle.core.GameException;
 import me.blindle.core.Phase;
@@ -88,6 +89,10 @@ public final class Room {
 
     public String code() {
         return code;
+    }
+
+    public Preset preset() {
+        return setup.preset();
     }
 
     public Instant lastActivity() {

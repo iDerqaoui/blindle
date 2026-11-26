@@ -13,6 +13,7 @@ import { GameService } from '../game/game.service';
         <p class="room-code">{{ room.code }}</p>
         <button class="btn small" (click)="copy(room.code)">{{ copied() ? 'Copié !' : 'Copier le code' }}</button>
         <p class="muted">{{ room.presetName }} · {{ room.themeName }}</p>
+        @if (disclaimer(); as d) { <p class="disclaimer">{{ d }}</p> }
       </section>
 
       <div class="columns">
@@ -57,6 +58,8 @@ export class LobbyComponent {
   readonly game = inject(GameService);
   readonly isHost = computed(() => this.game.me()?.host ?? false);
   readonly copied = signal(false);
+  readonly disclaimer = computed(() =>
+    this.game.presets().find(p => p.id === this.game.room()?.presetId)?.disclaimer ?? null);
   budget = 1000;
   rounds = 10;
   timer = 30;

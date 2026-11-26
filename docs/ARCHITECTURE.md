@@ -82,6 +82,7 @@ joueur par la session (`Principal` attribué au `join`), jamais par un champ du 
 | `/user/queue/errors` | `{ code, message }` : offre rejetée, action interdite |
 | `GET /api/daily` (REST) | Défis du jour : preset, thème, date, nombre de parties, top 10 du classement |
 | `GET /api/bots` (REST) | Profils de bots : `{ profile, label }` |
+| `/api/admin/themes[/{theme}/channels/{canal}/block]` (REST) | Admin, en-tête `X-Admin-Token` = `blindle.admin.token` : état (GET), retrait (POST), rétablissement (DELETE). 404 si aucun jeton n'est configuré |
 
 Chaque message porte `type` et `version` (numéro monotone de l'état) pour que le client
 ignore les messages obsolètes. Les vues sont calculées par `ViewProjector` côté serveur
@@ -200,3 +201,22 @@ Chaque tâche est testable seule.
 - Les bots ne votent pas : les presets « Solo · … contre bots » (`solo-manga-bots`,
   `solo-pays-bots`) utilisent le verdict `value`.
 - `GameRandom.nextLong()` ajouté (générique) pour dériver la seed des bots.
+
+## 10. Droits et canaux (étape 10)
+
+- `rights` est obligatoire (schéma). `RightsPolicy` (content) refuse les combinaisons
+  incohérentes : `imagePolicy: any` réservé au profil `private` ; `real-people` sans photos
+  (`generic-only` ou `none`) ; `fictional-ip` et `real-people` sur le web seulement, avec
+  `disclaimer` et `takedownContact` ; tout thème public a un `takedownContact` ; `private`
+  jamais public ni sur Discord. Un preset sans `channels` hérite de ceux de son thème, sinon il
+  ne peut que les restreindre.
+- **Canal déduit de l'authentification** : `ChannelAuthenticator` est appelé à la poignée de main
+  WebSocket (le canal est porté par le `PlayerPrincipal`) et sur les appels REST. Aujourd'hui
+  `WebChannelAuthenticator` répond toujours `web` ; l'étape 11 le remplacera par un
+  authentificateur Discord. Aucun champ client n'entre en jeu.
+- `ChannelAccess` : canaux effectifs = canaux du preset (ou du thème) − retraits à chaud.
+  Vérifié à la création de room, au défi du jour et à **chaque `join`** (un joueur Discord ne
+  rejoint pas une room web par son code). `/api/presets` et `/api/daily` sont filtrés.
+- Retrait à chaud : API admin ci-dessus, ou `blindle.rights.blocked=theme:canal,…` au démarrage.
+  Retraits en mémoire ; les parties en cours vont à leur terme, plus personne n'y entre.
+- `visibility` est validée mais pas encore exploitée (toutes les rooms sont sur code).

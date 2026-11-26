@@ -1,5 +1,6 @@
 package me.blindle.realtime;
 
+import me.blindle.realtime.channel.ChannelAuthenticator;
 import me.blindle.realtime.stomp.PlayerHandshakeHandler;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
@@ -18,15 +19,18 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final String[] allowedOrigins;
+    private final ChannelAuthenticator channels;
 
-    public WebSocketConfig(@Value("${blindle.allowed-origins:http://localhost:*}") String[] allowedOrigins) {
+    public WebSocketConfig(@Value("${blindle.allowed-origins:http://localhost:*}") String[] allowedOrigins,
+                           ChannelAuthenticator channels) {
         this.allowedOrigins = allowedOrigins;
+        this.channels = channels;
     }
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
-                .setHandshakeHandler(new PlayerHandshakeHandler())
+                .setHandshakeHandler(new PlayerHandshakeHandler(channels))
                 .setAllowedOriginPatterns(allowedOrigins);
     }
 
