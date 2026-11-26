@@ -73,3 +73,10 @@ Mettre à jour cette ligne à chaque étape terminée.
 - Reconnexion = nouveau joueur (pas de reprise de session) ; rooms en mémoire.
 - Défi du jour rejouable à volonté (pas de compte) ; classement en mémoire. Équilibrage du prix du marché et des bots à ajuster en jouant.
 - Dépôt local uniquement : ajouter le remote GitLab puis `git push -u origin main`.
+- Prochaines étapes convenues (2026-11-26), dans l'ordre :
+  1. Mise en ligne sur un seul serveur : front construit embarqué dans le jar (ou Nginx devant), image Docker, HTTPS/WSS, `blindle.allowed-origins`, guide de déploiement ; lancer `node tools/import-anilist.mjs` sur le serveur.
+  2. Reconnexion (jeton qui rend sa place au joueur) et passation d'hôte quand l'hôte part.
+  3. Snapshots des rooms dans Redis (survivre aux redémarrages).
+  4. Classement du jour et retraits de thèmes dans un stockage partagé (Redis / PostgreSQL).
+  5. Si la charge l'exige : une room = un serveur propriétaire, table room → serveur dans Redis.
+- Avant toute ouverture publique : les univers anime (profil `private`, images AniList) sont réservés au jeu entre amis (§8) ; protéger l'accès ou changer d'images.
