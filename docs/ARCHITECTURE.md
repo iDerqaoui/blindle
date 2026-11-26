@@ -230,10 +230,18 @@ Chaque tâche est testable seule.
   `RoomView.trash`). Gagnée : révélation 4 s puis pose automatique dans le tableau.
 - `BidMode.drawerId(state)` et `BidMode.autoPlace()` : extensions génériques ; les vues masquent
   les indices quand un piocheur existe. La partie se termine dès que toutes les équipes sont pleines.
-- Contenu : `tools/import-anilist.mjs` génère un thème + un preset par univers depuis l'API
-  publique AniList (Jikan était injoignable). Images en URL uniquement, fichiers
+- Contenu : `tools/import-anime.mjs` génère un thème + un preset par univers depuis Tenrai
+  (données MyAnimeList, successeur de Jikan ; remplace AniList le 2026-11-26). Images en URL uniquement, fichiers
   `content/{themes,presets}/anime-*.json` ignorés par git, profil `private`, web seulement.
   Champ de thème optionnel `art` (affiche, bannière, couleur) pour le dos de carte.
 - Front refait : barre du haut (code, univers, Quitter avec confirmation), accueil par affiches
   d'univers, salon avec bannière, table (pioche animée, retournement, enchère, tableaux de 5,
   poubelle en modale), vote sur les tableaux illustrés. Minimum de joueurs par défaut : 2.
+- Rareté « populaire OU puissant » (2026-11-26) : `content/curation/anime-<univers>.json` (commité)
+  liste les personnages retenus, leur nom d'affichage et un rang de puissance S/A/B/C/D (S=100,
+  A=85, B=70, C=50, D=25). Popularité = favoris MAL en échelle log 0–100 dans l'univers. Score =
+  max(popularité, puissance) + 0,25 × min. Top 40 par score, rareté par quotas fixes : 10 %
+  légendaires, 20 % épiques, 30 % rares, 40 % communes (4/8/12/16), identiques pour tous les univers.
+- Verdict `points` (`PointsVerdictMode`, générique) : somme des points de rareté de l'équipe
+  (`RarityPoints` : 10 / 20 / 35 / 60) ; pièces hors score ; égalité : bonus de règles, puis or
+  restant, puis seed. `CardView.points` exposé ; total affiché sur chaque tableau.

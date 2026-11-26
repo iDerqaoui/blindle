@@ -1,0 +1,19 @@
+{
+  "universe": "dragon-ball",
+  "note": "Dragon Ball, Z et Super (séries). S : dieux, anges et combattants de ce niveau (Goku Ultra Instinct, Vegeta Ultra Ego, Gohan Beast, Freezer Black).",
+  "characters": [
+    [246, "Son Goku", "S"], [913, "Vegeta", "S"], [2093, "Son Gohan", "S"], [76348, "Beerus", "S"], [76346, "Whis", "S"],
+    [150769, "Jiren", "S"], [141140, "Zeno", "S"], [3694, "Frieza", "S"], [170671, "Vegito", "S"], [135265, "Vados", "S"],
+    [150922, "Grand Priest", "S"],
+    [914, "Piccolo", "A"], [143844, "Future Trunks", "A"], [141729, "Goku Black", "A"], [143154, "Zamasu", "A"],
+    [170677, "Fused Zamasu", "A"], [138959, "Hit", "A"], [3908, "Cell", "A"], [1012, "Majin Buu", "A"],
+    [170676, "Gotenks", "A"], [2147, "Android 17", "A"], [157075, "Kefla", "A"],
+    [2707, "Trunks", "B"], [2551, "Son Goten", "B"], [4318, "Android 18", "B"], [6122, "Bardock", "B"],
+    [150753, "Caulifla", "B"], [151307, "Kale", "B"], [2099, "Android 16", "B"], [3182, "Arale Norimaki", "B"],
+    [9392, "Uub", "B"],
+    [2159, "Krillin", "C"], [5499, "Tien Shinhan", "C"], [6167, "Master Roshi", "C"], [6155, "Raditz", "C"],
+    [5224, "Nappa", "C"], [6134, "Captain Ginyu", "C"], [9767, "King Piccolo", "C"], [3168, "Pan", "C"], [6106, "Mr. Popo", "C"],
+    [4014, "Yamcha", "D"], [2131, "Mercenary Tao", "D"], [9377, "Mr. Satan", "D"], [678, "Bulma", "D"], [2102, "Chi-Chi", "D"],
+    [2111, "Videl", "D"], [2105, "Launch", "D"], [6273, "Dende", "D"]
+  ]
+}

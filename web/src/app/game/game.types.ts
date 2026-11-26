@@ -14,6 +14,8 @@ export interface CardView {
   stats: Record<string, number>;
   /** Valeur en pièces (verdict « value »). */
   value: number;
+  /** Points de rareté (verdict « points »). */
+  points: number;
   /** Image du personnage (thèmes illustrés), sinon null. */
   image: string | null;
 }

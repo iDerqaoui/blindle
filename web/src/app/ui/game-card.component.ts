@@ -29,7 +29,9 @@ import { TranslatePipe } from '../i18n/i18n';
             }
             <div class="gcard-caption">
               <span class="gcard-name">{{ c.name }}</span>
-              @if (c.rarity && size() !== 'xs') { <span class="gcard-rarity">{{ 'rarity.' + c.rarity | t }}</span> }
+              @if (c.rarity && size() !== 'xs') {
+                <span class="gcard-rarity">{{ 'rarity.' + c.rarity | t }} · {{ 'card.points' | t: { n: c.points } }}</span>
+              }
             </div>
           }
         </div>

@@ -54,7 +54,12 @@ import { TranslatePipe } from '../i18n/i18n';
               <li>{{ 'lobby.rule1' | t }}</li>
               <li>{{ 'lobby.rule2' | t }}</li>
               <li>{{ 'lobby.rule3' | t }}</li>
-              <li>{{ 'lobby.rule4' | t: { n: room.slots.length } }}</li>
+              @if (room.verdictMode === 'points') {
+                <li>{{ 'lobby.rule4points' | t: { n: room.slots.length } }}</li>
+                <li>{{ 'lobby.rule5points' | t }}</li>
+              } @else {
+                <li>{{ 'lobby.rule4' | t: { n: room.slots.length } }}</li>
+              }
             </ul>
           }
           @if (isHost()) {

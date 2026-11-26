@@ -1,0 +1,19 @@
+{
+  "universe": "naruto",
+  "note": "Puissance à la fin de Shippuden (4e grande guerre). S : niveau Rikudo, Kaguya, Madara.",
+  "characters": [
+    [17, "Naruto Uzumaki", "S"], [13, "Sasuke Uchiha", "S"], [53901, "Madara Uchiha", "S"], [12464, "Hashirama Senju", "S"],
+    [108297, "Kaguya Otsutsuki", "S"], [2910, "Obito Uchiha", "S"],
+    [14, "Itachi Uchiha", "A"], [85, "Kakashi Hatake", "A"], [2535, "Minato Namikaze", "A"], [3180, "Pain", "A"],
+    [2423, "Jiraiya", "A"], [307, "Might Guy", "A"], [12465, "Tobirama Senju", "A"], [7571, "Hiruzen Sarutobi", "A"],
+    [2455, "Orochimaru", "A"], [18473, "Killer Bee", "A"], [7407, "Kurama", "A"], [2405, "Kabuto Yakushi", "A"],
+    [22893, "Shisui Uchiha", "A"], [2767, "Tsunade", "A"],
+    [1662, "Gaara", "B"], [2672, "Kisame Hoshigaki", "B"], [3179, "Konan", "B"], [1902, "Deidara", "B"], [1900, "Sasori", "B"],
+    [3178, "Kakuzu", "B"], [145, "Sakura Haruno", "B"], [7302, "Kushina Uzumaki", "B"], [23424, "Danzo Shimura", "B"],
+    [2006, "Yamato", "B"], [23478, "Mei Terumi", "B"], [103209, "Might Dai", "B"],
+    [2792, "Hidan", "C"], [3438, "Kimimaro", "C"], [728, "Zabuza Momochi", "C"], [2039, "Haku", "C"], [306, "Rock Lee", "C"],
+    [1694, "Neji Hyuga", "C"], [2007, "Shikamaru Nara", "C"], [1555, "Hinata Hyuga", "C"], [4775, "Asuma Sarutobi", "C"],
+    [2174, "Temari", "C"], [1901, "Sai", "C"], [2008, "Choji Akimichi", "C"], [1903, "Suigetsu Hozuki", "C"],
+    [3495, "Kiba Inuzuka", "D"], [3710, "Tenten", "D"], [2009, "Ino Yamanaka", "D"], [2011, "Iruka Umino", "D"]
+  ]
+}

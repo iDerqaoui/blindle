@@ -1,0 +1,19 @@
+{
+  "universe": "demon-slayer",
+  "note": "Puissance au combat final (château de l'Infini). S : Muzan, Yoriichi, Kokushibo. A : Piliers et Lunes supérieures.",
+  "characters": [
+    [151156, "Muzan Kibutsuji", "S"], [174159, "Yoriichi Tsugikuni", "S"], [174145, "Kokushibo", "S"],
+    [170152, "Doma", "A"], [174147, "Akaza", "A"], [151146, "Gyomei Himejima", "A"], [151149, "Sanemi Shinazugawa", "A"],
+    [146735, "Giyu Tomioka", "A"], [151147, "Muichiro Tokito", "A"], [151148, "Obanai Iguro", "A"],
+    [151145, "Mitsuri Kanroji", "A"], [151143, "Kyojuro Rengoku", "A"], [151144, "Tengen Uzui", "A"], [146156, "Tanjiro Kamado", "A"],
+    [146736, "Shinobu Kocho", "B"], [146158, "Zenitsu Agatsuma", "B"], [146159, "Inosuke Hashibira", "B"],
+    [146157, "Nezuko Kamado", "B"], [151142, "Kanao Tsuyuri", "B"], [170070, "Genya Shinazugawa", "B"],
+    [174150, "Gyutaro", "B"], [171967, "Rui", "B"], [174148, "Hantengu", "B"], [174149, "Gyokko", "B"], [174120, "Nakime", "B"],
+    [173526, "Kaigaku", "B"], [173733, "Kanae Kocho", "B"],
+    [174151, "Daki", "C"], [173936, "Enmu", "C"], [151157, "Tamayo", "C"], [151158, "Yushiro", "C"],
+    [151141, "Sakonji Urokodaki", "C"], [169779, "Sabito", "C"], [172067, "Jigoro Kuwajima", "C"], [170248, "Susamaru", "C"],
+    [172089, "Kyogai", "C"], [172124, "Tanjuro Kamado", "C"],
+    [169813, "Makomo", "D"], [151150, "Kagaya Ubuyashiki", "D"], [170254, "Hotaru Haganezuka", "D"], [173537, "Aoi Kanzaki", "D"],
+    [204046, "Suma", "D"]
+  ]
+}

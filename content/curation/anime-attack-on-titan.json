@@ -1,0 +1,17 @@
+{
+  "universe": "attack-on-titan",
+  "note": "Puissance au dénouement. S : Titan Originel et Levi. A : détenteurs des Neuf Titans au sommet, Mikasa.",
+  "characters": [
+    [40882, "Eren Yeager", "S"], [45627, "Levi Ackerman", "S"],
+    [142314, "Zeke Yeager", "A"], [40881, "Mikasa Ackerman", "A"], [46484, "Reiner Braun", "A"], [46490, "Annie Leonhart", "A"],
+    [46488, "Bertolt Hoover", "A"], [46494, "Armin Arlert", "A"], [146020, "Frieda Reiss", "A"],
+    [150596, "Pieck Finger", "B"], [150594, "Porco Galliard", "B"], [106521, "Kenny Ackerman", "B"], [46496, "Erwin Smith", "B"],
+    [71479, "Ymir", "B"], [62477, "Grisha Yeager", "B"], [191292, "Lara Tybur", "B"], [71119, "Mike Zacharias", "B"],
+    [71121, "Hange Zoë", "C"], [46498, "Jean Kirstein", "C"], [45887, "Sasha Blouse", "C"], [149205, "Gabi Braun", "C"],
+    [150103, "Falco Grice", "C"], [149624, "Floch Forster", "C"], [62501, "Petra Ral", "C"], [161893, "Yelena", "C"],
+    [71687, "Oluo Bozado", "C"], [150105, "Theo Magath", "C"], [71481, "Nanaba", "C"], [150104, "Colt Grice", "C"],
+    [62481, "Historia Reiss", "D"], [46486, "Connie Springer", "D"], [62479, "Marco Bott", "D"], [86017, "Hitch Dreyse", "D"],
+    [62485, "Dot Pyxis", "D"], [46492, "Hannes", "D"], [84707, "Rico Brzenska", "D"], [187041, "Onyankopon", "D"],
+    [157315, "Willy Tybur", "D"], [84305, "Keith Shadis", "D"], [166643, "Niccolo", "D"], [62475, "Carla Yeager", "D"]
+  ]
+}

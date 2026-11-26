@@ -55,7 +55,7 @@ Jeu d'enchères à l'aveugle multijoueur en ligne (3 à 8 joueurs, ou solo contr
 - Jar exécutable : `mvn clean install -DskipTests` puis `java -jar app/target/app-0.1.0-SNAPSHOT.jar --blindle.content.dir=content` (le `clean` évite un jar embarquant d'anciens modules)
 - Front : `cd web && npm install && npm start` → http://localhost:4200 (proxy `/api` et `/ws` vers 8080) ; build : `npx ng build`
 - Minimum de joueurs par défaut : 2 ; solo : `--blindle.room.min-players=1`
-- Thèmes anime illustrés (non commités) : `node tools/import-anilist.mjs`
+- Thèmes anime illustrés (non commités) : `node tools/import-anime.mjs` (Tenrai/MyAnimeList + rangs de puissance `content/curation/`)
 
 Java 17 retenu (décision du 2026-11-26) : pas de pattern matching dans `switch` ni de record patterns.
 
@@ -63,7 +63,7 @@ Architecture et protocole STOMP proposés à l'étape 0 : `docs/ARCHITECTURE.md`
 
 ## Étape en cours
 
-Étape 10 terminée. Hors feuille de route : mode principal « Anime Blind Bid » (mode `drawer`, thèmes AniList privés, front refait — voir ARCHITECTURE §11). Prochaine : retours de test du mode, puis étape 11 — Discord Activity (voir `docs/PROJECT.md` §11 et §12).
+Étape 10 terminée. Hors feuille de route : mode principal « Anime Blind Bid » (mode `drawer`, thèmes MyAnimeList privés via Tenrai, rareté populaire-ou-puissant et verdict aux points, front refait — voir ARCHITECTURE §11). Prochaine : retours de test du mode, puis étape 11 — Discord Activity (voir `docs/PROJECT.md` §11 et §12).
 Mettre à jour cette ligne à chaque étape terminée.
 
 ## Notes de passation (2026-11-26)
@@ -72,11 +72,11 @@ Mettre à jour cette ligne à chaque étape terminée.
 - À relire avant diffusion publique : cartes pièges du thème manga et les 40 cartes de `pays-du-monde`.
 - Reconnexion = nouveau joueur (pas de reprise de session) ; rooms en mémoire.
 - Défi du jour rejouable à volonté (pas de compte) ; classement en mémoire. Équilibrage du prix du marché et des bots à ajuster en jouant.
-- Dépôt local uniquement : ajouter le remote GitLab puis `git push -u origin main`.
+- Dépôt : GitHub `iDerqaoui/blindle` (origin). Hébergement de test : Cloudflare Tunnel (voir `docs/DEPLOY.md`).
 - Prochaines étapes convenues (2026-11-26), dans l'ordre :
-  1. Mise en ligne sur un seul serveur : front construit embarqué dans le jar (ou Nginx devant), image Docker, HTTPS/WSS, `blindle.allowed-origins`, guide de déploiement ; lancer `node tools/import-anilist.mjs` sur le serveur.
+  1. Mise en ligne sur un seul serveur : front construit embarqué dans le jar (ou Nginx devant), image Docker, HTTPS/WSS, `blindle.allowed-origins`, guide de déploiement ; lancer `node tools/import-anime.mjs` sur le serveur.
   2. Reconnexion (jeton qui rend sa place au joueur) et passation d'hôte quand l'hôte part.
   3. Snapshots des rooms dans Redis (survivre aux redémarrages).
   4. Classement du jour et retraits de thèmes dans un stockage partagé (Redis / PostgreSQL).
   5. Si la charge l'exige : une room = un serveur propriétaire, table room → serveur dans Redis.
-- Avant toute ouverture publique : les univers anime (profil `private`, images AniList) sont réservés au jeu entre amis (§8) ; protéger l'accès ou changer d'images.
+- Avant toute ouverture publique : les univers anime (profil `private`, images MyAnimeList) sont réservés au jeu entre amis (§8) ; protéger l'accès ou changer d'images.

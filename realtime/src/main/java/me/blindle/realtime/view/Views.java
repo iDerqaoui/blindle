@@ -48,7 +48,7 @@ public final class Views {
 
     /** @param value valeur en pièces (verdict « value »), dérivée des stats et de la rareté publiques */
     public record CardView(String id, String name, Set<String> tags, String rarity, Map<String, Integer> stats,
-                           int value, String image) {
+                           int value, int points, String image) {
     }
 
     public record HintView(int level, String type, String value) {

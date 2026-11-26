@@ -1,0 +1,19 @@
+{
+  "universe": "my-hero-academia",
+  "note": "Puissance au combat final. S : All Might (au sommet), All For One, Shigaraki.",
+  "characters": [
+    [117921, "All Might", "S"], [141358, "All For One", "S"], [122103, "Tomura Shigaraki", "S"],
+    [117909, "Izuku Midoriya", "A"], [117911, "Katsuki Bakugo", "A"], [118489, "Shoto Todoroki", "A"], [141624, "Endeavor", "A"],
+    [162597, "Hawks", "A"], [149296, "Mirio Togata", "A"], [148286, "Overhaul", "A"], [139262, "Dabi", "A"],
+    [162596, "Mirko", "A"], [202728, "Star and Stripe", "A"],
+    [117915, "Shota Aizawa", "B"], [118487, "Eijiro Kirishima", "B"], [135879, "Himiko Toga", "B"], [149910, "Tamaki Amajiki", "B"],
+    [129826, "Fumikage Tokoyami", "B"], [150793, "Twice", "B"], [132691, "Stain", "B"], [159165, "Eri", "B"],
+    [149909, "Nejire Hado", "B"], [197452, "Lady Nagant", "B"], [153879, "Fat Gum", "B"], [153877, "Sir Nighteye", "B"],
+    [145119, "Inasa Yoarashi", "B"], [141628, "Gran Torino", "B"], [140809, "Kurogiri", "B"], [143771, "Nana Shimura", "B"],
+    [117917, "Ochaco Uraraka", "C"], [119209, "Tsuyu Asui", "C"], [118657, "Denki Kaminari", "C"], [138638, "Kyoka Jiro", "C"],
+    [119321, "Momo Yaoyorozu", "C"], [125935, "Hitoshi Shinso", "C"], [117913, "Tenya Iida", "C"], [125318, "Mina Ashido", "C"],
+    [125092, "Neito Monoma", "C"], [139041, "Present Mic", "C"], [141593, "Midnight", "C"],
+    [119521, "Minoru Mineta", "D"], [126700, "Mei Hatsume", "D"], [117919, "Yuga Aoyama", "D"], [160738, "Gentle Criminal", "D"],
+    [138884, "Hanta Sero", "D"]
+  ]
+}

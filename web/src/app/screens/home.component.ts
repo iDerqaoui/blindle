@@ -115,7 +115,7 @@ const TRAINING_BOTS = ['aggressive', 'strategist', 'bluffer'];
         @if (universes().length === 0) {
           <div class="empty-state">
             <p><strong>{{ 'home.noneTitle' | t }}</strong></p>
-            <p class="muted">{{ 'home.noneHint' | t: { cmd: 'node tools/import-anilist.mjs' } }}</p>
+            <p class="muted">{{ 'home.noneHint' | t: { cmd: 'node tools/import-anime.mjs' } }}</p>
           </div>
         } @else {
           <div class="universe-grid">

@@ -1,0 +1,18 @@
+{
+  "universe": "jujutsu-kaisen",
+  "note": "Puissance au dernier arc (Shinjuku). S : Gojo, Sukuna, Yuta.",
+  "characters": [
+    [164471, "Satoru Gojo", "S"], [175198, "Ryomen Sukuna", "S"], [168067, "Yuta Okkotsu", "S"],
+    [196089, "Kenjaku", "A"], [240069, "Mahoraga", "A"], [175543, "Toji Fushiguro", "A"], [175542, "Suguru Geto", "A"],
+    [178998, "Yuki Tsukumo", "A"], [163847, "Yuji Itadori", "A"], [164482, "Maki Zenin", "A"], [164481, "Mahito", "A"],
+    [176770, "Jogo", "A"], [189234, "Rika Orimoto", "A"],
+    [164470, "Megumi Fushiguro", "B"], [164473, "Kento Nanami", "B"], [164484, "Aoi Todo", "B"], [180764, "Choso", "B"],
+    [184442, "Hanami", "B"], [184441, "Dagon", "B"], [164478, "Toge Inumaki", "B"], [180766, "Mei Mei", "B"],
+    [189223, "Uraume", "B"], [184484, "Naobito Zenin", "B"],
+    [164472, "Nobara Kugisaki", "C"], [164476, "Panda", "C"], [177253, "Utahime Iori", "C"], [164483, "Mai Zenin", "C"],
+    [179176, "Kokichi Muta", "C"], [184438, "Takuma Ino", "C"], [184437, "Atsuya Kusakabe", "C"], [179990, "Noritoshi Kamo", "C"],
+    [164474, "Masamichi Yaga", "C"], [189227, "Miguel", "C"],
+    [164485, "Kasumi Miwa", "D"], [164477, "Shoko Ieiri", "D"], [164480, "Junpei Yoshino", "D"], [189228, "Riko Amanai", "D"],
+    [193163, "Momo Nishimiya", "D"], [164479, "Kiyotaka Ijichi", "D"], [232695, "Yu Haibara", "D"]
+  ]
+}

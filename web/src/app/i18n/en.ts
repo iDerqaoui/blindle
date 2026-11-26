@@ -72,6 +72,8 @@ export const EN: Record<string, string> = {
   'lobby.rule1': 'Players take turns drawing a card: only the drawer sees the character.',
   'lobby.rule2': 'The drawer opens the bidding; the others outbid or let it go, blind.',
   'lobby.rule3': 'The card joins the winner’s board. If nobody wants it, it goes to the trash, visible to all.',
+  'lobby.rule4points': 'Once every team of {n} is complete, the team with the most points wins (ties: most gold left).',
+  'lobby.rule5points': 'Points by rarity: Common 10 · Rare 20 · Epic 35 · Legendary 60. Characters are ranked by popularity or power.',
   'lobby.rule4': 'Once every team of {n} is complete, everyone votes for the best one.',
   'lobby.gold': 'Gold per player',
   'lobby.timer': 'Bidding time (s)',
@@ -126,6 +128,8 @@ export const EN: Record<string, string> = {
   'board.gold': 'gold',
 
   // Cards
+  'card.points': '{n} pts',
+  'board.pointsHint': "Team points: the highest total wins",
   'rarity.common': 'Common',
   'rarity.rare': 'Rare',
   'rarity.epic': 'Epic',

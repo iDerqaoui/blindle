@@ -72,6 +72,8 @@ export const FR: Record<string, string> = {
   'lobby.rule1': 'Chaque joueur pioche à tour de rôle : lui seul voit le personnage.',
   'lobby.rule2': 'Il ouvre l’enchère, les autres surenchérissent ou laissent, à l’aveugle.',
   'lobby.rule3': 'La carte rejoint le tableau du gagnant. Si personne n’en veut, elle part à la poubelle, visible par tous.',
+  'lobby.rule4points': 'Quand toutes les équipes de {n} sont complètes, l’équipe qui a le plus de points gagne (égalité : le plus d’or restant).',
+  'lobby.rule5points': 'Points par rareté : Commune 10 · Rare 20 · Épique 35 · Légendaire 60. Les personnages sont classés par popularité ou puissance.',
   'lobby.rule4': 'Quand les équipes de {n} sont complètes, on vote pour la meilleure.',
   'lobby.gold': 'Or par joueur',
   'lobby.timer': 'Temps d’enchère (s)',
@@ -126,6 +128,8 @@ export const FR: Record<string, string> = {
   'board.gold': 'or',
 
   // Cartes
+  'card.points': '{n} pts',
+  'board.pointsHint': "Points de l'équipe : le plus gros total gagne",
   'rarity.common': 'Commun',
   'rarity.rare': 'Rare',
   'rarity.epic': 'Épique',

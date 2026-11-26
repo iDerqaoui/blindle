@@ -1,6 +1,6 @@
 # Image unique : front Angular servi par Spring Boot, thèmes anime générés au build.
 
-# 1. Front + contenu AniList
+# 1. Front + contenu anime
 FROM node:22-alpine AS web
 WORKDIR /src
 COPY web/package.json web/package-lock.json web/
@@ -9,8 +9,8 @@ COPY web web
 RUN cd web && npx ng build
 COPY content content
 COPY tools tools
-# Thèmes anime (profil private, non commités) : générés depuis l'API publique AniList.
-RUN node tools/import-anilist.mjs
+# Thèmes anime (profil private, non commités) : générés depuis Tenrai (données MyAnimeList) et content/curation.
+RUN node tools/import-anime.mjs
 
 # 2. Back
 FROM maven:3.9-eclipse-temurin-17 AS back

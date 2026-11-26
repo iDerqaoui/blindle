@@ -20,6 +20,7 @@ import { TranslatePipe } from '../i18n/i18n';
         <span class="board-name">{{ game.displayName(p) }}@if (p.id === game.myId()) { <small> · {{ 'board.you' | t }}</small> }</span>
         @if (p.id === drawerId()) { <span class="pill pill-drawer">{{ 'board.drawing' | t }}</span> }
         @if (p.id === leaderId()) { <span class="pill pill-leader">{{ 'board.leading' | t }}</span> }
+        @if (points() > 0) { <span class="pill pill-points" [title]="'board.pointsHint' | t">{{ 'card.points' | t: { n: points() } }}</span> }
         <span class="gold">{{ p.budget }}<small> {{ 'board.gold' | t }}</small></span>
       </header>
       <div class="board-slots">
@@ -46,6 +47,8 @@ export class BoardComponent {
       ? bids.reduce((a, b) => (b.amount > a.amount ? b : a)).playerId
       : null;
   });
+  /** Total des points de rareté de l'équipe (verdict « points »). */
+  readonly points = computed(() => this.player().team.reduce((sum, e) => sum + (e.card?.points ?? 0), 0));
   /** Teinte stable dérivée de l'identifiant, pour distinguer les avatars. */
   readonly hue = computed(() => [...this.player().id].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 360, 7));
 

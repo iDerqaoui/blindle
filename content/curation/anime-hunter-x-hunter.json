@@ -1,0 +1,18 @@
+{
+  "universe": "hunter-x-hunter",
+  "note": "Série 2011. S : Meruem, Netero, Alluka (Nanika).",
+  "characters": [
+    [23277, "Meruem", "S"], [14489, "Isaac Netero", "S"], [52425, "Alluka Zoldyck", "S"],
+    [27, "Killua Zoldyck", "A"], [31, "Hisoka", "A"], [28, "Kurapika", "A"], [30, "Gon Freecss", "A"], [58, "Chrollo Lucilfer", "A"],
+    [12300, "Neferpitou", "A"], [57, "Illumi Zoldyck", "A"], [26, "Ging Freecss", "A"], [41135, "Shaiapouf", "A"],
+    [59, "Zeno Zoldyck", "A"], [60, "Silva Zoldyck", "A"], [43953, "Menthuthuyoupi", "A"],
+    [3195, "Feitan", "B"], [20594, "Kite", "B"], [29809, "Knuckle Bine", "B"], [13898, "Biscuit Krueger", "B"],
+    [55071, "Pariston Hill", "B"], [5830, "Machi", "B"], [29806, "Morel Mackernasey", "B"], [5836, "Uvogin", "B"],
+    [5831, "Nobunaga", "B"], [5834, "Phinks", "B"], [82925, "Knov", "B"], [55069, "Cheadle Yorkshire", "B"],
+    [22518, "Razor", "B"], [33300, "Genthru", "B"],
+    [5833, "Shizuku", "C"], [29805, "Ikalgo", "C"], [5835, "Pakunoda", "C"], [5832, "Shalnark", "C"], [12515, "Senritsu", "C"],
+    [6089, "Kalluto Zoldyck", "C"], [34054, "Palm Siberia", "C"], [22521, "Wing", "C"], [83203, "Welfin", "C"],
+    [29807, "Shoot McMahon", "C"], [29808, "Meleoron", "C"],
+    [29, "Leorio Paradinight", "D"], [14313, "Komugi", "D"], [35894, "Canary", "D"], [43931, "Zushi", "D"], [17564, "Neon Nostrade", "D"]
+  ]
+}

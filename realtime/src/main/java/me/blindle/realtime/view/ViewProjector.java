@@ -9,6 +9,7 @@ import me.blindle.core.model.LotState;
 import me.blindle.core.model.PlayerState;
 import me.blindle.core.model.SlotDef;
 import me.blindle.modes.CardValuation;
+import me.blindle.modes.RarityPoints;
 import me.blindle.modes.Vote;
 import me.blindle.realtime.room.Room;
 import me.blindle.realtime.room.RoomSnapshot;
@@ -162,6 +163,6 @@ public final class ViewProjector {
             return null;
         }
         return new Views.CardView(c.id(), c.name(), c.tags(), c.rarity(), c.stats(), CardValuation.of(c),
-                theme.imageOf(c.id()));
+                RarityPoints.of(c), theme.imageOf(c.id()));
     }
 }

@@ -143,6 +143,7 @@ code { background: var(--panel-2); padding: 2px 6px; border-radius: 6px; font-si
 .pill-me { background: rgb(255 181 71 / 15%); color: var(--accent); }
 .pill-drawer { background: rgb(107 91 214 / 25%); color: #b9adff; }
 .pill-leader { background: rgb(70 197 140 / 18%); color: var(--ok); }
+.pill-points { background: rgb(245 166 35 / 18%); color: #ffc768; }
 .tag {
   display: inline-block; padding: 1px 8px; margin: 2px 4px 2px 0;
   border-radius: 999px; background: var(--panel-2); color: var(--muted); font-size: 0.75rem;

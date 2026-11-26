@@ -8,6 +8,7 @@ import me.blindle.modes.MarketBidMode;
 import me.blindle.modes.ModeCatalog;
 import me.blindle.modes.OpenBidMode;
 import me.blindle.modes.SealedBidMode;
+import me.blindle.modes.PointsVerdictMode;
 import me.blindle.modes.ValueVerdictMode;
 import me.blindle.modes.VoteVerdictMode;
 import me.blindle.realtime.RealtimeConfig.RoomSettings;
@@ -43,7 +44,7 @@ class RoomTest {
                     new JokerStealRule(), new TrapLotsRule(), new TagSynergyRule(), new SlotConstraintRule(),
                     new AntiSnipeRule())),
             new ModeCatalog(List.of(new SealedBidMode(), new OpenBidMode(), new MarketBidMode(), new DrawerBidMode()),
-                    List.of(new VoteVerdictMode(), new ValueVerdictMode())));
+                    List.of(new VoteVerdictMode(), new ValueVerdictMode(), new PointsVerdictMode())));
 
     /** Minuteries manuelles : on déclenche à la main la dernière programmée. */
     static final class ManualTimers implements TimerScheduler {

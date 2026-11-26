@@ -1,10 +1,10 @@
 # Mise en ligne (test entre amis)
 
 Une seule image Docker (`Dockerfile` à la racine) : front Angular servi par Spring Boot,
-STOMP sur `/ws`, thèmes anime générés au build depuis AniList (`tools/import-anilist.mjs`).
+STOMP sur `/ws`, thèmes anime générés au build depuis Tenrai / MyAnimeList (`tools/import-anime.mjs`).
 Port lu dans `PORT` (défaut 8080). Origines WebSocket : `BLINDLE_ALLOWED_ORIGINS`.
 
-Rappel §8 : univers anime = profil `private`, images AniList → lien partagé entre amis seulement.
+Rappel §8 : univers anime = profil `private`, images MyAnimeList → lien partagé entre amis seulement.
 
 ## Option A — Cloudflare Tunnel depuis son PC (0 €, 2 minutes)
 
@@ -33,4 +33,4 @@ Alternative équivalente : Koyeb (free, Docker, WebSocket, `*.koyeb.app`).
 - Simple : coller l'URL dans un salon Discord, chacun ouvre le lien.
 - Discord Activity (jeu dans le salon vocal) : étape 11 (`docs/PROJECT.md` §11) — application
   Discord, URL mapping vers l'URL ci-dessus, SDK `@discord/embedded-app-sdk` dans le front, et
-  mapping des images AniList (la CSP de Discord bloque les domaines non déclarés).
+  mapping des images MyAnimeList (cdn.myanimelist.net) (la CSP de Discord bloque les domaines non déclarés).

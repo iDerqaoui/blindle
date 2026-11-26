@@ -1,0 +1,19 @@
+{
+  "universe": "one-piece",
+  "note": "Puissance au dernier arc adapté (Egghead). S : Empereurs, Roger, Garp, Mihawk. A : amiraux, commandants d'élite, Supernovas de pointe.",
+  "characters": [
+    [40, "Monkey D. Luffy", "S"], [727, "Shanks", "S"], [2751, "Whitebeard", "S"], [46109, "Kaido", "S"],
+    [54495, "Big Mom", "S"], [4883, "Gol D. Roger", "S"], [3331, "Blackbeard", "S"], [2064, "Dracule Mihawk", "S"],
+    [8064, "Monkey D. Garp", "S"], [191297, "Rocks D. Xebec", "S"],
+    [62, "Roronoa Zoro", "A"], [305, "Sanji", "A"], [13767, "Trafalgar Law", "A"], [150775, "Charlotte Katakuri", "A"],
+    [2754, "Donquixote Doflamingo", "A"], [184114, "Yamato", "A"], [32893, "Sabo", "A"], [17142, "Silvers Rayleigh", "A"],
+    [9323, "Marco", "A"], [2752, "Aokiji", "A"], [21093, "Kizaru", "A"], [22687, "Akainu", "A"], [82259, "Fujitora", "A"],
+    [14989, "Eustass Kid", "A"], [4884, "Monkey D. Dragon", "A"], [166944, "Kozuki Oden", "A"], [4882, "Benn Beckman", "A"],
+    [2072, "Portgas D. Ace", "B"], [18938, "Jinbe", "B"], [16342, "Boa Hancock", "B"], [2749, "Crocodile", "B"],
+    [7453, "Bartholomew Kuma", "B"], [1541, "Enel", "B"], [5677, "Rob Lucci", "B"], [20295, "Jewelry Bonney", "B"],
+    [61, "Nico Robin", "C"], [64, "Franky", "C"], [5627, "Brook", "C"], [309, "Tony Tony Chopper", "C"], [724, "Usopp", "C"],
+    [113609, "Donquixote Rosinante", "C"], [4875, "Bon Clay", "C"], [7467, "Perona", "C"], [140169, "Carrot", "C"],
+    [725, "Buggy", "C"], [85647, "Bartolomeo", "C"], [209380, "Uta", "C"], [2753, "Smoker", "C"], [12361, "Koby", "C"],
+    [723, "Nami", "D"], [726, "Nefertari Vivi", "D"]
+  ]
+}
