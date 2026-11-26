@@ -63,3 +63,10 @@ Architecture et protocole STOMP proposés à l'étape 0 : `docs/ARCHITECTURE.md`
 
 Étape 8 terminée (thème pays-du-monde, 40 cartes, moteur inchangé). Prochaine : étape 9 — mode solo (`market`, défi du jour, puis bots) (voir `docs/PROJECT.md` §11 et §12).
 Mettre à jour cette ligne à chaque étape terminée.
+
+## Notes de passation (2026-11-26)
+
+- Pas encore vérifié visuellement dans un navigateur (extension Chrome non connectée) : le front compile sans avertissement et des parties scriptées passent par le proxy de dev.
+- À relire avant diffusion publique : cartes pièges du thème manga et les 40 cartes de `pays-du-monde`.
+- Reconnexion = nouveau joueur (pas de reprise de session) ; rooms en mémoire.
+- Dépôt local uniquement : ajouter le remote GitLab puis `git push -u origin main`.
