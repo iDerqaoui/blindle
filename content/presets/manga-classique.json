@@ -1,0 +1,13 @@
+{
+  "id": "manga-classique",
+  "name": "Manga Classique",
+  "description": "Enchères scellées, prix plancher croissant, vote final.",
+  "theme": "manga-shonen",
+  "bidMode": "sealed",
+  "verdictMode": "vote",
+  "settings": { "budget": 1000, "rounds": 10, "teamSize": 5, "hintLevels": 3, "bidTimerSec": 30 },
+  "rules": [
+    { "ref": "budget-cap" },
+    { "ref": "rising-floor", "params": { "base": 50, "stepPerHint": 50 } }
+  ]
+}

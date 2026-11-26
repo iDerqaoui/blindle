@@ -1,0 +1,324 @@
+{
+  "id": "manga-shonen",
+  "name": "Manga Shonen",
+  "version": "1.0.0",
+  "description": "Personnages de shonen populaires. Indices rédigés maison, stats maison, aucune image.",
+  "rights": {
+    "profile": "fictional-ip",
+    "channels": ["web"],
+    "visibility": "private",
+    "imagePolicy": "none",
+    "disclaimer": "Jeu de fans, non affilié aux ayants droit. Les personnages appartiennent à leurs auteurs et éditeurs.",
+    "takedownContact": "contact@blindle.me"
+  },
+  "defaultSlots": [
+    { "id": "captain", "label": "Capitaine" },
+    { "id": "right", "label": "Bras droit" },
+    { "id": "tactician", "label": "Stratège" },
+    { "id": "support", "label": "Soutien", "requiredTags": ["support"] },
+    { "id": "joker", "label": "Joker" }
+  ],
+  "attributes": ["power", "intelligence", "popularity"],
+  "cards": [
+    {
+      "id": "op-luffy", "name": "Monkey D. Luffy",
+      "tags": ["one-piece", "pirate", "captain"], "rarity": "legendary",
+      "stats": { "power": 93, "intelligence": 40, "popularity": 98 },
+      "hints": [
+        { "level": 1, "type": "text", "text": "Son corps s'étire comme du caoutchouc" },
+        { "level": 2, "type": "text", "text": "Rêve de devenir le roi d'un océan entier" },
+        { "level": 3, "type": "text", "text": "Capitaine pirate au chapeau de paille" }
+      ]
+    },
+    {
+      "id": "op-zoro", "name": "Roronoa Zoro",
+      "tags": ["one-piece", "pirate", "swordsman"], "rarity": "epic",
+      "stats": { "power": 88, "intelligence": 45, "popularity": 92 },
+      "hints": [
+        { "level": 1, "type": "text", "text": "Combat avec plusieurs lames à la fois" },
+        { "level": 2, "type": "text", "text": "Se perd constamment, même en ligne droite" },
+        { "level": 3, "type": "text", "text": "Bretteur aux trois sabres et aux cheveux verts" }
+      ]
+    },
+    {
+      "id": "op-nami", "name": "Nami",
+      "tags": ["one-piece", "pirate", "support", "navigator"], "rarity": "rare",
+      "stats": { "power": 45, "intelligence": 82, "popularity": 85 },
+      "hints": [
+        { "level": 1, "type": "text", "text": "Lit le ciel et les vents mieux que personne" },
+        { "level": 2, "type": "text", "text": "Adore l'argent et les mandarines" },
+        { "level": 3, "type": "text", "text": "Navigatrice d'un équipage au chapeau de paille" }
+      ]
+    },
+    {
+      "id": "op-ace", "name": "Portgas D. Ace",
+      "tags": ["one-piece", "pirate", "fire"], "rarity": "epic",
+      "stats": { "power": 82, "intelligence": 60, "popularity": 90 },
+      "hints": [
+        { "level": 1, "type": "text", "text": "Utilisateur d'un pouvoir lié au feu" },
+        { "level": 2, "type": "text", "text": "A perdu la vie pour protéger un frère" },
+        { "level": 3, "type": "text", "text": "Commandant pirate surnommé « aux poings ardents »" }
+      ]
+    },
+    {
+      "id": "op-sanji", "name": "Sanji",
+      "tags": ["one-piece", "pirate", "cook", "support"], "rarity": "rare",
+      "stats": { "power": 84, "intelligence": 62, "popularity": 87 },
+      "hints": [
+        { "level": 1, "type": "text", "text": "Ne se bat qu'avec les jambes" },
+        { "level": 2, "type": "text", "text": "Refuse de lever la main sur une femme" },
+        { "level": 3, "type": "text", "text": "Cuisinier pirate au sourcil en spirale" }
+      ]
+    },
+    {
+      "id": "op-chopper", "name": "Tony Tony Chopper",
+      "tags": ["one-piece", "pirate", "support", "medic"], "rarity": "common",
+      "stats": { "power": 55, "intelligence": 70, "popularity": 80 },
+      "hints": [
+        { "level": 1, "type": "text", "text": "Change de forme grâce à un fruit étrange" },
+        { "level": 2, "type": "text", "text": "Rêve de guérir toutes les maladies du monde" },
+        { "level": 3, "type": "text", "text": "Renne médecin coiffé d'un chapeau rose" }
+      ]
+    },
+    {
+      "id": "na-naruto", "name": "Naruto Uzumaki",
+      "tags": ["naruto", "ninja", "captain"], "rarity": "legendary",
+      "stats": { "power": 92, "intelligence": 50, "popularity": 97 },
+      "hints": [
+        { "level": 1, "type": "text", "text": "Une créature a été scellée en lui à sa naissance" },
+        { "level": 2, "type": "text", "text": "Rêve d'être reconnu par tout son village" },
+        { "level": 3, "type": "text", "text": "Ninja blond adepte des clones et des ramens" }
+      ]
+    },
+    {
+      "id": "na-sasuke", "name": "Sasuke Uchiha",
+      "tags": ["naruto", "ninja", "lightning"], "rarity": "epic",
+      "stats": { "power": 90, "intelligence": 75, "popularity": 91 },
+      "hints": [
+        { "level": 1, "type": "text", "text": "L'un des derniers survivants d'un clan décimé" },
+        { "level": 2, "type": "text", "text": "A longtemps vécu pour se venger de son frère" },
+        { "level": 3, "type": "text", "text": "Ninja aux yeux rouges qui manie la foudre" }
+      ]
+    },
+    {
+      "id": "na-sakura", "name": "Sakura Haruno",
+      "tags": ["naruto", "ninja", "support", "medic"], "rarity": "rare",
+      "stats": { "power": 70, "intelligence": 78, "popularity": 72 },
+      "hints": [
+        { "level": 1, "type": "text", "text": "Sa force physique a été forgée par la discipline" },
+        { "level": 2, "type": "text", "text": "Soigne ses alliés en plein combat" },
+        { "level": 3, "type": "text", "text": "Ninja médecin aux cheveux roses" }
+      ]
+    },
+    {
+      "id": "na-kakashi", "name": "Kakashi Hatake",
+      "tags": ["naruto", "ninja", "mentor", "tactician"], "rarity": "epic",
+      "stats": { "power": 83, "intelligence": 88, "popularity": 89 },
+      "hints": [
+        { "level": 1, "type": "text", "text": "Cache la moitié de son visage en permanence" },
+        { "level": 2, "type": "text", "text": "Toujours plongé dans la même série de romans" },
+        { "level": 3, "type": "text", "text": "Ninja copieur aux cheveux argentés" }
+      ]
+    },
+    {
+      "id": "na-itachi", "name": "Itachi Uchiha",
+      "tags": ["naruto", "ninja", "illusion", "tactician"], "rarity": "epic",
+      "stats": { "power": 89, "intelligence": 94, "popularity": 90 },
+      "hints": [
+        { "level": 1, "type": "text", "text": "Maître des illusions" },
+        { "level": 2, "type": "text", "text": "A sacrifié sa réputation pour protéger son village" },
+        { "level": 3, "type": "text", "text": "Grand frère vêtu d'une cape à nuages rouges" }
+      ]
+    },
+    {
+      "id": "db-goku", "name": "Son Goku",
+      "tags": ["dragon-ball", "saiyan", "captain"], "rarity": "legendary",
+      "stats": { "power": 99, "intelligence": 35, "popularity": 99 },
+      "hints": [
+        { "level": 1, "type": "text", "text": "Envoyé bébé depuis une autre planète" },
+        { "level": 2, "type": "text", "text": "Ne pense qu'à affronter des adversaires plus forts" },
+        { "level": 3, "type": "text", "text": "Guerrier saiyan élevé sur Terre, maître du Kamehameha" }
+      ]
+    },
+    {
+      "id": "db-vegeta", "name": "Vegeta",
+      "tags": ["dragon-ball", "saiyan", "royalty"], "rarity": "epic",
+      "stats": { "power": 97, "intelligence": 70, "popularity": 93 },
+      "hints": [
+        { "level": 1, "type": "text", "text": "Prince d'un peuple guerrier presque éteint" },
+        { "level": 2, "type": "text", "text": "Rival éternel d'un autre combattant de sa race" },
+        { "level": 3, "type": "text", "text": "Saiyan à la coiffure en pointe, fier jusqu'à l'excès" }
+      ]
+    },
+    {
+      "id": "db-piccolo", "name": "Piccolo",
+      "tags": ["dragon-ball", "mentor", "support", "tactician"], "rarity": "rare",
+      "stats": { "power": 80, "intelligence": 82, "popularity": 78 },
+      "hints": [
+        { "level": 1, "type": "text", "text": "Peut faire repousser ses membres perdus" },
+        { "level": 2, "type": "text", "text": "Ancien ennemi devenu le mentor d'un enfant" },
+        { "level": 3, "type": "text", "text": "Guerrier namek à la peau verte" }
+      ]
+    },
+    {
+      "id": "db-bulma", "name": "Bulma",
+      "tags": ["dragon-ball", "scientist", "support", "tactician"], "rarity": "rare",
+      "stats": { "power": 10, "intelligence": 97, "popularity": 80 },
+      "hints": [
+        { "level": 1, "type": "text", "text": "Génie de la technologie depuis l'enfance" },
+        { "level": 2, "type": "text", "text": "A lancé la quête de sept objets magiques" },
+        { "level": 3, "type": "text", "text": "Héritière d'une entreprise de capsules" }
+      ]
+    },
+    {
+      "id": "bl-ichigo", "name": "Ichigo Kurosaki",
+      "tags": ["bleach", "shinigami", "captain"], "rarity": "epic",
+      "stats": { "power": 91, "intelligence": 55, "popularity": 88 },
+      "hints": [
+        { "level": 1, "type": "text", "text": "Voit les esprits depuis l'enfance" },
+        { "level": 2, "type": "text", "text": "Manie un sabre démesuré" },
+        { "level": 3, "type": "text", "text": "Lycéen aux cheveux orange devenu shinigami remplaçant" }
+      ]
+    },
+    {
+      "id": "bl-rukia", "name": "Rukia Kuchiki",
+      "tags": ["bleach", "shinigami", "ice", "support"], "rarity": "rare",
+      "stats": { "power": 72, "intelligence": 70, "popularity": 80 },
+      "hints": [
+        { "level": 1, "type": "text", "text": "Sa lame est liée à la glace" },
+        { "level": 2, "type": "text", "text": "A transmis ses pouvoirs à un lycéen" },
+        { "level": 3, "type": "text", "text": "Shinigami de petite taille, adoptée par une famille noble" }
+      ]
+    },
+    {
+      "id": "bl-aizen", "name": "Sosuke Aizen",
+      "tags": ["bleach", "shinigami", "villain", "tactician"], "rarity": "epic",
+      "stats": { "power": 94, "intelligence": 98, "popularity": 84 },
+      "hints": [
+        { "level": 1, "type": "text", "text": "Ses plans ont toujours des années d'avance" },
+        { "level": 2, "type": "text", "text": "A trompé tout le monde sous des airs bienveillants" },
+        { "level": 3, "type": "text", "text": "Ancien capitaine à lunettes, maître de l'hypnose totale" }
+      ]
+    },
+    {
+      "id": "hxh-gon", "name": "Gon Freecss",
+      "tags": ["hunter-x-hunter", "hunter", "nature"], "rarity": "rare",
+      "stats": { "power": 78, "intelligence": 45, "popularity": 85 },
+      "hints": [
+        { "level": 1, "type": "text", "text": "Élevé sur une île, très proche de la nature" },
+        { "level": 2, "type": "text", "text": "Parcourt le monde à la recherche de son père" },
+        { "level": 3, "type": "text", "text": "Jeune Hunter armé d'une canne à pêche" }
+      ]
+    },
+    {
+      "id": "hxh-killua", "name": "Killua Zoldyck",
+      "tags": ["hunter-x-hunter", "hunter", "assassin", "lightning"], "rarity": "epic",
+      "stats": { "power": 82, "intelligence": 85, "popularity": 92 },
+      "hints": [
+        { "level": 1, "type": "text", "text": "Ses mains peuvent trancher comme des lames" },
+        { "level": 2, "type": "text", "text": "Issu d'une célèbre famille d'assassins" },
+        { "level": 3, "type": "text", "text": "Garçon aux cheveux blancs qui maîtrise l'électricité" }
+      ]
+    },
+    {
+      "id": "hxh-kurapika", "name": "Kurapika",
+      "tags": ["hunter-x-hunter", "hunter", "tactician"], "rarity": "rare",
+      "stats": { "power": 76, "intelligence": 90, "popularity": 82 },
+      "hints": [
+        { "level": 1, "type": "text", "text": "Ses yeux changent de couleur sous le coup de la colère" },
+        { "level": 2, "type": "text", "text": "Traque ceux qui ont massacré son clan" },
+        { "level": 3, "type": "text", "text": "Hunter blond qui combat avec des chaînes" }
+      ]
+    },
+    {
+      "id": "mha-deku", "name": "Izuku Midoriya",
+      "tags": ["my-hero-academia", "hero", "captain"], "rarity": "epic",
+      "stats": { "power": 85, "intelligence": 84, "popularity": 88 },
+      "hints": [
+        { "level": 1, "type": "text", "text": "Né sans pouvoir dans un monde où presque tous en ont" },
+        { "level": 2, "type": "text", "text": "A hérité d'un pouvoir transmis de génération en génération" },
+        { "level": 3, "type": "text", "text": "Élève héros surnommé Deku" }
+      ]
+    },
+    {
+      "id": "mha-bakugo", "name": "Katsuki Bakugo",
+      "tags": ["my-hero-academia", "hero", "explosion"], "rarity": "rare",
+      "stats": { "power": 84, "intelligence": 72, "popularity": 86 },
+      "hints": [
+        { "level": 1, "type": "text", "text": "Sa sueur est explosive" },
+        { "level": 2, "type": "text", "text": "Ami d'enfance devenu rival acharné" },
+        { "level": 3, "type": "text", "text": "Élève héros colérique aux cheveux blonds hérissés" }
+      ]
+    },
+    {
+      "id": "mha-all-might", "name": "All Might",
+      "tags": ["my-hero-academia", "hero", "mentor", "support"], "rarity": "legendary",
+      "stats": { "power": 96, "intelligence": 65, "popularity": 90 },
+      "hints": [
+        { "level": 1, "type": "text", "text": "Symbole de paix de toute une société" },
+        { "level": 2, "type": "text", "text": "Cache une grave blessure derrière un immense sourire" },
+        { "level": 3, "type": "text", "text": "Héros numéro un, mentor de Deku" }
+      ]
+    },
+    {
+      "id": "ds-tanjiro", "name": "Tanjiro Kamado",
+      "tags": ["demon-slayer", "slayer", "captain"], "rarity": "epic",
+      "stats": { "power": 80, "intelligence": 68, "popularity": 90 },
+      "hints": [
+        { "level": 1, "type": "text", "text": "Doté d'un odorat exceptionnel" },
+        { "level": 2, "type": "text", "text": "Cherche à rendre son humanité à sa sœur" },
+        { "level": 3, "type": "text", "text": "Pourfendeur de démons aux boucles d'oreilles hanafuda" }
+      ]
+    },
+    {
+      "id": "ds-nezuko", "name": "Nezuko Kamado",
+      "tags": ["demon-slayer", "demon", "support"], "rarity": "rare",
+      "stats": { "power": 74, "intelligence": 30, "popularity": 89 },
+      "hints": [
+        { "level": 1, "type": "text", "text": "Dort beaucoup pour reprendre des forces" },
+        { "level": 2, "type": "text", "text": "Résiste à sa propre nature pour protéger les humains" },
+        { "level": 3, "type": "text", "text": "Sœur devenue démon, transportée dans une boîte en bois" }
+      ]
+    },
+    {
+      "id": "jjk-gojo", "name": "Satoru Gojo",
+      "tags": ["jujutsu-kaisen", "sorcerer", "mentor"], "rarity": "legendary",
+      "stats": { "power": 98, "intelligence": 85, "popularity": 96 },
+      "hints": [
+        { "level": 1, "type": "text", "text": "Porte presque toujours un bandeau sur les yeux" },
+        { "level": 2, "type": "text", "text": "Rien ne semble pouvoir l'atteindre" },
+        { "level": 3, "type": "text", "text": "Exorciste le plus puissant, professeur aux cheveux blancs" }
+      ]
+    },
+    {
+      "id": "jjk-itadori", "name": "Yuji Itadori",
+      "tags": ["jujutsu-kaisen", "sorcerer", "vessel"], "rarity": "rare",
+      "stats": { "power": 83, "intelligence": 50, "popularity": 85 },
+      "hints": [
+        { "level": 1, "type": "text", "text": "Force physique hors du commun, sans entraînement" },
+        { "level": 2, "type": "text", "text": "A avalé un objet maudit pour sauver ses amis" },
+        { "level": 3, "type": "text", "text": "Lycéen hôte du roi des fléaux" }
+      ]
+    },
+    {
+      "id": "fma-edward", "name": "Edward Elric",
+      "tags": ["fullmetal-alchemist", "alchemist", "tactician"], "rarity": "epic",
+      "stats": { "power": 75, "intelligence": 92, "popularity": 90 },
+      "hints": [
+        { "level": 1, "type": "text", "text": "Transforme la matière sans tracer de cercle" },
+        { "level": 2, "type": "text", "text": "Veut rendre son corps à son petit frère" },
+        { "level": 3, "type": "text", "text": "Alchimiste d'État au bras mécanique" }
+      ]
+    },
+    {
+      "id": "aot-levi", "name": "Livaï Ackerman",
+      "tags": ["attack-on-titan", "soldier", "captain"], "rarity": "legendary",
+      "stats": { "power": 90, "intelligence": 80, "popularity": 94 },
+      "hints": [
+        { "level": 1, "type": "text", "text": "Obsédé par la propreté" },
+        { "level": 2, "type": "text", "text": "Considéré comme le soldat le plus fort de l'humanité" },
+        { "level": 3, "type": "text", "text": "Caporal du bataillon d'exploration" }
+      ]
+    }
+  ]
+}

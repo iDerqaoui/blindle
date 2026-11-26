@@ -42,6 +42,7 @@ Jeu d'enchères à l'aveugle multijoueur en ligne (3 à 8 joueurs, ou solo contr
 - Tests JUnit 5 obligatoires pour chaque règle et chaque mode : état initial + événement → état attendu
 - Une étape de la feuille de route par session ; petits commits clairs (GitLab)
 - Signaler toute nouvelle dépendance avant de l'ajouter
+- Dépendances ajoutées (validées) : `com.networknt:json-schema-validator` (content)
 - Si une étape exige de modifier `engine-*` pour un besoin propre à un thème : s'arrêter et le signaler
 
 ## Commandes
@@ -58,5 +59,5 @@ Architecture et protocole STOMP proposés à l'étape 0 : `docs/ARCHITECTURE.md`
 
 ## Étape en cours
 
-Étape 3 terminée (mode `sealed`, verdict `vote`, partie complète en test). Prochaine : étape 4 — thèmes JSON + JSON Schema + 30 cartes Manga (voir `docs/PROJECT.md` §11 et §12).
+Étape 4 terminée (contenu JSON validé au démarrage, thème manga-shonen, preset manga-classique). Prochaine : étape 5 — `realtime` (voir `docs/PROJECT.md` §11 et §12).
 Mettre à jour cette ligne à chaque étape terminée.

@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://blindle.me/schema/preset.schema.json",
+  "title": "Preset Blindle",
+  "type": "object",
+  "required": ["id", "name", "theme", "bidMode", "verdictMode", "settings"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "$ref": "#/$defs/slug" },
+    "name": { "type": "string", "minLength": 1 },
+    "description": { "type": "string" },
+    "theme": { "$ref": "#/$defs/slug" },
+    "bidMode": { "$ref": "#/$defs/slug" },
+    "verdictMode": { "$ref": "#/$defs/slug" },
+    "channels": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "enum": ["web", "discord"] }
+    },
+    "settings": {
+      "type": "object",
+      "required": ["budget", "rounds", "teamSize", "hintLevels", "bidTimerSec"],
+      "additionalProperties": false,
+      "properties": {
+        "budget": { "type": "integer", "minimum": 1 },
+        "rounds": { "type": "integer", "minimum": 1 },
+        "teamSize": { "type": "integer", "minimum": 1 },
+        "hintLevels": { "type": "integer", "minimum": 1 },
+        "bidTimerSec": { "type": "integer", "minimum": 5, "maximum": 600 }
+      }
+    },
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["ref"],
+        "additionalProperties": false,
+        "properties": {
+          "ref": { "$ref": "#/$defs/slug" },
+          "params": { "type": "object" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "slug": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" }
+  }
+}

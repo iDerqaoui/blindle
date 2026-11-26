@@ -13,7 +13,7 @@ blindle/
 ├── content/                 données, aucun code
 │   ├── themes/              un fichier JSON par thème
 │   ├── presets/             un fichier JSON par preset
-│   └── schema/              JSON Schema (étape 4)
+(schémas JSON : `content/src/main/resources/schema/`, sur le classpath)
 ├── engine-core/             Java pur : état, événements, hooks, phases
 ├── engine-rules/            une classe @Component par règle   → engine-core
 ├── engine-modes/            BidMode, VerdictMode              → engine-core
