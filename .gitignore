@@ -39,3 +39,6 @@ target/
 node_modules/
 web/dist/
 web/.angular/
+
+# Thèmes générés depuis AniList (images sous droits, usage privé) : jamais commités
+content/themes/anime-*.json

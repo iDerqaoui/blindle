@@ -11,6 +11,15 @@
     "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
     "description": { "type": "string" },
     "rights": { "$ref": "#/$defs/rights" },
+    "art": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "cover": { "type": "string" },
+        "banner": { "type": ["string", "null"] },
+        "color": { "type": ["string", "null"] }
+      }
+    },
     "defaultSlots": {
       "type": "array",
       "minItems": 1,
