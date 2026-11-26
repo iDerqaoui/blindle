@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { GameService } from '../game/game.service';
 import { PresetSummary } from '../game/game.types';
 import { I18nService, TranslatePipe } from '../i18n/i18n';
+import { FEATURES } from '../features';
 
 /** Profils des bots ajoutés pour une partie d'entraînement, dans l'ordre. */
 const TRAINING_BOTS = ['aggressive', 'strategist', 'bluffer'];
@@ -140,6 +141,7 @@ const TRAINING_BOTS = ['aggressive', 'strategist', 'bluffer'];
         </div>
       </section>
 
+      @if (features.otherModes) {
       <details class="section other-modes glass">
         <summary><h2>{{ 'home.otherModes' | t }}</h2></summary>
 
@@ -175,12 +177,14 @@ const TRAINING_BOTS = ['aggressive', 'strategist', 'bluffer'];
         </div>
         @if (!hasName()) { <p class="muted small">{{ 'home.needName' | t }}</p> }
       </details>
+      }
     }
   `,
 })
 export class HomeComponent implements OnDestroy {
   readonly game = inject(GameService);
   readonly i18n = inject(I18nService);
+  readonly features = FEATURES;
   readonly name = signal(localStorageGet('blindle.name'));
   readonly code = signal('');
   readonly botCount = signal(2);
