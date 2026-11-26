@@ -1,0 +1,13 @@
+{
+  "id": "solo-pays-bots",
+  "name": "Solo · Pays contre bots",
+  "description": "Ajoute des bots dans le salon (agressif, radin, fan, bluffeur, stratège). Enchères scellées ; score = valeur de ton équipe − pièces dépensées.",
+  "theme": "pays-du-monde",
+  "bidMode": "sealed",
+  "verdictMode": "value",
+  "settings": { "budget": 1000, "rounds": 10, "teamSize": 5, "hintLevels": 4, "bidTimerSec": 30 },
+  "rules": [
+    { "ref": "budget-cap" },
+    { "ref": "rising-floor", "params": { "base": 40, "stepPerHint": 40 } }
+  ]
+}

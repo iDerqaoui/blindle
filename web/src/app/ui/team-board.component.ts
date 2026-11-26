@@ -14,7 +14,7 @@ import { PlayerSummary, TeamEntry } from '../game/game.types';
         @for (p of players(); track p.id) {
           <div class="team" [class.mine]="p.id === game.myId()">
             <div class="team-head">
-              <span>{{ p.name }}@if (p.id === game.myId()) { <em> (toi)</em> }</span>
+              <span>@if (p.bot) { 🤖 }{{ p.name }}@if (p.id === game.myId()) { <em> (toi)</em> }</span>
               <span>
                 @if (p.bonus > 0) { <span class="tag bonus">+{{ p.bonus }} synergie</span> }
                 <span class="coins">{{ p.budget }} 🪙</span>

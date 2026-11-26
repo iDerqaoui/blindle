@@ -1,6 +1,7 @@
 package me.blindle.realtime;
 
 import me.blindle.content.Preset;
+import me.blindle.modes.bot.BotCatalog;
 import me.blindle.realtime.game.GameFactory;
 import me.blindle.realtime.solo.DailyChallenge;
 import me.blindle.realtime.solo.DailyLeaderboard;
@@ -11,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.LocalDate;
 import java.util.List;
 
-/** Catalogue des presets pour l'écran d'accueil, et défis du jour avec leur classement. */
+/** Catalogue des presets et des profils de bots, et défis du jour avec leur classement. */
 @RestController
 @RequestMapping("/api")
 public class PresetController {
@@ -21,8 +22,11 @@ public class PresetController {
     private final GameFactory factory;
     private final DailyChallenge daily;
     private final DailyLeaderboard leaderboard;
+    private final BotCatalog bots;
 
-    public PresetController(GameFactory factory, DailyChallenge daily, DailyLeaderboard leaderboard) {
+    public PresetController(GameFactory factory, DailyChallenge daily, DailyLeaderboard leaderboard,
+                            BotCatalog bots) {
+        this.bots = bots;
         this.factory = factory;
         this.daily = daily;
         this.leaderboard = leaderboard;
@@ -43,6 +47,14 @@ public class PresetController {
             return new PresetSummary(p.id(), p.name(), p.description(), setup.theme().name(),
                     p.bidMode(), p.verdictMode(), p.daily(), p.settings());
         }).toList();
+    }
+
+    public record BotProfile(String profile, String label) {
+    }
+
+    @GetMapping("/bots")
+    public List<BotProfile> bots() {
+        return bots.all().stream().map(b -> new BotProfile(b.profile(), b.label())).toList();
     }
 
     @GetMapping("/daily")

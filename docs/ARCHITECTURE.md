@@ -64,6 +64,7 @@ joueur par la session (`Principal` attribué au `join`), jamais par un champ du 
 | `/app/daily.start` | `{ name, presetId }` | Défi du jour : room solo créée avec la seed du jour, rejointe et démarrée (`room.create` refuse un preset `daily`) |
 | `/app/room/{code}/sync` | `{}` | Renvoie au joueur ses deux vues (après abonnement au topic) |
 | `/app/room/{code}/settings` | `{ budget?, rounds?, bidTimerSec? }` | Hôte seulement, en LOBBY |
+| `/app/room/{code}/bot` | `{ profile }` | Hôte seulement, en LOBBY : ajoute un bot (`aggressive`, `stingy`, `fan`, `bluffer`, `strategist`) ; refusé en défi du jour |
 | `/app/room/{code}/start` | `{}` | Hôte seulement |
 | `/app/room/{code}/bid` | `{ amount }` | Offre sur le lot courant |
 | `/app/room/{code}/pass` | `{}` | Passe sur ce palier |
@@ -80,6 +81,7 @@ joueur par la session (`Principal` attribué au `join`), jamais par un champ du 
 | `/user/queue/room` | `PlayerView` privé (`type: "player"`) : mon id, mon offre, passe, `canBid`, `mustPlace`, slots libres, mon vote. Reçoit aussi la `RoomView` lors d'un `sync` |
 | `/user/queue/errors` | `{ code, message }` : offre rejetée, action interdite |
 | `GET /api/daily` (REST) | Défis du jour : preset, thème, date, nombre de parties, top 10 du classement |
+| `GET /api/bots` (REST) | Profils de bots : `{ profile, label }` |
 
 Chaque message porte `type` et `version` (numéro monotone de l'état) pour que le client
 ignore les messages obsolètes. Les vues sont calculées par `ViewProjector` côté serveur
@@ -178,3 +180,23 @@ Chaque tâche est testable seule.
 - Partage sans spoiler (`DailyShare`) : une ligne par round, une case par palier —
   ⬜ palier joué, 🟩 achat rentable, 🟥 achat à perte, ⬛ palier non atteint.
 - Limite connue : pas de compte, donc rien n'empêche de rejouer le défi (nouvelle connexion).
+
+### Bots
+
+- `engine-modes/bot` : `BotStrategy.decide(BotView)` → offre ou passe. `BotViews` construit la
+  vue avec les filtres d'un humain : indices révélés, jamais l'identité du lot, offres adverses
+  seulement en mode visible ; plus les cartes encore en jeu (connaissance de l'univers, sans
+  l'ordre du deck). Aléa : `botSeed` dérivé de la seed de la partie.
+- `BotEstimator` : cartes compatibles avec les indices, moyenne mélangée à celle des cartes en
+  jeu avec une confiance = palier / nombre de paliers, bruit personnel ±10 %.
+- Profils : Agressif (dès l'indice 1, ≤ 120 %), Radin (dernier indice, ≤ 80 %), Fan (tag favori
+  seedé : ≤ 150 % dès l'indice 1, sinon indice 2 et ≤ 90 %), Bluffeur (surenchérit en mode
+  visible puis se retire au dernier indice ; en scellé un coup à 70 % au 1er indice), Stratège
+  (réserve le plancher pour ses autres slots libres, mise à mi-parcours ≤ 100 %, ≤ 110 % s'il
+  manque de rounds).
+- `Room` fait jouer les bots à l'ouverture de chaque palier et, en mode visible, après chaque
+  offre humaine (le meneur et les bots qui ont passé ne rejouent pas). Une offre refusée par
+  une règle devient une passe. Un bot gagnant place sa carte seul après 4 s de révélation.
+- Les bots ne votent pas : les presets « Solo · … contre bots » (`solo-manga-bots`,
+  `solo-pays-bots`) utilisent le verdict `value`.
+- `GameRandom.nextLong()` ajouté (générique) pour dériver la seed des bots.

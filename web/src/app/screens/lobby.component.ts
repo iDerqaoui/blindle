@@ -20,9 +20,17 @@ import { GameService } from '../game/game.service';
           <h2>Joueurs ({{ room.players.length }}/8)</h2>
           <ul class="player-list">
             @for (p of room.players; track p.id) {
-              <li>{{ p.name }} @if (p.host) { <span class="tag">hôte</span> } @if (p.id === game.myId()) { <em>(toi)</em> }</li>
+              <li>@if (p.bot) { 🤖 }{{ p.name }} @if (p.host) { <span class="tag">hôte</span> } @if (p.id === game.myId()) { <em>(toi)</em> }</li>
             }
           </ul>
+          @if (isHost() && room.players.length < 8) {
+            <div class="bot-row">
+              <span class="muted">Ajouter un bot :</span>
+              @for (b of game.botProfiles(); track b.profile) {
+                <button class="btn small" [title]="botHelp[b.profile]" (click)="game.addBot(b.profile)">🤖 {{ b.label }}</button>
+              }
+            </div>
+          }
           @if (room.players.length < 3) {
             <p class="muted">Il faut au moins 3 joueurs pour lancer la partie.</p>
           }
@@ -53,6 +61,14 @@ export class LobbyComponent {
   rounds = 10;
   timer = 30;
 
+  /** Personnalités des bots (§7), en infobulle. */
+  readonly botHelp: Record<string, string> = {
+    aggressive: 'Mise dès le premier indice, jusqu’à 120 % de son estimation',
+    stingy: 'Attend le dernier indice, plafonne à 80 %',
+    fan: 'Surenchérit sur son tag favori',
+    bluffer: 'Fait monter les prix puis se retire',
+    strategist: 'Garde du budget pour ses slots vides',
+  };
 
   save(): void {
     this.game.updateSettings({ budget: this.budget, rounds: this.rounds, bidTimerSec: this.timer });

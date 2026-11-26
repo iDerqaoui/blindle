@@ -43,6 +43,10 @@ public final class GameRandom {
         return random.nextDouble();
     }
 
+    public long nextLong() {
+        return random.nextLong();
+    }
+
     public <T> List<T> shuffled(List<T> items) {
         List<T> copy = new ArrayList<>(items);
         Collections.shuffle(copy, random);

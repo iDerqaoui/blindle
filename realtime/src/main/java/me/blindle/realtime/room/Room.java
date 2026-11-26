@@ -12,7 +12,10 @@ import me.blindle.core.model.GameState;
 import me.blindle.core.model.LotState;
 import me.blindle.core.model.PlayerState;
 import me.blindle.core.model.SlotDef;
+import me.blindle.modes.BidMode;
 import me.blindle.modes.Vote;
+import me.blindle.modes.bot.BotStrategy;
+import me.blindle.modes.bot.BotViews;
 import me.blindle.realtime.RealtimeConfig.RoomSettings;
 import me.blindle.realtime.game.GameSetup;
 import me.blindle.realtime.timer.TimerScheduler;
@@ -22,7 +25,11 @@ import org.slf4j.LoggerFactory;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * Une partie en cours : tient le {@link GameState} courant, enchaîne les phases
@@ -33,6 +40,8 @@ public final class Room {
 
     private static final Logger LOG = LoggerFactory.getLogger(Room.class);
     private static final int MAX_NAME = 20;
+    private static final int MAX_BOT_TURNS = 200;
+    static final int BOT_REVEAL_SEC = 4;
 
     private final String code;
     private final GameSetup setup;
@@ -52,6 +61,7 @@ public final class Room {
     private final List<RoundOutcome> history = new ArrayList<>();
     private final DailyContext daily;
     private Integer dailyRank;
+    private final Map<String, BotStrategy> bots = new LinkedHashMap<>();
 
     public Room(String code, long seed, GameSetup setup, RoomSettings settings, TimerScheduler timers,
                 Broadcaster broadcaster, Clock clock) {
@@ -158,11 +168,25 @@ public final class Room {
         setup.bidMode().validateBid(state, bid);
         Instant before = state.lot().deadline();
         apply(engine.placeBid(state, bid, clock.instant()));
-        Instant after = state.lot().deadline();
-        if (after != null && !after.equals(before)) {
-            schedule(after); // heure de fin repoussée par une règle (anti-snipe)
+        if (setup.bidMode().bidsVisible()) {
+            runBots(); // les bots voient la nouvelle offre et peuvent surenchérir
         }
+        rescheduleIfExtended(before);
         closeTierIfComplete();
+        publish();
+    }
+
+    /** Le joueur hôte ajoute un bot du profil donné (en LOBBY). Interdit en défi du jour. */
+    public synchronized void addBot(String playerId, BotStrategy strategy) {
+        requireHost(playerId);
+        if (daily != null) {
+            throw new GameException("DAILY_IS_SOLO", "Le défi du jour se joue seul, sans bot");
+        }
+        String id = "bot-" + (bots.size() + 1);
+        long same = bots.values().stream().filter(b -> b.profile().equals(strategy.profile())).count();
+        String name = "Bot " + strategy.label() + (same > 0 ? " " + (same + 1) : "");
+        apply(engine.addPlayer(state, id, name, true));
+        bots.put(id, strategy);
         publish();
     }
 
@@ -260,8 +284,72 @@ public final class Room {
         apply(engine.openBidding(state, deadline));
         phaseDeadline = null;
         schedule(deadline);
-        // Personne ne peut miser (équipes pleines) : inutile d'attendre.
+        runBots();
+        rescheduleIfExtended(deadline);
+        // Tout le monde a joué, ou personne ne peut miser (équipes pleines) : inutile d'attendre.
         closeTierIfComplete();
+    }
+
+    /**
+     * Fait jouer les bots éligibles sur le palier courant, par le même chemin qu'un humain
+     * (validation du mode, règles). Offre secrète : une décision par palier. Offre visible :
+     * on recommence tant qu'un bot surenchérit ; le meneur ne rejoue pas, un bot qui a passé non plus.
+     */
+    private void runBots() {
+        BidMode mode = setup.bidMode();
+        for (int turn = 0; turn < MAX_BOT_TURNS; turn++) {
+            boolean acted = false;
+            for (Map.Entry<String, BotStrategy> bot : bots.entrySet()) {
+                if (state.phase() != Phase.BIDDING) {
+                    return;
+                }
+                String id = bot.getKey();
+                LotState lot = state.lot();
+                if (!state.eligibleBidders().contains(id) || lot.passes().contains(id)
+                        || (!mode.bidsVisible() && lot.hasActed(id)) || id.equals(leaderId(lot))) {
+                    continue;
+                }
+                acted |= botActs(id, bot.getValue().decide(BotViews.of(state, id, mode)));
+            }
+            if (!acted || !mode.bidsVisible()) {
+                return;
+            }
+        }
+    }
+
+    /** Applique la décision d'un bot ; une offre refusée par une règle devient une passe. */
+    private boolean botActs(String botId, Optional<Bid> decision) {
+        if (decision.isPresent()) {
+            try {
+                setup.bidMode().validateBid(state, decision.get());
+                apply(engine.placeBid(state, decision.get(), clock.instant()));
+                return true;
+            } catch (GameException e) {
+                // offre refusée (plancher, budget…) : le bot passe
+            }
+        }
+        try {
+            setup.bidMode().validatePass(state, botId);
+            apply(engine.pass(state, botId));
+            return true;
+        } catch (GameException e) {
+            return false;
+        }
+    }
+
+    private static String leaderId(LotState lot) {
+        return lot.bids().stream().max(Comparator.comparingInt(Bid::amount)).map(Bid::playerId).orElse(null);
+    }
+
+    /** Heure de fin repoussée par une règle (anti-snipe) : on reprogramme la minuterie. */
+    private void rescheduleIfExtended(Instant before) {
+        if (state.phase() != Phase.BIDDING) {
+            return;
+        }
+        Instant after = state.lot().deadline();
+        if (after != null && !after.equals(before)) {
+            schedule(after);
+        }
     }
 
     private void closeTierIfComplete() {
@@ -277,7 +365,9 @@ public final class Room {
             case HINT -> openTier();
             case AWARDED -> {
                 apply(engine.revealCard(state));
-                phaseDeadline = clock.instant().plusSeconds(settings.slotTimeoutSec());
+                // Un bot place sa carte seul, après une courte pause pour laisser voir la révélation.
+                int wait = bots.containsKey(state.lot().winnerId()) ? BOT_REVEAL_SEC : settings.slotTimeoutSec();
+                phaseDeadline = clock.instant().plusSeconds(wait);
                 schedule(phaseDeadline);
             }
             case DRAW, VERDICT -> continueRound();

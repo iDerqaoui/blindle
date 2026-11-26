@@ -1,6 +1,6 @@
 import { Injectable, computed, signal } from '@angular/core';
 import { Client, IMessage, StompSubscription } from '@stomp/stompjs';
-import { DailySummary, ErrorMessage, PlayerView, PresetSummary, RoomView } from './game.types';
+import { BotProfile, DailySummary, ErrorMessage, PlayerView, PresetSummary, RoomView } from './game.types';
 
 /**
  * Connexion STOMP au serveur et état reçu. Le client ne fait qu'afficher :
@@ -14,6 +14,7 @@ export class GameService {
   readonly error = signal<string | null>(null);
   readonly presets = signal<PresetSummary[]>([]);
   readonly daily = signal<DailySummary[]>([]);
+  readonly botProfiles = signal<BotProfile[]>([]);
 
   /** Horloge locale corrigée de l'écart avec le serveur, rafraîchie 4 fois par seconde. */
   readonly now = signal(Date.now());
@@ -63,6 +64,10 @@ export class GameService {
       if (res.ok) {
         this.presets.set(await res.json());
       }
+      const bots = await fetch('/api/bots');
+      if (bots.ok) {
+        this.botProfiles.set(await bots.json());
+      }
     } catch {
       this.showError('Serveur injoignable');
     }
@@ -98,6 +103,7 @@ export class GameService {
     this.sendToRoom('settings', settings);
   }
 
+  addBot(profile: string): void { this.sendToRoom('bot', { profile }); }
   start(): void { this.sendToRoom('start'); }
   bid(amount: number): void { this.sendToRoom('bid', { amount }); }
   pass(): void { this.sendToRoom('pass'); }

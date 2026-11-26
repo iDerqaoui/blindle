@@ -27,6 +27,9 @@ public final class Requests {
     public record UseJoker(String jokerId, String targetId) {
     }
 
+    public record AddBot(String profile) {
+    }
+
     public record CastVote(String teamOwnerId) {
     }
 }

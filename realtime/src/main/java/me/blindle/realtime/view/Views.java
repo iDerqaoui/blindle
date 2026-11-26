@@ -32,8 +32,8 @@ public final class Views {
     public record SlotView(String id, String label, Set<String> requiredTags) {
     }
 
-    public record PlayerSummary(String id, String name, int budget, int bonus, boolean host, boolean acted,
-                                List<TeamEntry> team) {
+    public record PlayerSummary(String id, String name, int budget, int bonus, boolean host, boolean bot,
+                                boolean acted, List<TeamEntry> team) {
     }
 
     /** @param paid prix payé (public : annoncé dans le journal) */

@@ -24,6 +24,7 @@ export interface PlayerSummary {
   budget: number;
   bonus: number;
   host: boolean;
+  bot: boolean;
   acted: boolean;
   team: TeamEntry[];
 }
@@ -116,3 +117,5 @@ export interface DailySummary {
   players: number;
   leaderboard: LeaderboardEntry[];
 }
+
+export interface BotProfile { profile: string; label: string; }

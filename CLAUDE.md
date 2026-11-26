@@ -61,7 +61,7 @@ Architecture et protocole STOMP proposés à l'étape 0 : `docs/ARCHITECTURE.md`
 
 ## Étape en cours
 
-Étape 9 en cours : défi du jour fait (`market`, verdict `value`, seed du jour, classement, partage emoji). Reste : bots (`BotStrategy`, 5 profils) (voir `docs/PROJECT.md` §11 et §12).
+Étape 9 terminée (défi du jour `market` + verdict `value` + classement + partage emoji ; bots `BotStrategy`, 5 profils). Prochaine : étape 10 — droits et canaux (voir `docs/PROJECT.md` §11 et §12).
 Mettre à jour cette ligne à chaque étape terminée.
 
 ## Notes de passation (2026-11-26)
@@ -69,4 +69,5 @@ Mettre à jour cette ligne à chaque étape terminée.
 - Pas encore vérifié visuellement dans un navigateur (extension Chrome non connectée) : le front compile sans avertissement et des parties scriptées passent par le proxy de dev.
 - À relire avant diffusion publique : cartes pièges du thème manga et les 40 cartes de `pays-du-monde`.
 - Reconnexion = nouveau joueur (pas de reprise de session) ; rooms en mémoire.
+- Défi du jour rejouable à volonté (pas de compte) ; classement en mémoire. Équilibrage du prix du marché et des bots à ajuster en jouant.
 - Dépôt local uniquement : ajouter le remote GitLab puis `git push -u origin main`.

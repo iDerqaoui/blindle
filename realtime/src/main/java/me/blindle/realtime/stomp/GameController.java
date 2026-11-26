@@ -1,6 +1,7 @@
 package me.blindle.realtime.stomp;
 
 import me.blindle.core.GameException;
+import me.blindle.modes.bot.BotCatalog;
 import me.blindle.realtime.room.Room;
 import me.blindle.realtime.room.RoomRegistry;
 import me.blindle.realtime.solo.DailyChallenge;
@@ -26,10 +27,12 @@ public class GameController {
 
     private final RoomRegistry rooms;
     private final DailyChallenge daily;
+    private final BotCatalog bots;
 
-    public GameController(RoomRegistry rooms, DailyChallenge daily) {
+    public GameController(RoomRegistry rooms, DailyChallenge daily, BotCatalog bots) {
         this.rooms = rooms;
         this.daily = daily;
+        this.bots = bots;
     }
 
     @MessageMapping("/room.create")
@@ -60,6 +63,11 @@ public class GameController {
     @MessageMapping("/room/{code}/settings")
     public void settings(@DestinationVariable String code, Requests.UpdateSettings req, Principal player) {
         rooms.require(code).updateSettings(player.getName(), req.budget(), req.rounds(), req.bidTimerSec());
+    }
+
+    @MessageMapping("/room/{code}/bot")
+    public void addBot(@DestinationVariable String code, Requests.AddBot req, Principal player) {
+        rooms.require(code).addBot(player.getName(), bots.require(req.profile()));
     }
 
     @MessageMapping("/room/{code}/start")

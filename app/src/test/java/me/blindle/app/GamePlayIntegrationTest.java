@@ -54,6 +54,9 @@ class GamePlayIntegrationTest {
     void presetsAreListed() {
         List<?> presets = rest.getForObject("/api/presets", List.class);
         assertThat(presets).anySatisfy(p -> assertThat(((Map<?, ?>) p).get("id")).isEqualTo("manga-classique"));
+        List<?> bots = rest.getForObject("/api/bots", List.class);
+        assertThat(bots.stream().map(b -> (String) ((Map<?, ?>) b).get("profile")).toList())
+                .containsExactlyInAnyOrder("aggressive", "stingy", "fan", "bluffer", "strategist");
     }
 
     @Test

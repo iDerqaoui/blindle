@@ -1,0 +1,13 @@
+{
+  "id": "solo-manga-bots",
+  "name": "Solo · Manga contre bots",
+  "description": "Ajoute des bots dans le salon (agressif, radin, fan, bluffeur, stratège). Enchères scellées ; score = valeur de ton équipe − pièces dépensées.",
+  "theme": "manga-shonen",
+  "bidMode": "sealed",
+  "verdictMode": "value",
+  "settings": { "budget": 1000, "rounds": 10, "teamSize": 5, "hintLevels": 3, "bidTimerSec": 30 },
+  "rules": [
+    { "ref": "budget-cap" },
+    { "ref": "rising-floor", "params": { "base": 50, "stepPerHint": 50 } }
+  ]
+}
