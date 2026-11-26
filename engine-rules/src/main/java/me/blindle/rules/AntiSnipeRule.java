@@ -14,7 +14,7 @@ import java.util.Set;
 
 /**
  * {@code anti-snipe} : une offre reçue à moins de {@code extendSeconds} de la fin repousse
- * l'heure de fin à « réception + extendSeconds ». Réservé au mode {@code open}.
+ * l'heure de fin à « réception + extendSeconds ». Réservé aux modes à offres visibles ({@code open}, {@code drawer}).
  */
 @Component
 public class AntiSnipeRule implements Rule {
@@ -50,7 +50,7 @@ public class AntiSnipeRule implements Rule {
 
     @Override
     public Set<String> requiredBidModes() {
-        return Set.of("open");
+        return Set.of("open", "drawer");
     }
 
     @Override

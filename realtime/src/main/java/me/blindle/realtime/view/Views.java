@@ -20,13 +20,18 @@ public final class Views {
                            String verdictMode, List<String> rules, String hostId, int round, int totalRounds,
                            List<SlotView> slots, List<PlayerSummary> players, LotView lot,
                            Long deadline, Long serverTime, List<String> log, ResultView result,
-                           int votesReceived, DailyView daily) {
+                           int votesReceived, DailyView daily, String drawerId, List<CardView> trash,
+                           ArtView art) {
     }
 
     /**
      * Défi du jour : date, puis en fin de partie rang obtenu et texte à partager (sans spoiler).
      */
     public record DailyView(String date, Integer rank, String share) {
+    }
+
+    /** Habillage de l'univers : affiche, bannière, couleur (dos de carte). */
+    public record ArtView(String cover, String banner, String color) {
     }
 
     public record SlotView(String id, String label, Set<String> requiredTags) {
@@ -42,7 +47,7 @@ public final class Views {
 
     /** @param value valeur en pièces (verdict « value »), dérivée des stats et de la rareté publiques */
     public record CardView(String id, String name, Set<String> tags, String rarity, Map<String, Integer> stats,
-                           int value) {
+                           int value, String image) {
     }
 
     public record HintView(int level, String type, String value) {
@@ -67,7 +72,8 @@ public final class Views {
     public record PlayerView(String type, String code, long version, String playerId, String name,
                              boolean host, Integer myBid, boolean passed, boolean canBid,
                              boolean mustPlace, List<String> freeSlots, List<String> placeableSlots,
-                             Map<String, Integer> jokers, List<HintView> privateHints, String votedFor) {
+                             Map<String, Integer> jokers, List<HintView> privateHints, String votedFor,
+                             CardView drawnCard) {
     }
 
     /** Erreur envoyée sur {@code /user/queue/errors}. */

@@ -17,13 +17,14 @@ import java.util.Optional;
  * @param freeSlots   slots encore libres dans l'équipe du bot
  * @param totalSlots  taille d'une équipe
  * @param visibleBids offres visibles (mode open), vide sinon
+ * @param drawnCard   carte piochée par ce bot (mode à piocheur), null sinon : seul le piocheur la voit
  * @param unseen      cartes du thème que personne n'a encore gagnées ni vues défaussées :
  *                    connaissance publique d'un joueur qui connaît l'univers, sans l'ordre du deck
  */
 public record BotView(String botId, long botSeed, String bidMode, boolean bidsVisible,
                       int round, int totalRounds, int budget, int startBudget, int freeSlots, int totalSlots,
                       int hintLevel, int maxHintLevel, List<Hint> hints, int lotSize, int floorPrice,
-                      Integer myBid, List<Bid> visibleBids, List<Card> unseen) {
+                      Integer myBid, List<Bid> visibleBids, List<Card> unseen, Card drawnCard) {
 
     public BotView {
         hints = List.copyOf(hints);

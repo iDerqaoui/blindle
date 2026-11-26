@@ -3,6 +3,7 @@ package me.blindle.realtime.room;
 import me.blindle.content.ContentRegistry;
 import me.blindle.core.GameException;
 import me.blindle.core.Phase;
+import me.blindle.modes.DrawerBidMode;
 import me.blindle.modes.MarketBidMode;
 import me.blindle.modes.ModeCatalog;
 import me.blindle.modes.OpenBidMode;
@@ -41,7 +42,7 @@ class RoomTest {
             new RuleCatalog(List.of(new BudgetCapRule(), new RisingFloorRule(), new JokerSpyRule(),
                     new JokerStealRule(), new TrapLotsRule(), new TagSynergyRule(), new SlotConstraintRule(),
                     new AntiSnipeRule())),
-            new ModeCatalog(List.of(new SealedBidMode(), new OpenBidMode(), new MarketBidMode()),
+            new ModeCatalog(List.of(new SealedBidMode(), new OpenBidMode(), new MarketBidMode(), new DrawerBidMode()),
                     List.of(new VoteVerdictMode(), new ValueVerdictMode())));
 
     /** Minuteries manuelles : on déclenche à la main la dernière programmée. */

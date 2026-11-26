@@ -10,13 +10,23 @@ import java.util.Map;
 import java.util.Set;
 
 /** Thème tel que décrit en JSON (docs/PROJECT.md §4), converti en objets moteur à la demande. */
-public record Theme(String id, String name, String version, String description, Rights rights,
+public record Theme(String id, String name, String version, String description, Rights rights, Art art,
                     List<SlotDefinition> defaultSlots, List<String> attributes, List<CardDefinition> cards) {
 
     public Theme {
         defaultSlots = defaultSlots == null ? List.of() : List.copyOf(defaultSlots);
         attributes = attributes == null ? List.of() : List.copyOf(attributes);
         cards = cards == null ? List.of() : List.copyOf(cards);
+    }
+
+    /** Habillage de l'univers (dos de carte, accueil) : affiche, bannière, couleur dominante. Optionnel. */
+    public record Art(String cover, String banner, String color) {
+    }
+
+    /** Image d'une carte (URL), ou null : le moteur ne la connaît pas, seules les vues l'utilisent. */
+    public String imageOf(String cardId) {
+        return cards.stream().filter(c -> c.id().equals(cardId)).findFirst()
+                .map(CardDefinition::image).orElse(null);
     }
 
     /** Droits et canaux de diffusion (§8). */

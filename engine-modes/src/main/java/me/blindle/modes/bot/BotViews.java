@@ -33,12 +33,18 @@ public final class BotViews {
         int maxHint = 0;
         int lotSize = 1;
         int floor = 0;
+        Card drawn = null;
+        String drawer = mode.drawerId(s);
         if (lot != null) {
+            if (botId.equals(drawer)) {
+                drawn = lot.cards().get(0);
+            }
             hintLevel = lot.hintLevel();
             maxHint = Math.min(lot.maxHintLevel(), s.settings().hintLevels());
             lotSize = lot.cards().size();
             floor = lot.floorPrice();
-            for (Card c : lot.cards()) {
+            // Mode à piocheur : les autres ne voient que le dos de la carte, aucun indice.
+            for (Card c : drawer == null ? lot.cards() : List.<Card>of()) {
                 for (int level = 1; level <= hintLevel; level++) {
                     c.hint(level).ifPresent(hints::add);
                 }
@@ -60,6 +66,6 @@ public final class BotViews {
         long botSeed = GameRandom.derive(s.seed(), "bot:" + botId).nextLong();
         return new BotView(botId, botSeed, mode.id(), mode.bidsVisible(), s.roundIndex(), s.settings().rounds(),
                 me.budget(), s.settings().budget(), s.freeSlots(botId), s.slots().size(), hintLevel, maxHint,
-                hints, lotSize, floor, myBid, visible, unseen);
+                hints, lotSize, floor, myBid, visible, unseen, drawn);
     }
 }

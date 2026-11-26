@@ -40,6 +40,6 @@ final class BotFixtures {
     static BotView view(Card lot, int level, boolean visible, List<Bid> bids, int round, int freeSlots,
                         int budget, int floor) {
         return new BotView("bot-1", 42L, visible ? "open" : "sealed", visible, round, 10, budget, 1000,
-                freeSlots, 5, level, 3, hints(lot, level), 1, floor, null, bids, ALL);
+                freeSlots, 5, level, 3, hints(lot, level), 1, floor, null, bids, ALL, null);
     }
 }

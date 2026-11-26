@@ -5,6 +5,7 @@ import me.blindle.content.Channel;
 import me.blindle.content.Preset;
 import me.blindle.realtime.channel.ChannelAccess;
 import me.blindle.realtime.channel.ChannelAuthenticator;
+import me.blindle.realtime.view.Views;
 import org.springframework.http.server.ServletServerHttpRequest;
 import me.blindle.modes.bot.BotCatalog;
 import me.blindle.realtime.game.GameFactory;
@@ -43,7 +44,7 @@ public class PresetController {
 
     public record PresetSummary(String id, String name, String description, String themeName,
                                 String bidMode, String verdictMode, boolean daily, Preset.Settings settings,
-                                String disclaimer) {
+                                String disclaimer, Views.ArtView art, int cards) {
     }
 
     public record DailySummary(String presetId, String name, String description, String themeName, String date,
@@ -57,7 +58,8 @@ public class PresetController {
         return factory.presets().stream().filter(p -> access.allows(p, channel)).map(p -> {
             var setup = factory.setup(p.id());
             return new PresetSummary(p.id(), p.name(), p.description(), setup.theme().name(),
-                    p.bidMode(), p.verdictMode(), p.daily(), p.settings(), setup.theme().rights().disclaimer());
+                    p.bidMode(), p.verdictMode(), p.daily(), p.settings(), setup.theme().rights().disclaimer(),
+                    art(setup.theme()), setup.theme().cards().size());
         }).toList();
     }
 
@@ -76,6 +78,11 @@ public class PresetController {
         return daily.dailyPresets().stream().filter(p -> access.allows(p, channel)).map(p -> new DailySummary(p.id(), p.name(), p.description(),
                 factory.setup(p.id()).theme().name(), today.toString(), leaderboard.size(today, p.id()),
                 leaderboard.top(today, p.id(), LEADERBOARD_SIZE))).toList();
+    }
+
+    private static Views.ArtView art(me.blindle.content.Theme theme) {
+        return theme.art() == null ? null
+                : new Views.ArtView(theme.art().cover(), theme.art().banner(), theme.art().color());
     }
 
     private Channel channelOf(HttpServletRequest request) {

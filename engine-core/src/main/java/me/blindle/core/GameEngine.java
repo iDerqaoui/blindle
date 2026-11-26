@@ -301,7 +301,9 @@ public final class GameEngine {
 
     private void drawOrVerdict(Tx tx) {
         GameState s = tx.state;
-        if (s.roundIndex() >= s.settings().rounds() || s.deck().isEmpty()) {
+        // Fin : rounds joués, deck épuisé, ou plus aucune équipe ne peut recevoir de carte.
+        boolean allTeamsFull = s.players().stream().allMatch(p -> s.freeSlots(p.id()) == 0);
+        if (s.roundIndex() >= s.settings().rounds() || s.deck().isEmpty() || allTeamsFull) {
             tx.to(Phase.VERDICT);
             tx.state = tx.state.withLog("Place au verdict");
             tx.emit(new GameEvent.VerdictRequested());

@@ -35,7 +35,7 @@ class AntiSnipeRuleTest {
     }
 
     @Test
-    void onlyForOpenMode() {
-        assertThat(new AntiSnipeRule().requiredBidModes()).containsExactly("open");
+    void onlyForVisibleBidModes() {
+        assertThat(new AntiSnipeRule().requiredBidModes()).containsExactlyInAnyOrder("open", "drawer");
     }
 }

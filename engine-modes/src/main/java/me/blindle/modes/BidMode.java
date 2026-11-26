@@ -31,6 +31,19 @@ public interface BidMode extends BidResolver {
     default void validatePass(GameState state, String playerId) {
     }
 
+    /**
+     * Joueur qui a pioché le lot courant et seul à en voir la carte, ou null si le mode n'a pas
+     * de piocheur (toutes les cartes sont alors cachées à tous jusqu'à la révélation).
+     */
+    default String drawerId(GameState state) {
+        return null;
+    }
+
+    /** La carte gagnée est-elle posée d'office dans l'équipe (sans choix de slot) ? */
+    default boolean autoPlace() {
+        return false;
+    }
+
     @Override
     Optional<LotResult> resolve(LotState lot, GameRandom random);
 }

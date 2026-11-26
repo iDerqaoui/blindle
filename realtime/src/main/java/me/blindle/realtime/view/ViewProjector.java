@@ -1,5 +1,6 @@
 package me.blindle.realtime.view;
 
+import me.blindle.content.Theme;
 import me.blindle.core.Phase;
 import me.blindle.core.model.Bid;
 import me.blindle.core.model.Card;
@@ -40,6 +41,7 @@ public final class ViewProjector {
 
     public static Views.RoomView room(RoomSnapshot r) {
         GameState s = r.state();
+        Theme theme = r.setup().theme();
         // Les cartes placées dans les équipes ont été révélées à tous : elles sont publiques.
         Map<String, Card> known = s.cards();
         List<Views.PlayerSummary> players = new ArrayList<>();
@@ -48,7 +50,7 @@ public final class ViewProjector {
             for (SlotDef slot : s.slots()) {
                 String cardId = p.team().get(slot.id());
                 if (cardId != null) {
-                    team.add(new Views.TeamEntry(slot.id(), card(known.get(cardId)), p.paid().get(cardId)));
+                    team.add(new Views.TeamEntry(slot.id(), card(known.get(cardId), theme), p.paid().get(cardId)));
                 }
             }
             boolean acted = s.phase() == Phase.BIDDING && s.lot() != null && s.lot().hasActed(p.id());
@@ -65,9 +67,10 @@ public final class ViewProjector {
                 r.setup().preset().id(), r.setup().preset().name(), r.setup().theme().name(),
                 r.setup().bidMode().id(), r.setup().verdictMode().id(),
                 r.setup().preset().rules().stream().map(x -> x.ref()).toList(), r.hostId(),
-                s.roundIndex(), s.settings().rounds(), slots, players, lot(s, r.setup().bidMode().bidsVisible()),
+                s.roundIndex(), s.settings().rounds(), slots, players, lot(s, r.setup().bidMode().bidsVisible(), r.setup().bidMode().drawerId(s) != null, theme),
                 deadline == null ? null : deadline.toEpochMilli(), r.now().toEpochMilli(),
-                List.copyOf(log), result, r.votes().size(), daily(r));
+                List.copyOf(log), result, r.votes().size(), daily(r), drawer(r),
+                s.discarded().stream().map(c -> card(c, theme)).toList(), art(theme));
     }
 
     public static Views.PlayerView player(RoomSnapshot r, String playerId) {
@@ -93,16 +96,18 @@ public final class ViewProjector {
                 .map(h -> new Views.HintView(h.level(), h.type(), h.value())).toList();
         return new Views.PlayerView("player", r.code(), s.version(), playerId, me.name(),
                 playerId.equals(r.hostId()), myBid, passed, canBid, mustPlace, freeSlots, placeable,
-                me.jokers(), privateHints, votedFor);
+                me.jokers(), privateHints, votedFor, drawnCard(r, playerId));
     }
 
-    private static Views.LotView lot(GameState s, boolean bidsVisible) {
+    private static Views.LotView lot(GameState s, boolean bidsVisible, boolean drawerMode, Theme theme) {
         LotState lot = s.lot();
         if (lot == null) {
             return null;
         }
         List<Views.HintView> hints = new ArrayList<>();
-        for (int level = 1; level <= lot.hintLevel(); level++) {
+        // Mode à piocheur : les autres ne voient que le dos de la carte, aucun indice.
+        int shownLevels = drawerMode ? 0 : lot.hintLevel();
+        for (int level = 1; level <= shownLevels; level++) {
             int l = level;
             // Lot multi-cartes : un indice par carte et par palier.
             for (Card c : lot.cards()) {
@@ -114,7 +119,7 @@ public final class ViewProjector {
                 ? lot.bids().stream().map(b -> new Views.BidView(b.playerId(), b.amount())).toList()
                 : null;
         List<Views.CardView> cards = CARD_VISIBLE.contains(s.phase())
-                ? lot.cards().stream().map(ViewProjector::card).toList()
+                ? lot.cards().stream().map(c -> card(c, theme)).toList()
                 : null;
         int maxHint = Math.min(lot.maxHintLevel(), s.settings().hintLevels());
         int acted = lot.bids().size() + lot.passes().size();
@@ -133,10 +138,30 @@ public final class ViewProjector {
         return new Views.DailyView(r.dailyDate().toString(), r.dailyRank(), share);
     }
 
-    private static Views.CardView card(Card c) {
+    /** Piocheur du lot en cours (public : tout le monde sait qui a pioché), tant que la carte est cachée. */
+    private static String drawer(RoomSnapshot r) {
+        GameState s = r.state();
+        return s.lot() == null || CARD_VISIBLE.contains(s.phase()) ? null : r.setup().bidMode().drawerId(s);
+    }
+
+    /** La carte piochée, envoyée à son seul piocheur avant la révélation (principe 2). */
+    private static Views.CardView drawnCard(RoomSnapshot r, String playerId) {
+        if (!playerId.equals(drawer(r))) {
+            return null;
+        }
+        return card(r.state().lot().cards().get(0), r.setup().theme());
+    }
+
+    private static Views.ArtView art(Theme theme) {
+        Theme.Art a = theme.art();
+        return a == null ? null : new Views.ArtView(a.cover(), a.banner(), a.color());
+    }
+
+    private static Views.CardView card(Card c, Theme theme) {
         if (c == null) {
             return null;
         }
-        return new Views.CardView(c.id(), c.name(), c.tags(), c.rarity(), c.stats(), CardValuation.of(c));
+        return new Views.CardView(c.id(), c.name(), c.tags(), c.rarity(), c.stats(), CardValuation.of(c),
+                theme.imageOf(c.id()));
     }
 }

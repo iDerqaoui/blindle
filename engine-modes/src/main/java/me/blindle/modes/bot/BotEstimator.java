@@ -21,6 +21,10 @@ public final class BotEstimator {
     }
 
     public static double estimate(BotView v) {
+        if (v.drawnCard() != null) {
+            GameRandom random = GameRandom.derive(v.botSeed(), "estimate:" + v.round());
+            return CardValuation.of(v.drawnCard()) * (1 - NOISE + 2 * NOISE * random.nextDouble());
+        }
         List<Card> pool = v.unseen();
         if (pool.isEmpty()) {
             return 0;

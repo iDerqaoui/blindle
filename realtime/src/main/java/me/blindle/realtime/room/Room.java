@@ -202,6 +202,9 @@ public final class Room {
         }
         setup.bidMode().validatePass(state, playerId);
         apply(engine.pass(state, playerId));
+        if (setup.bidMode().bidsVisible()) {
+            runBots(); // le piocheur a laissé, ou un adversaire s'est retiré : les bots réagissent
+        }
         closeTierIfComplete();
         publish();
     }
@@ -370,8 +373,10 @@ public final class Room {
             case HINT -> openTier();
             case AWARDED -> {
                 apply(engine.revealCard(state));
-                // Un bot place sa carte seul, après une courte pause pour laisser voir la révélation.
-                int wait = bots.containsKey(state.lot().winnerId()) ? BOT_REVEAL_SEC : settings.slotTimeoutSec();
+                // Un bot (ou tout gagnant en pose automatique) place sa carte seul, après une courte pause
+                // pour laisser voir la révélation.
+                boolean auto = setup.bidMode().autoPlace() || bots.containsKey(state.lot().winnerId());
+                int wait = auto ? BOT_REVEAL_SEC : settings.slotTimeoutSec();
                 phaseDeadline = clock.instant().plusSeconds(wait);
                 schedule(phaseDeadline);
             }

@@ -3,7 +3,7 @@
 // Un thème par univers : on ne mélange jamais les licences dans une partie.
 //
 // Les images restent chez AniList : le thème ne contient que leurs URL, et les fichiers générés
-// (content/themes/anime-*.json) sont ignorés par git. Profil « private » (§8) : usage entre amis,
+// (content/themes/anime-*.json, content/presets/anime-*.json) sont ignorés par git. Profil « private » (§8) : usage entre amis,
 // sur invitation, canal web uniquement.
 //
 // Usage : node tools/import-anilist.mjs [slug…]   (sans argument : tous les univers ci-dessous)
@@ -26,7 +26,9 @@ const UNIVERSES = [
 const CARDS_PER_THEME = 40;
 const PAGE_SIZE = 25;
 const PAUSE_MS = 2500; // AniList limite le nombre de requêtes par minute
-const OUT_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'content', 'themes');
+const CONTENT_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'content');
+const OUT_DIR = path.join(CONTENT_DIR, 'themes');
+const PRESET_DIR = path.join(CONTENT_DIR, 'presets');
 
 const QUERY = `
 query ($search: String, $page: Int, $perPage: Int) {
@@ -123,7 +125,19 @@ async function importUniverse(u) {
   };
   const file = path.join(OUT_DIR, `${theme.id}.json`);
   await writeFile(file, JSON.stringify(theme, null, 2) + '\n', 'utf8');
-  console.log(`${theme.id} : ${cards.length} cartes (${media.title.romaji}) → ${path.relative(process.cwd(), file)}`);
+  // Mode principal « Anime Blind Bid » : le piocheur voit la carte, les autres surenchérissent à l'aveugle.
+  const preset = {
+    id: theme.id,
+    name: u.name,
+    description: 'Anime Blind Bid : le piocheur seul voit le personnage et ouvre l’enchère, les autres surenchérissent ou laissent.',
+    theme: theme.id,
+    bidMode: 'drawer',
+    verdictMode: 'vote',
+    settings: { budget: 1000, rounds: cards.length, teamSize: 5, hintLevels: 1, bidTimerSec: 20 },
+    rules: [{ ref: 'budget-cap' }, { ref: 'anti-snipe', params: { extendSeconds: 5 } }],
+  };
+  await writeFile(path.join(PRESET_DIR, `${preset.id}.json`), JSON.stringify(preset, null, 2) + '\n', 'utf8');
+  console.log(`${theme.id} : ${cards.length} cartes (${media.title.romaji}) → ${path.relative(process.cwd(), file)} + preset`);
 }
 
 const wanted = process.argv.slice(2);
