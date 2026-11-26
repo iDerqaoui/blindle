@@ -42,7 +42,7 @@ Jeu d'enchères à l'aveugle multijoueur en ligne (3 à 8 joueurs, ou solo contr
 - Tests JUnit 5 obligatoires pour chaque règle et chaque mode : état initial + événement → état attendu
 - Une étape de la feuille de route par session ; petits commits clairs (GitLab)
 - Signaler toute nouvelle dépendance avant de l'ajouter
-- Dépendances ajoutées (validées) : `com.networknt:json-schema-validator` (content)
+- Dépendances ajoutées (validées) : `com.networknt:json-schema-validator` (content) ; front : Angular 21 LTS, `@stomp/stompjs` 7.1.1 (version exacte)
 - Si une étape exige de modifier `engine-*` pour un besoin propre à un thème : s'arrêter et le signaler
 
 ## Commandes
@@ -51,7 +51,9 @@ Jeu d'enchères à l'aveugle multijoueur en ligne (3 à 8 joueurs, ou solo contr
 - Tests d'un module : `mvn -pl engine-core test` (ajouter `-am` pour construire ses dépendances)
 - Un test : `mvn -pl engine-rules -am test -Dtest=BudgetCapRuleTest -Dsurefire.failIfNoSpecifiedTests=false`
 - Lancer le back : `mvn -pl app -am spring-boot:run` (port 8080, STOMP sur `/ws`)
-- Front : à définir à l'étape 6 (`web/`)
+- Jar exécutable : `mvn clean install -DskipTests` puis `java -jar app/target/app-0.1.0-SNAPSHOT.jar --blindle.content.dir=content` (le `clean` évite un jar embarquant d'anciens modules)
+- Front : `cd web && npm install && npm start` → http://localhost:4200 (proxy `/api` et `/ws` vers 8080) ; build : `npx ng build`
+- Dev à moins de 3 joueurs : `--blindle.room.min-players=1`
 
 Java 17 retenu (décision du 2026-11-26) : pas de pattern matching dans `switch` ni de record patterns.
 
@@ -59,5 +61,5 @@ Architecture et protocole STOMP proposés à l'étape 0 : `docs/ARCHITECTURE.md`
 
 ## Étape en cours
 
-Étape 5 terminée (rooms, STOMP, timers serveur, vues filtrées, partie à 3 clients testée). Prochaine : étape 6 — front Angular (voir `docs/PROJECT.md` §11 et §12).
+Étape 6 terminée — **MVP jouable** (front Angular : accueil, lobby, enchère, équipes, vote, résultats). Prochaine : étape 7 — jokers, lots pièges, synergies, mode `open` (voir `docs/PROJECT.md` §11 et §12).
 Mettre à jour cette ligne à chaque étape terminée.
