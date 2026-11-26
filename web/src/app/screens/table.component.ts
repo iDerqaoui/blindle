@@ -21,9 +21,6 @@ import { TimerComponent } from '../ui/timer.component';
           <div class="stage-top">
             <span class="round-chip">Carte {{ room.round }}</span>
             <app-timer />
-            <button class="btn ghost small" (click)="trashOpen.set(true)">
-              🗑️ Poubelle <span class="count">{{ room.trash.length }}</span>
-            </button>
           </div>
 
           <div class="stage-cards">
@@ -38,6 +35,17 @@ import { TimerComponent } from '../ui/timer.component';
                                [faceUp]="!!shownCard()" size="lg" />
               </div>
             }
+
+            <button class="trash-pile" (click)="trashOpen.set(true)"
+                    [attr.aria-label]="'Poubelle : ' + room.trash.length + ' carte(s)'">
+              @if (lastTrashed(); as top) {
+                <app-game-card class="trash-top" [card]="top" [faceUp]="true" size="sm" />
+                <span class="trash-count">{{ room.trash.length }}</span>
+              } @else {
+                <span class="trash-empty">🗑️</span>
+              }
+              <span>Poubelle</span>
+            </button>
           </div>
 
           <div class="stage-info">
@@ -133,6 +141,11 @@ export class TableComponent {
   readonly leader = computed(() => {
     const bids = this.game.room()?.lot?.bids ?? [];
     return bids.length === 0 ? null : bids.reduce((a, b) => (b.amount > a.amount ? b : a));
+  });
+  /** Dernière carte jetée, posée face visible sur la pile. */
+  readonly lastTrashed = computed(() => {
+    const trash = this.game.room()?.trash ?? [];
+    return trash.length ? trash[trash.length - 1] : null;
   });
   readonly iLead = computed(() => this.leader()?.playerId === this.game.myId());
   readonly myGold = computed(() => this.game.room()?.players.find(p => p.id === this.game.myId())?.budget ?? 0);

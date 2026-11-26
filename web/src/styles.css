@@ -296,8 +296,28 @@ code { background: var(--panel-2); padding: 2px 6px; border-radius: 6px; font-si
 .gcard.size-xs .gcard-caption { padding: 10px 4px 3px; }
 .gcard.size-xs .gcard-name { font-size: 0.62rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .gcard.size-lg .gcard-name { font-size: 1.05rem; }
-.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 14px; justify-items: center; }
+/* L'hôte du composant doit être un bloc : sinon une largeur en % dans une grille centrée s'effondre. */
+app-game-card { display: block; }
+.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 14px; }
 .card-grid .gcard.size-sm { --w: 100%; }
+
+/* Poubelle : pile sur la table, dernière carte jetée face visible. */
+.trash-pile {
+  position: relative; display: grid; justify-items: center; gap: 6px; padding: 0; cursor: pointer;
+  background: none; border: 0; color: var(--muted); font-size: 0.8rem; font-weight: 600;
+}
+.trash-pile .gcard { --w: clamp(84px, 9vw, 104px); }
+.trash-pile:hover .gcard-front, .trash-pile:hover .trash-empty { border-color: var(--accent); }
+.trash-pile .trash-top { transform: rotate(6deg); }
+.trash-empty {
+  width: clamp(84px, 9vw, 104px); aspect-ratio: 5 / 7; border-radius: 10px;
+  border: 1.5px dashed var(--border); display: grid; place-items: center; font-size: 1.6rem;
+}
+.trash-count {
+  position: absolute; top: -8px; right: -8px; min-width: 24px; height: 24px; padding: 0 6px;
+  display: grid; place-items: center; border-radius: 999px;
+  background: var(--danger); color: #fff; font-size: 0.75rem; font-weight: 800;
+}
 
 /* ------------------------------------------------------------------ table Blind Bid */
 
@@ -311,7 +331,7 @@ code { background: var(--panel-2); padding: 2px 6px; border-radius: 6px; font-si
 }
 .stage-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
 .round-chip { font-weight: 800; padding: 4px 12px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--border); }
-.stage-cards { display: flex; justify-content: center; align-items: center; gap: 28px; margin: 22px 0 16px; min-height: 260px; }
+.stage-cards { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 28px; margin: 22px 0 16px; min-height: 260px; }
 .deck { position: relative; }
 .deck .gcard.size-lg { --w: clamp(110px, 12vw, 140px); }
 .deck-under { position: absolute; top: 5px; left: 5px; z-index: -1; filter: brightness(0.7); }
