@@ -319,6 +319,36 @@
         { "level": 2, "type": "text", "text": "Considéré comme le soldat le plus fort de l'humanité" },
         { "level": 3, "type": "text", "text": "Caporal du bataillon d'exploration" }
       ]
+    },
+    {
+      "id": "db-yamcha", "name": "Yamcha",
+      "tags": ["dragon-ball", "fighter"], "rarity": "common", "isTrap": true,
+      "stats": { "power": 30, "intelligence": 35, "popularity": 45 },
+      "hints": [
+        { "level": 1, "type": "text", "text": "Ancien bandit redouté du désert" },
+        { "level": 2, "type": "text", "text": "A combattu aux côtés des plus grands guerriers de la Terre" },
+        { "level": 3, "type": "text", "text": "Combattant célèbre pour sa technique du loup" }
+      ]
+    },
+    {
+      "id": "db-hercule", "name": "Hercule",
+      "tags": ["dragon-ball", "fighter", "celebrity"], "rarity": "common", "isTrap": true,
+      "stats": { "power": 12, "intelligence": 30, "popularity": 75 },
+      "hints": [
+        { "level": 1, "type": "text", "text": "Champion du monde des arts martiaux" },
+        { "level": 2, "type": "text", "text": "Acclamé comme le sauveur de la planète" },
+        { "level": 3, "type": "text", "text": "Boxeur moustachu à la coupe afro" }
+      ]
+    },
+    {
+      "id": "op-buggy", "name": "Baggy le Clown",
+      "tags": ["one-piece", "pirate", "captain"], "rarity": "common", "isTrap": true,
+      "stats": { "power": 25, "intelligence": 40, "popularity": 70 },
+      "hints": [
+        { "level": 1, "type": "text", "text": "Chef d'une immense flotte pirate" },
+        { "level": 2, "type": "text", "text": "A navigué sur le navire du roi des pirates" },
+        { "level": 3, "type": "text", "text": "Pirate clown au gros nez rouge" }
+      ]
     }
   ]
 }

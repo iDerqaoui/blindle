@@ -25,4 +25,26 @@ public interface Rule {
     int priority();
 
     RuleResult apply(GameEvent event, GameState state, RuleParams params);
+
+    /**
+     * Champs de thème requis : {@code stats}, {@code rarity}, {@code tags}, {@code isTrap}
+     * (au moins une carte piège) ou {@code slotTags} (au moins un slot avec tags requis).
+     */
+    default Set<String> requiredThemeFields() {
+        return Set.of();
+    }
+
+    /** Modes d'enchère compatibles (vide = tous). */
+    default Set<String> requiredBidModes() {
+        return Set.of();
+    }
+
+    /** Règles incompatibles avec celle-ci. */
+    default Set<String> conflictsWith() {
+        return Set.of();
+    }
+
+    /** Vérifie les paramètres au chargement du preset ; lève IllegalArgumentException s'ils sont invalides. */
+    default void validateParams(RuleParams params) {
+    }
 }

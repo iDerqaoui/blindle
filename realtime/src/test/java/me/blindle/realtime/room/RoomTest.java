@@ -4,6 +4,7 @@ import me.blindle.content.ContentRegistry;
 import me.blindle.core.GameException;
 import me.blindle.core.Phase;
 import me.blindle.modes.ModeCatalog;
+import me.blindle.modes.OpenBidMode;
 import me.blindle.modes.SealedBidMode;
 import me.blindle.modes.VoteVerdictMode;
 import me.blindle.realtime.RealtimeConfig.RoomSettings;
@@ -11,7 +12,13 @@ import me.blindle.realtime.game.GameFactory;
 import me.blindle.realtime.timer.TimerScheduler;
 import me.blindle.realtime.view.ViewProjector;
 import me.blindle.realtime.view.Views;
+import me.blindle.rules.AntiSnipeRule;
 import me.blindle.rules.BudgetCapRule;
+import me.blindle.rules.JokerSpyRule;
+import me.blindle.rules.JokerStealRule;
+import me.blindle.rules.SlotConstraintRule;
+import me.blindle.rules.TagSynergyRule;
+import me.blindle.rules.TrapLotsRule;
 import me.blindle.rules.RisingFloorRule;
 import me.blindle.rules.RuleCatalog;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,8 +36,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class RoomTest {
 
     static final GameFactory FACTORY = new GameFactory(new ContentRegistry(""),
-            new RuleCatalog(List.of(new BudgetCapRule(), new RisingFloorRule())),
-            new ModeCatalog(List.of(new SealedBidMode()), List.of(new VoteVerdictMode())));
+            new RuleCatalog(List.of(new BudgetCapRule(), new RisingFloorRule(), new JokerSpyRule(),
+                    new JokerStealRule(), new TrapLotsRule(), new TagSynergyRule(), new SlotConstraintRule(),
+                    new AntiSnipeRule())),
+            new ModeCatalog(List.of(new SealedBidMode(), new OpenBidMode()), List.of(new VoteVerdictMode())));
 
     /** Minuteries manuelles : on déclenche à la main la dernière programmée. */
     static final class ManualTimers implements TimerScheduler {

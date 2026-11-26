@@ -58,7 +58,7 @@ public final class Room {
         this.broadcaster = broadcaster;
         this.clock = clock;
         this.state = engine.create(code, seed, setup.preset().settings().toGameSettings(),
-                setup.theme().toSlots(), setup.theme().toCards());
+                setup.theme().toSlots(), setup.deck());
         this.lastActivity = clock.instant();
     }
 
@@ -132,14 +132,36 @@ public final class Room {
 
     public synchronized void bid(String playerId, int amount) {
         requirePlayer(playerId);
-        apply(engine.placeBid(state, new Bid(playerId, amount)));
+        if (state.phase() != Phase.BIDDING) {
+            throw new GameException("WRONG_PHASE", "Les enchères sont fermées");
+        }
+        Bid bid = new Bid(playerId, amount);
+        setup.bidMode().validateBid(state, bid);
+        Instant before = state.lot().deadline();
+        apply(engine.placeBid(state, bid, clock.instant()));
+        Instant after = state.lot().deadline();
+        if (after != null && !after.equals(before)) {
+            schedule(after); // heure de fin repoussée par une règle (anti-snipe)
+        }
         closeTierIfComplete();
         publish();
     }
 
     public synchronized void pass(String playerId) {
         requirePlayer(playerId);
+        if (state.phase() != Phase.BIDDING) {
+            throw new GameException("WRONG_PHASE", "Les enchères sont fermées");
+        }
+        setup.bidMode().validatePass(state, playerId);
         apply(engine.pass(state, playerId));
+        closeTierIfComplete();
+        publish();
+    }
+
+    public synchronized void useJoker(String playerId, String jokerId, String targetId) {
+        requirePlayer(playerId);
+        apply(engine.useJoker(state, playerId, jokerId, targetId));
+        // Un vol change le nombre de slots libres, donc les joueurs éligibles.
         closeTierIfComplete();
         publish();
     }
@@ -153,6 +175,36 @@ public final class Room {
         apply(engine.assignSlot(state, playerId, slotId, card.id()));
         afterSlot();
         publish();
+    }
+
+    /** Le gagnant renonce à la carte, uniquement si aucun slot libre ne l'accepte. */
+    public synchronized void forfeit(String playerId) {
+        requirePlayer(playerId);
+        if (state.phase() != Phase.REVEALED) {
+            throw new GameException("WRONG_PHASE", "Aucune carte à placer");
+        }
+        if (!placeableSlots(state, engine, playerId).isEmpty()) {
+            throw new GameException("CAN_PLACE", "Un slot peut accueillir cette carte");
+        }
+        apply(engine.forfeit(state, playerId));
+        afterSlot();
+        publish();
+    }
+
+    /** Slots libres où la prochaine carte du lot peut aller, règles comprises (essai à blanc). */
+    public static List<String> placeableSlots(GameState s, GameEngine engine, String playerId) {
+        if (s.phase() != Phase.REVEALED || s.lot() == null || !playerId.equals(s.lot().winnerId())) {
+            return List.of();
+        }
+        PlayerState p = s.player(playerId).orElseThrow();
+        Card card = s.lot().cards().stream().filter(c -> !p.team().containsValue(c.id())).findFirst().orElse(null);
+        if (card == null) {
+            return List.of();
+        }
+        return s.slots().stream().map(SlotDef::id)
+                .filter(id -> !p.team().containsKey(id))
+                .filter(id -> engine.canAssign(s, playerId, id, card.id()))
+                .toList();
     }
 
     public synchronized void vote(String playerId, String teamOwnerId) {
@@ -222,16 +274,24 @@ public final class Room {
         }
     }
 
-    /** Le gagnant n'a pas choisi à temps : premier slot libre compatible, sinon premier libre. */
+    /**
+     * Le gagnant n'a pas choisi à temps : premier slot accepté par les règles,
+     * en privilégiant ceux dont la carte a les tags ; sinon la carte est défaussée.
+     */
     private void autoPlace() {
         String winner = state.lot().winnerId();
         while (state.phase() == Phase.REVEALED) {
             Card card = nextCardToPlace(winner);
-            PlayerState p = state.player(winner).orElseThrow();
-            List<SlotDef> free = state.slots().stream().filter(s -> !p.team().containsKey(s.id())).toList();
-            SlotDef slot = free.stream().filter(s -> card.tags().containsAll(s.requiredTags())).findFirst()
-                    .orElse(free.get(0));
-            apply(engine.assignSlot(state, winner, slot.id(), card.id()));
+            List<String> options = placeableSlots(state, engine, winner);
+            if (options.isEmpty()) {
+                apply(engine.forfeit(state, winner));
+                break;
+            }
+            String slot = options.stream()
+                    .filter(id -> state.slot(id).map(s -> card.tags().containsAll(s.requiredTags())
+                            && !s.requiredTags().isEmpty()).orElse(false))
+                    .findFirst().orElse(options.get(0));
+            apply(engine.assignSlot(state, winner, slot, card.id()));
         }
         afterSlot();
     }

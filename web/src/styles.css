@@ -167,3 +167,13 @@ h3 { font-size: 1rem; margin-top: 16px; }
   .room-code { font-size: 2.2rem; }
   main { padding: 12px; }
 }
+
+/* Étape 7 : jokers, enchères ouvertes, bonus */
+.private-hint { border: 1px dashed var(--accent); border-radius: 10px; padding: 6px; }
+.live-bids { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+.tag.leader { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.tag.bonus { background: #1f3b2e; color: var(--ok); }
+.jokers { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px;
+  padding-top: 10px; border-top: 1px solid var(--border); }
+.slot-card { display: inline-flex; align-items: center; gap: 6px; }
+.slot-card .btn.small { padding: 2px 8px; margin: 0; font-size: 0.75rem; }

@@ -85,6 +85,13 @@ export class GameService {
   pass(): void { this.sendToRoom('pass'); }
   assignSlot(slotId: string): void { this.sendToRoom('slot', { slotId }); }
   vote(teamOwnerId: string): void { this.sendToRoom('vote', { teamOwnerId }); }
+  useJoker(jokerId: string, targetId: string | null = null): void { this.sendToRoom('joker', { jokerId, targetId }); }
+  forfeit(): void { this.sendToRoom('forfeit'); }
+
+  /** Utilisations restantes d'un joker pour le joueur courant. */
+  jokersLeft(jokerId: string): number {
+    return this.me()?.jokers?.[jokerId] ?? 0;
+  }
 
   /** Quitte la room côté client (nouvelle connexion = nouvelle identité). */
   leave(): void {

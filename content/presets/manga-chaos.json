@@ -1,0 +1,19 @@
+{
+  "id": "manga-chaos",
+  "name": "Manga Chaos",
+  "description": "Enchères visibles, jokers espion et vol, lots pièges, synergies et slot Soutien contraint.",
+  "theme": "manga-shonen",
+  "bidMode": "open",
+  "verdictMode": "vote",
+  "settings": { "budget": 1000, "rounds": 10, "teamSize": 5, "hintLevels": 3, "bidTimerSec": 20 },
+  "rules": [
+    { "ref": "budget-cap" },
+    { "ref": "rising-floor", "params": { "base": 50, "stepPerHint": 25 } },
+    { "ref": "joker-spy", "params": { "usesPerGame": 1 } },
+    { "ref": "joker-steal", "params": { "multiplier": 1.5, "usesPerGame": 1 } },
+    { "ref": "trap-lots", "params": { "frequency": 0.2, "penalty": 50 } },
+    { "ref": "tag-synergy", "params": { "minCount": 2, "bonus": 1 } },
+    { "ref": "slot-constraint" },
+    { "ref": "anti-snipe", "params": { "extendSeconds": 5 } }
+  ]
+}

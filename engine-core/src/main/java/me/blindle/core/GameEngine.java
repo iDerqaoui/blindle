@@ -13,7 +13,9 @@ import me.blindle.core.model.SlotDef;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -47,7 +49,13 @@ public final class GameEngine {
         if (slots.isEmpty()) {
             throw new IllegalArgumentException("Au moins un slot requis");
         }
-        return new GameState(gameId, seed, Phase.LOBBY, settings, slots, List.of(), cards,
+        Map<String, Card> index = new HashMap<>();
+        for (Card c : cards) {
+            if (index.put(c.id(), c) != null) {
+                throw new IllegalArgumentException("Carte en double : " + c.id());
+            }
+        }
+        return new GameState(gameId, seed, Phase.LOBBY, settings, slots, List.of(), index, cards,
                 0, null, List.of(), List.of(), null, 0);
     }
 
@@ -121,6 +129,11 @@ public final class GameEngine {
     }
 
     public Step placeBid(GameState s, Bid bid) {
+        return placeBid(s, bid, null);
+    }
+
+    /** @param at heure serveur de réception de l'offre (utilisée par anti-snipe), peut être null */
+    public Step placeBid(GameState s, Bid bid, Instant at) {
         phases.requirePhase(s.phase(), Phase.BIDDING);
         PlayerState p = s.player(bid.playerId())
                 .orElseThrow(() -> new GameException("UNKNOWN_PLAYER", "Joueur inconnu"));
@@ -136,7 +149,26 @@ public final class GameEngine {
             throw new GameException("TEAM_FULL", "Ton équipe est complète");
         }
         Tx tx = new Tx(s.withLot(lot.withBid(bid)));
-        tx.emit(new GameEvent.BidPlaced(bid));
+        tx.emit(new GameEvent.BidPlaced(bid, at));
+        return tx.done();
+    }
+
+    /**
+     * Active un joker pendant les enchères. Le moteur décompte l'utilisation ; l'effet est
+     * porté par la règle du joker (hook ON_JOKER_USED), qui peut rejeter l'action.
+     *
+     * @param targetId cible libre, interprétée par la règle (peut être null)
+     */
+    public Step useJoker(GameState s, String playerId, String jokerId, String targetId) {
+        phases.requirePhase(s.phase(), Phase.BIDDING);
+        PlayerState p = s.player(playerId)
+                .orElseThrow(() -> new GameException("UNKNOWN_PLAYER", "Joueur inconnu"));
+        int left = p.jokersLeft(jokerId);
+        if (left <= 0) {
+            throw new GameException("NO_JOKER", "Plus de joker « " + jokerId + " » disponible");
+        }
+        Tx tx = new Tx(s.withPlayer(playerId, pl -> pl.withJokers(jokerId, left - 1)));
+        tx.emit(new GameEvent.JokerUsed(playerId, jokerId, targetId));
         return tx.done();
     }
 
@@ -212,13 +244,44 @@ public final class GameEngine {
         if (p.team().containsValue(cardId)) {
             throw new GameException("CARD_ALREADY_PLACED", "Carte déjà placée");
         }
-        Tx tx = new Tx(s.withPlayer(playerId, pl -> pl.withCardInSlot(slotId, cardId)));
+        int pricePerCard = lot.price() / lot.cards().size();
+        Tx tx = new Tx(s.withPlayer(playerId,
+                pl -> pl.withCardInSlot(slotId, cardId).withCardPaid(cardId, pricePerCard)));
         tx.emit(new GameEvent.SlotAssigned(playerId, slotId, cardId));
         PlayerState after = tx.state.player(playerId).orElseThrow();
         boolean allPlaced = lot.cards().stream().allMatch(c -> after.team().containsValue(c.id()));
         if (allPlaced) {
             tx.to(Phase.SLOT);
         }
+        return tx.done();
+    }
+
+    /** Essai à blanc : la carte peut-elle aller dans ce slot (règles comprises) ? */
+    public boolean canAssign(GameState s, String playerId, String slotId, String cardId) {
+        try {
+            assignSlot(s, playerId, slotId, cardId);
+            return true;
+        } catch (GameException e) {
+            return false;
+        }
+    }
+
+    /**
+     * Le gagnant renonce aux cartes du lot qu'il ne peut pas placer : elles sont défaussées
+     * (le prix reste payé). REVEALED → SLOT.
+     */
+    public Step forfeit(GameState s, String playerId) {
+        phases.requirePhase(s.phase(), Phase.REVEALED);
+        LotState lot = s.lot();
+        if (!playerId.equals(lot.winnerId())) {
+            throw new GameException("NOT_WINNER", "Seul le gagnant peut renoncer à la carte");
+        }
+        PlayerState p = s.player(playerId).orElseThrow();
+        List<Card> dropped = lot.cards().stream().filter(c -> !p.team().containsValue(c.id())).toList();
+        List<Card> discarded = new ArrayList<>(s.discarded());
+        discarded.addAll(dropped);
+        Tx tx = new Tx(s.withDiscarded(discarded).withLog(p.name() + " ne peut pas placer la carte : défaussée"));
+        tx.to(Phase.SLOT);
         return tx.done();
     }
 

@@ -21,6 +21,9 @@ public final class Requests {
     public record AssignSlot(String slotId) {
     }
 
+    public record UseJoker(String jokerId, String targetId) {
+    }
+
     public record CastVote(String teamOwnerId) {
     }
 }

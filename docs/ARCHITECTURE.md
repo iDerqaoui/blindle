@@ -67,7 +67,8 @@ joueur par la session (`Principal` attribué au `join`), jamais par un champ du 
 | `/app/room/{code}/bid` | `{ amount }` | Offre sur le lot courant |
 | `/app/room/{code}/pass` | `{}` | Passe sur ce palier |
 | `/app/room/{code}/slot` | `{ slotId }` | Place la carte gagnée |
-| `/app/room/{code}/joker` | `{ jokerId, target? }` | Active un joker (étape 7) |
+| `/app/room/{code}/joker` | `{ jokerId, targetId? }` | Active un joker pendant les enchères : `spy` (sans cible), `steal` (cible `"<joueur>/<slot>"`) |
+| `/app/room/{code}/forfeit` | `{}` | Le gagnant défausse la carte, seulement si aucun slot libre ne l'accepte |
 | `/app/room/{code}/vote` | `{ teamOwnerId }` | Vote (verdict `vote`) |
 
 ### Serveur → client
@@ -128,3 +129,18 @@ Chaque tâche est testable seule.
   Une reconnexion crée un nouveau joueur (reprise de session : plus tard).
 - Rooms en mémoire, code de 4 lettres, purge après 2 h d'inactivité.
 - `blindle.room.min-players` (défaut 3) peut être abaissé en dev.
+
+## 7. Règles avancées et mode open (étape 7)
+
+- Le moteur gère des notions génériques : jokers (`PlayerState.jokers`, action `useJoker`),
+  indices privés, prix payé par carte, bonus de règles, défausse (`forfeit`) et essai à blanc
+  (`canAssign`). Les effets sont portés par les règles, jamais par le moteur.
+- Règles : `joker-spy`, `joker-steal`, `trap-lots`, `tag-synergy`, `slot-constraint`,
+  `anti-snipe`. Chaque règle déclare `requiredThemeFields`, `requiredBidModes`,
+  `conflictsWith` et valide ses paramètres ; `GameFactory` vérifie tout au démarrage.
+- Les cartes `isTrap` ne sont dans le deck que si `trap-lots` est active.
+- Mode `open` : offres visibles, chaque offre dépasse la meilleure, le meneur ne peut pas
+  passer ; clos quand tous les autres ont passé ou à l'heure de fin (repoussée par anti-snipe,
+  et le timer serveur est reprogrammé).
+- Verdict `vote` : égalité départagée par le bonus des règles, puis le budget, puis la seed.
+- Le thème manga-shonen compte 33 cartes, dont 3 pièges (Yamcha, Hercule, Baggy).

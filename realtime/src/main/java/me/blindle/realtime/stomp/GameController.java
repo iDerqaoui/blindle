@@ -70,6 +70,16 @@ public class GameController {
         rooms.require(code).assignSlot(player.getName(), req.slotId());
     }
 
+    @MessageMapping("/room/{code}/joker")
+    public void joker(@DestinationVariable String code, Requests.UseJoker req, Principal player) {
+        rooms.require(code).useJoker(player.getName(), req.jokerId(), req.targetId());
+    }
+
+    @MessageMapping("/room/{code}/forfeit")
+    public void forfeit(@DestinationVariable String code, Principal player) {
+        rooms.require(code).forfeit(player.getName());
+    }
+
     @MessageMapping("/room/{code}/vote")
     public void vote(@DestinationVariable String code, Requests.CastVote req, Principal player) {
         rooms.require(code).vote(player.getName(), req.teamOwnerId());

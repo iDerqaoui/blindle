@@ -26,7 +26,7 @@ public class ContentRegistry {
         this.content = new ContentLoader().load(dir);
     }
 
-    static Path resolveDir(String configured) {
+    public static Path resolveDir(String configured) {
         if (configured != null && !configured.isBlank()) {
             return Path.of(configured);
         }

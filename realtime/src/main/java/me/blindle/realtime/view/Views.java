@@ -17,7 +17,7 @@ public final class Views {
     /** Vue publique d'une room, diffusée sur {@code /topic/room/{code}}. */
     public record RoomView(String type, String code, long version, String phase,
                            String presetId, String presetName, String themeName, String bidMode,
-                           String verdictMode, String hostId, int round, int totalRounds,
+                           String verdictMode, List<String> rules, String hostId, int round, int totalRounds,
                            List<SlotView> slots, List<PlayerSummary> players, LotView lot,
                            Long deadline, Long serverTime, List<String> log, ResultView result,
                            int votesReceived) {
@@ -26,11 +26,12 @@ public final class Views {
     public record SlotView(String id, String label, Set<String> requiredTags) {
     }
 
-    public record PlayerSummary(String id, String name, int budget, boolean host, boolean acted,
+    public record PlayerSummary(String id, String name, int budget, int bonus, boolean host, boolean acted,
                                 List<TeamEntry> team) {
     }
 
-    public record TeamEntry(String slotId, CardView card) {
+    /** @param paid prix payé (public : annoncé dans le journal) */
+    public record TeamEntry(String slotId, CardView card, Integer paid) {
     }
 
     public record CardView(String id, String name, Set<String> tags, String rarity, Map<String, Integer> stats) {
@@ -57,7 +58,8 @@ public final class Views {
     /** Vue privée d'un joueur, envoyée sur {@code /user/queue/room}. */
     public record PlayerView(String type, String code, long version, String playerId, String name,
                              boolean host, Integer myBid, boolean passed, boolean canBid,
-                             boolean mustPlace, List<String> freeSlots, String votedFor) {
+                             boolean mustPlace, List<String> freeSlots, List<String> placeableSlots,
+                             Map<String, Integer> jokers, List<HintView> privateHints, String votedFor) {
     }
 
     /** Erreur envoyée sur {@code /user/queue/errors}. */

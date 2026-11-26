@@ -53,6 +53,11 @@ public class RisingFloorRule implements Rule {
     }
 
     @Override
+    public void validateParams(RuleParams params) {
+        Params.from(params);
+    }
+
+    @Override
     public RuleResult apply(GameEvent event, GameState state, RuleParams params) {
         if (!(event instanceof GameEvent.HintRevealed revealed) || state.lot() == null) {
             return RuleResult.ok(state);

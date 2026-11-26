@@ -33,7 +33,12 @@ public sealed interface GameEvent {
         }
     }
 
-    record BidPlaced(Bid bid) implements GameEvent {
+    /** @param at heure serveur de réception (null si inconnue, ex. en simulation) */
+    record BidPlaced(Bid bid, java.time.Instant at) implements GameEvent {
+        public BidPlaced(Bid bid) {
+            this(bid, null);
+        }
+
         public GameHook hook() {
             return GameHook.ON_BID_PLACED;
         }

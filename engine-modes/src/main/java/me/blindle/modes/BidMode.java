@@ -23,6 +23,14 @@ public interface BidMode extends BidResolver {
     /** Le palier peut-il être résolu avant l'heure de fin ? */
     boolean isComplete(GameState state);
 
+    /** Contrôle propre au mode avant d'enregistrer une offre ; lève GameException si refusée. */
+    default void validateBid(GameState state, me.blindle.core.model.Bid bid) {
+    }
+
+    /** Contrôle propre au mode avant d'enregistrer une passe ; lève GameException si refusée. */
+    default void validatePass(GameState state, String playerId) {
+    }
+
     @Override
     Optional<LotResult> resolve(LotState lot, GameRandom random);
 }

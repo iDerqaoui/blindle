@@ -17,7 +17,7 @@ import java.util.Set;
 
 /**
  * {@code vote} : chaque joueur humain vote pour la meilleure équipe, sauf la sienne.
- * Score = nombre de voix. Égalité : budget restant le plus élevé, puis tirage par la seed.
+ * Score = nombre de voix. Égalité : bonus des règles (synergies…), puis budget restant, puis seed.
  */
 @Component
 public class VoteVerdictMode implements VerdictMode {
@@ -81,12 +81,17 @@ public class VoteVerdictMode implements VerdictMode {
             scores.merge(v.teamOwnerId(), 1, Integer::sum);
         }
         Map<String, Integer> budgets = new HashMap<>();
-        state.players().forEach(p -> budgets.put(p.id(), p.budget()));
+        Map<String, Integer> bonuses = new HashMap<>();
+        state.players().forEach(p -> {
+            budgets.put(p.id(), p.budget());
+            bonuses.put(p.id(), p.bonus());
+        });
 
-        // Ordre aléatoire seedé, puis tri stable : voix, puis budget restant.
+        // Ordre aléatoire seedé, puis tri stable : voix, bonus des règles, budget restant.
         List<String> ranking = new ArrayList<>(GameRandom.derive(state.seed(), "verdict")
                 .shuffled(state.players().stream().map(PlayerState::id).toList()));
         ranking.sort(Comparator.<String>comparingInt(scores::get).reversed()
+                .thenComparing(Comparator.<String>comparingInt(bonuses::get).reversed())
                 .thenComparing(Comparator.<String>comparingInt(budgets::get).reversed()));
         return new GameResult(ranking, scores);
     }

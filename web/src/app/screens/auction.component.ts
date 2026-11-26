@@ -5,7 +5,7 @@ import { HintComponent } from '../ui/hint.component';
 import { TimerComponent } from '../ui/timer.component';
 import { CardComponent } from '../ui/card.component';
 
-/** Lot mystère : indices, prix plancher, offre ; puis révélation et placement de la carte. */
+/** Lot mystère : indices, prix plancher, offre, jokers ; puis révélation et placement de la carte. */
 @Component({
   selector: 'app-auction',
   imports: [FormsModule, HintComponent, TimerComponent, CardComponent],
@@ -22,23 +22,48 @@ import { CardComponent } from '../ui/card.component';
             @for (hint of lot.hints; track hint.level) {
               <app-hint [hint]="hint" class="reveal" />
             }
+            @for (hint of me()?.privateHints ?? []; track hint.level) {
+              <div class="private-hint reveal">
+                <span class="tag">🕵️ espion · visible par toi seul</span>
+                <app-hint [hint]="hint" />
+              </div>
+            }
             <p class="floor">Palier {{ lot.hintLevel }}/{{ lot.maxHintLevel }} · offre minimale <strong>{{ lot.floorPrice }} 🪙</strong></p>
           </div>
 
           @if (room.phase === 'BIDDING') {
-            <p class="muted">{{ lot.actedCount }} / {{ room.players.length }} joueurs ont joué ce palier
-              @if (room.bidMode === 'sealed') { · offres secrètes }</p>
+            @if (room.bidMode === 'open') {
+              <div class="live-bids">
+                @for (b of sortedBids(); track b.playerId; let first = $first) {
+                  <span class="tag" [class.leader]="first">{{ game.playerName(b.playerId) }} : {{ b.amount }} 🪙</span>
+                } @empty { <span class="muted">Aucune offre pour l'instant</span> }
+              </div>
+            } @else {
+              <p class="muted">{{ lot.actedCount }} / {{ room.players.length }} joueurs ont joué ce palier · offres secrètes</p>
+            }
             @if (me(); as me) {
               @if (me.canBid) {
                 <div class="bid-row">
-                  <input class="input" type="number" [min]="lot.floorPrice" [max]="myBudget()" step="10" [(ngModel)]="amount" />
+                  <input class="input" type="number" [min]="minBid()" [max]="myBudget()" step="10" [(ngModel)]="amount" />
                   <button class="btn primary" (click)="bid()">Miser</button>
                   <button class="btn" (click)="game.pass()">Passer</button>
                 </div>
-                @if (me.myBid !== null) { <p>Ton offre : <strong>{{ me.myBid }} 🪙</strong> (modifiable jusqu'à la fin)</p> }
+                @if (me.myBid !== null) { <p>Ton offre : <strong>{{ me.myBid }} 🪙</strong>@if (room.bidMode === 'sealed') { (modifiable jusqu'à la fin)}</p> }
                 @if (me.passed) { <p class="muted">Tu passes ce palier.</p> }
               } @else {
                 <p class="muted">Ton équipe est complète : tu regardes ce lot.</p>
+              }
+              @if (game.jokersLeft('spy') > 0 || game.jokersLeft('steal') > 0) {
+                <div class="jokers">
+                  @if (game.jokersLeft('spy') > 0) {
+                    <button class="btn small" [disabled]="lot.hintLevel >= lot.maxHintLevel" (click)="game.useJoker('spy')">
+                      🕵️ Espion ({{ game.jokersLeft('spy') }}) : voir l'indice suivant
+                    </button>
+                  }
+                  @if (game.jokersLeft('steal') > 0) {
+                    <span class="muted">🦝 Vol ({{ game.jokersLeft('steal') }}) : clique « Voler » sur une carte adverse dans Équipes</span>
+                  }
+                </div>
               }
             }
           }
@@ -53,11 +78,11 @@ import { CardComponent } from '../ui/card.component';
               @if (me()?.mustPlace) {
                 <h3>Où places-tu cette carte ? (définitif)</h3>
                 <div class="slot-choices">
-                  @for (slot of freeSlots(); track slot.id) {
-                    <button class="btn" [class.warn]="!fits(slot.requiredTags)" (click)="game.assignSlot(slot.id)">
-                      {{ slot.label }}
-                      @if (!fits(slot.requiredTags)) { <small>(tag {{ slot.requiredTags.join(', ') }} conseillé)</small> }
-                    </button>
+                  @for (slot of placeable(); track slot.id) {
+                    <button class="btn" (click)="game.assignSlot(slot.id)">{{ slot.label }}</button>
+                  } @empty {
+                    <p class="muted">Aucun slot libre n'accepte cette carte.</p>
+                    <button class="btn" (click)="game.forfeit()">Défausser la carte</button>
                   }
                 </div>
               } @else {
@@ -78,31 +103,37 @@ export class AuctionComponent {
   readonly myBudget = computed(() =>
     this.game.room()?.players.find(p => p.id === this.game.myId())?.budget ?? 0);
 
-  readonly freeSlots = computed(() => {
-    const free = this.me()?.freeSlots ?? [];
-    return (this.game.room()?.slots ?? []).filter(s => free.includes(s.id));
+  readonly placeable = computed(() => {
+    const ids = this.me()?.placeableSlots ?? [];
+    return (this.game.room()?.slots ?? []).filter(s => ids.includes(s.id));
+  });
+
+  readonly sortedBids = computed(() =>
+    [...(this.game.room()?.lot?.bids ?? [])].sort((a, b) => b.amount - a.amount));
+
+  /** Mise minimale affichée : plancher, ou meilleure offre + 10 en mode ouvert. */
+  readonly minBid = computed(() => {
+    const room = this.game.room();
+    const floor = room?.lot?.floorPrice ?? 0;
+    const top = this.sortedBids()[0]?.amount;
+    return room?.bidMode === 'open' && top !== undefined ? Math.max(floor, top + 10) : floor;
   });
 
   private readonly lotKey = signal('');
 
   constructor() {
-    // Nouveau palier : l'offre proposée par défaut est le prix plancher.
+    // Nouveau palier, ou offre dépassée en mode ouvert : on propose la mise minimale.
     effect(() => {
       const room = this.game.room();
-      const key = `${room?.round}:${room?.lot?.hintLevel}`;
+      const key = `${room?.round}:${room?.lot?.hintLevel}:${this.sortedBids()[0]?.amount ?? ''}`;
       if (room?.lot && key !== this.lotKey()) {
         this.lotKey.set(key);
-        this.amount = room.lot.floorPrice;
+        this.amount = this.minBid();
       }
     });
   }
 
   bid(): void {
     this.game.bid(Math.floor(Number(this.amount)));
-  }
-
-  fits(requiredTags: string[]): boolean {
-    const tags = this.game.room()?.lot?.cards?.[0]?.tags ?? [];
-    return requiredTags.every(t => tags.includes(t));
   }
 }

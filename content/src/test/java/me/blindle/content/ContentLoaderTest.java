@@ -21,7 +21,8 @@ class ContentLoaderTest {
         ContentLoader.Content content = loader.load(ContentRegistry.resolveDir(""));
 
         Theme manga = content.themes().get("manga-shonen");
-        assertThat(manga.cards()).hasSize(30);
+        assertThat(manga.cards()).hasSize(33);
+        assertThat(manga.cards().stream().filter(c -> Boolean.TRUE.equals(c.isTrap()))).hasSize(3);
         assertThat(manga.rights().imagePolicy()).isEqualTo("none");
         assertThat(manga.rights().visibility()).isEqualTo("private");
         List<Card> cards = manga.toCards();

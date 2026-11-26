@@ -14,12 +14,13 @@ export interface CardView {
   stats: Record<string, number>;
 }
 
-export interface TeamEntry { slotId: string; card: CardView | null; }
+export interface TeamEntry { slotId: string; card: CardView | null; paid: number | null; }
 
 export interface PlayerSummary {
   id: string;
   name: string;
   budget: number;
+  bonus: number;
   host: boolean;
   acted: boolean;
   team: TeamEntry[];
@@ -53,6 +54,7 @@ export interface RoomView {
   themeName: string;
   bidMode: string;
   verdictMode: string;
+  rules: string[];
   hostId: string;
   round: number;
   totalRounds: number;
@@ -78,6 +80,9 @@ export interface PlayerView {
   canBid: boolean;
   mustPlace: boolean;
   freeSlots: string[];
+  placeableSlots: string[];
+  jokers: Record<string, number>;
+  privateHints: HintView[];
   votedFor: string | null;
 }
 
