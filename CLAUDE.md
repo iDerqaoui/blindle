@@ -38,7 +38,8 @@ Jeu d'enchères à l'aveugle multijoueur en ligne (3 à 8 joueurs, ou solo contr
 
 ## Conventions
 
-- Code et identifiants en anglais ; textes affichés et documentation en français
+- Code et identifiants en anglais ; documentation en français
+- Textes du site : jamais en dur, toujours via `I18nService` / pipe `t` (`web/src/app/i18n/en.ts` et `fr.ts`, mêmes clés) ; anglais par défaut, choix mémorisé
 - Tests JUnit 5 obligatoires pour chaque règle et chaque mode : état initial + événement → état attendu
 - Une étape de la feuille de route par session ; petits commits clairs (GitLab)
 - Signaler toute nouvelle dépendance avant de l'ajouter

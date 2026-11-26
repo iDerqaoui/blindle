@@ -37,7 +37,8 @@ public final class Views {
     public record SlotView(String id, String label, Set<String> requiredTags) {
     }
 
-    public record PlayerSummary(String id, String name, int budget, int bonus, boolean host, boolean bot,
+    /** @param botProfile profil du bot (aggressive, stingy…), null pour un humain : le client traduit le nom */
+    public record PlayerSummary(String id, String name, int budget, int bonus, boolean host, boolean bot, String botProfile,
                                 boolean acted, List<TeamEntry> team) {
     }
 

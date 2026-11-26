@@ -55,7 +55,7 @@ public final class ViewProjector {
             }
             boolean acted = s.phase() == Phase.BIDDING && s.lot() != null && s.lot().hasActed(p.id());
             players.add(new Views.PlayerSummary(p.id(), p.name(), p.budget(), p.bonus(), p.id().equals(r.hostId()),
-                    p.bot(), acted, team));
+                    p.bot(), r.botProfiles().get(p.id()), acted, team));
         }
         List<Views.SlotView> slots = s.slots().stream()
                 .map(x -> new Views.SlotView(x.id(), x.label(), x.requiredTags())).toList();

@@ -1,6 +1,7 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { GameService } from '../game/game.service';
+import { I18nService, TranslatePipe } from '../i18n/i18n';
 
 /**
  * Accueil : pseudo, choix de l'univers (mode principal Anime Blind Bid), rejoindre par code,
@@ -8,26 +9,27 @@ import { GameService } from '../game/game.service';
  */
 @Component({
   selector: 'app-home',
-  imports: [FormsModule],
+  imports: [FormsModule, TranslatePipe],
   template: `
     <section class="hero">
-      <h1>Anime <span>Blind Bid</span></h1>
-      <p>Pioche un personnage que toi seul vois, fais monter les enchères à l'aveugle, et monte la meilleure équipe de 5.</p>
+      <h1>{{ 'home.title1' | t }} <span>{{ 'home.title2' | t }}</span></h1>
+      <p>{{ 'home.tagline' | t }}</p>
       <label class="name-field">
-        <span>Ton pseudo</span>
-        <input class="input" [(ngModel)]="name" maxlength="20" placeholder="Ex. Yassine" autocomplete="nickname" />
+        <span>{{ 'home.nickname' | t }}</span>
+        <input class="input" [(ngModel)]="name" maxlength="20" [placeholder]="'home.nicknamePlaceholder' | t"
+               autocomplete="nickname" />
       </label>
     </section>
 
     <section class="section">
       <div class="section-head">
-        <h2>Choisis un univers</h2>
-        <p class="muted">Une partie = un seul univers, on ne mélange pas les licences.</p>
+        <h2>{{ 'home.pickUniverse' | t }}</h2>
+        <p class="muted">{{ 'home.pickHint' | t }}</p>
       </div>
       @if (universes().length === 0) {
         <div class="empty-state">
-          <p><strong>Aucun univers illustré installé.</strong></p>
-          <p class="muted">Lance <code>node tools/import-anilist.mjs</code> puis redémarre le serveur.</p>
+          <p><strong>{{ 'home.noneTitle' | t }}</strong></p>
+          <p class="muted">{{ 'home.noneHint' | t: { cmd: 'node tools/import-anilist.mjs' } }}</p>
         </div>
       } @else {
         <div class="universe-grid">
@@ -36,37 +38,38 @@ import { GameService } from '../game/game.service';
                     [style.--universe]="u.art?.color ?? '#6b5bd6'">
               @if (u.art?.cover; as cover) { <img [src]="cover" [alt]="u.name" loading="lazy" /> }
               <span class="universe-name">{{ u.name }}</span>
-              <span class="universe-meta">{{ u.cards }} personnages</span>
+              <span class="universe-meta">{{ 'home.characters' | t: { n: u.cards } }}</span>
             </button>
           }
         </div>
         <div class="cta-row">
           <button class="btn primary big" [disabled]="!hasName() || !selected()" (click)="create(selected()!)">
-            Créer la partie
+            {{ 'home.create' | t }}
           </button>
-          @if (!hasName()) { <span class="muted">Choisis d'abord un pseudo.</span> }
+          @if (!hasName()) { <span class="muted">{{ 'home.needName' | t }}</span> }
         </div>
       }
     </section>
 
     <section class="section join">
-      <h2>Rejoindre une partie</h2>
+      <h2>{{ 'home.joinTitle' | t }}</h2>
       <div class="join-row">
-        <input class="input code-input" [(ngModel)]="code" maxlength="4" placeholder="CODE" aria-label="Code de la room" />
-        <button class="btn" [disabled]="!canJoin()" (click)="join()">Rejoindre</button>
+        <input class="input code-input" [(ngModel)]="code" maxlength="4" placeholder="CODE"
+               [attr.aria-label]="'home.joinCode' | t" />
+        <button class="btn" [disabled]="!canJoin()" (click)="join()">{{ 'home.join' | t }}</button>
       </div>
     </section>
 
     <details class="section other-modes">
-      <summary><h2>Autres modes</h2></summary>
+      <summary><h2>{{ 'home.otherModes' | t }}</h2></summary>
 
       @if (game.daily().length > 0) {
-        <h3>☀️ Défi du jour <small class="muted">· seul contre le marché</small></h3>
+        <h3>{{ 'home.dailyTitle' | t }} <small class="muted">{{ 'home.dailySub' | t }}</small></h3>
         <div class="columns">
           @for (d of game.daily(); track d.presetId) {
             <div class="daily-card">
               <strong>{{ d.themeName }}</strong>
-              <span class="muted">{{ d.players }} partie(s) aujourd'hui</span>
+              <span class="muted">{{ i18n.plural('home.dailyGames', d.players) }}</span>
               @if (d.leaderboard.length > 0) {
                 <ol class="ranking compact">
                   @for (e of d.leaderboard.slice(0, 5); track $index) {
@@ -74,18 +77,18 @@ import { GameService } from '../game/game.service';
                   }
                 </ol>
               }
-              <button class="btn" [disabled]="!hasName()" (click)="playDaily(d.presetId)">Jouer</button>
+              <button class="btn" [disabled]="!hasName()" (click)="playDaily(d.presetId)">{{ 'home.play' | t }}</button>
             </div>
           }
         </div>
       }
 
-      <h3>Parties à indices</h3>
+      <h3>{{ 'home.classicTitle' | t }}</h3>
       <div class="presets">
         @for (p of classic(); track p.id) {
           <button type="button" class="preset" (click)="create(p.id)" [disabled]="!hasName()">
             <strong>{{ p.name }}</strong>
-            <span>{{ p.themeName }} · {{ p.settings.rounds }} rounds · {{ p.settings.budget }} or</span>
+            <span>{{ 'home.classicMeta' | t: { theme: p.themeName, rounds: p.settings.rounds, budget: p.settings.budget } }}</span>
             @if (p.description) { <small>{{ p.description }}</small> }
           </button>
         }
@@ -95,6 +98,7 @@ import { GameService } from '../game/game.service';
 })
 export class HomeComponent {
   readonly game = inject(GameService);
+  readonly i18n = inject(I18nService);
   readonly name = signal(localStorageGet('blindle.name'));
   readonly code = signal('');
   readonly selected = signal<string | null>(null);

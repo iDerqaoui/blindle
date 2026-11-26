@@ -1,16 +1,17 @@
 import { Component, input } from '@angular/core';
 import { KeyValuePipe } from '@angular/common';
 import { CardView } from '../game/game.types';
+import { TranslatePipe } from '../i18n/i18n';
 
 /** Carte révélée : nom, rareté, tags, stats maison. Pas d'image (imagePolicy). */
 @Component({
   selector: 'app-card',
-  imports: [KeyValuePipe],
+  imports: [KeyValuePipe, TranslatePipe],
   template: `
     <div class="card" [class]="'card rarity-' + (card().rarity ?? 'none')" [class.compact]="compact()">
       <div class="card-name">{{ card().name }}</div>
       @if (!compact()) {
-        @if (card().rarity) { <div class="card-rarity">{{ card().rarity }}</div> }
+        @if (card().rarity) { <div class="card-rarity">{{ 'rarity.' + card().rarity | t }}</div> }
         <div class="tags">
           @for (tag of card().tags; track tag) { <span class="tag">{{ tag }}</span> }
         </div>

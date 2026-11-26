@@ -1,6 +1,7 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { GameService } from '../game/game.service';
+import { TranslatePipe } from '../i18n/i18n';
 import { BoardComponent } from '../ui/board.component';
 import { GameCardComponent } from '../ui/game-card.component';
 import { ModalComponent } from '../ui/modal.component';
@@ -13,13 +14,13 @@ import { TimerComponent } from '../ui/timer.component';
  */
 @Component({
   selector: 'app-table',
-  imports: [FormsModule, BoardComponent, GameCardComponent, ModalComponent, TimerComponent],
+  imports: [FormsModule, BoardComponent, GameCardComponent, ModalComponent, TimerComponent, TranslatePipe],
   template: `
     @if (game.room(); as room) {
       <div class="table" [style.--universe]="room.art?.color ?? '#6b5bd6'">
         <section class="stage">
           <div class="stage-top">
-            <span class="round-chip">Carte {{ room.round }}</span>
+            <span class="round-chip">{{ 'table.card' | t: { n: room.round } }}</span>
             <app-timer />
           </div>
 
@@ -37,59 +38,55 @@ import { TimerComponent } from '../ui/timer.component';
             }
 
             <button class="trash-pile" (click)="trashOpen.set(true)"
-                    [attr.aria-label]="'Poubelle : ' + room.trash.length + ' carte(s)'">
+                    [attr.aria-label]="'table.trashAria' | t: { n: room.trash.length }">
               @if (lastTrashed(); as top) {
                 <app-game-card class="trash-top" [card]="top" [faceUp]="true" size="sm" />
                 <span class="trash-count">{{ room.trash.length }}</span>
               } @else {
                 <span class="trash-empty">🗑️</span>
               }
-              <span>Poubelle</span>
+              <span>{{ 'table.trash' | t }}</span>
             </button>
           </div>
 
           <div class="stage-info">
             @switch (situation()) {
               @case ('my-draw') {
-                <p class="headline">Tu as pioché <strong>{{ game.me()?.drawnCard?.name }}</strong></p>
-                <p class="muted">Toi seul la vois. Ouvre l'enchère, ou laisse-la : si personne n'en veut, elle part à la poubelle.</p>
+                <p class="headline">{{ 'table.myDraw' | t: { name: game.me()?.drawnCard?.name } }}</p>
+                <p class="muted">{{ 'table.myDrawHint' | t }}</p>
               }
               @case ('waiting-drawer') {
-                <p class="headline"><strong>{{ game.playerName(room.drawerId) }}</strong> regarde sa carte…</p>
-                <p class="muted">Tu ne vois que le dos. Attends sa mise d'ouverture.</p>
+                <p class="headline">{{ 'table.waitingDrawer' | t: { name: game.playerName(room.drawerId) } }}</p>
+                <p class="muted">{{ 'table.waitingDrawerHint' | t }}</p>
               }
               @case ('bidding') {
                 @if (leader(); as l) {
-                  <p class="headline">
-                    <strong>{{ game.playerName(l.playerId) }}</strong> mène à <span class="amount">{{ l.amount }} or</span>
-                  </p>
+                  <p class="headline">{{ 'table.leading' | t: { name: game.playerName(l.playerId), amount: l.amount } }}</p>
                 } @else {
-                  <p class="headline">Le piocheur a laissé : personne n'a encore misé</p>
+                  <p class="headline">{{ 'table.drawerPassed' | t }}</p>
                 }
-                <p class="muted">Pioche de {{ game.playerName(room.drawerId) }}. Surenchéris ou laisse.</p>
+                <p class="muted">{{ 'table.biddingHint' | t: { name: game.playerName(room.drawerId) } }}</p>
               }
               @case ('revealed') {
-                <p class="headline">
-                  🎉 <strong>{{ game.playerName(room.lot?.winnerId) }}</strong> remporte
-                  <strong>{{ room.lot?.cards?.[0]?.name }}</strong> pour <span class="amount">{{ room.lot?.price }} or</span>
-                </p>
-                <p class="muted">La carte rejoint son tableau…</p>
+                <p class="headline">{{ 'table.won' | t: { name: game.playerName(room.lot?.winnerId),
+                    card: room.lot?.cards?.[0]?.name, amount: room.lot?.price } }}</p>
+                <p class="muted">{{ 'table.wonHint' | t }}</p>
               }
-              @default { <p class="muted">Préparation de la carte suivante…</p> }
+              @default { <p class="muted">{{ 'table.next' | t }}</p> }
             }
           </div>
 
           @if (room.phase === 'BIDDING' && game.me(); as me) {
             <div class="bid-bar">
               @if (!me.canBid) {
-                <p class="muted">Ton équipe est complète : tu regardes la fin de partie.</p>
+                <p class="muted">{{ 'table.teamFull' | t }}</p>
               } @else if (situation() === 'waiting-drawer') {
-                <p class="muted">En attente du piocheur…</p>
+                <p class="muted">{{ 'table.waitDrawer' | t }}</p>
               } @else if (iLead()) {
-                <p class="lead-note">Tu mènes à <strong>{{ leader()?.amount }} or</strong>. Les autres doivent surenchérir.</p>
+                <p class="lead-note">{{ 'table.youLead' | t: { amount: leader()?.amount } }}</p>
               } @else if (me.passed) {
-                <p class="muted">Tu as laissé cette carte.</p>
-                <button class="btn small" (click)="bid()">Revenir à {{ amount }} or</button>
+                <p class="muted">{{ 'table.youPassed' | t }}</p>
+                <button class="btn small" (click)="bid()">{{ 'table.comeBack' | t: { amount: amount } }}</button>
               } @else {
                 <div class="quick">
                   @for (step of [10, 50, 100]; track step) {
@@ -98,13 +95,13 @@ import { TimerComponent } from '../ui/timer.component';
                 </div>
                 <div class="bid-input">
                   <input class="input" type="number" [min]="minBid()" [max]="myGold()" step="10"
-                         [(ngModel)]="amount" aria-label="Montant de l'offre" />
-                  <span class="suffix">or</span>
+                         [(ngModel)]="amount" [attr.aria-label]="'table.amount' | t" />
+                  <span class="suffix">{{ 'table.gold' | t }}</span>
                 </div>
                 <button class="btn primary" [disabled]="amount < minBid() || amount > myGold()" (click)="bid()">
-                  {{ situation() === 'my-draw' ? 'Ouvrir à' : 'Miser' }} {{ amount }} or
+                  {{ (situation() === 'my-draw' ? 'table.open' : 'table.bid') | t: { amount: amount } }}
                 </button>
-                <button class="btn" (click)="game.pass()">Laisser</button>
+                <button class="btn" (click)="game.pass()">{{ 'table.pass' | t }}</button>
               }
             </div>
           }
@@ -118,9 +115,9 @@ import { TimerComponent } from '../ui/timer.component';
       </div>
 
       @if (trashOpen()) {
-        <app-modal title="Poubelle" [wide]="true" (closed)="trashOpen.set(false)">
+        <app-modal [title]="'table.trash' | t" [wide]="true" (closed)="trashOpen.set(false)">
           @if (room.trash.length === 0) {
-            <p class="muted">Aucune carte jetée pour l'instant. Une carte dont personne ne veut finit ici, visible par tous.</p>
+            <p class="muted">{{ 'table.trashEmpty' | t }}</p>
           } @else {
             <div class="card-grid">
               @for (c of room.trash; track c.id) {

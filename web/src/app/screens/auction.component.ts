@@ -1,6 +1,7 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { GameService } from '../game/game.service';
+import { TranslatePipe } from '../i18n/i18n';
 import { HintComponent } from '../ui/hint.component';
 import { TimerComponent } from '../ui/timer.component';
 import { CardComponent } from '../ui/card.component';
@@ -8,12 +9,12 @@ import { CardComponent } from '../ui/card.component';
 /** Lot mystère : indices, prix plancher, offre, jokers ; puis révélation et placement de la carte. */
 @Component({
   selector: 'app-auction',
-  imports: [FormsModule, HintComponent, TimerComponent, CardComponent],
+  imports: [FormsModule, HintComponent, TimerComponent, CardComponent, TranslatePipe],
   template: `
     @if (game.room(); as room) {
       <section class="panel auction">
         <div class="auction-head">
-          <h2>Round {{ room.round }} / {{ room.totalRounds }}</h2>
+          <h2>{{ 'auction.round' | t: { n: room.round, total: room.totalRounds } }}</h2>
           <app-timer />
         </div>
 
@@ -24,11 +25,12 @@ import { CardComponent } from '../ui/card.component';
             }
             @for (hint of me()?.privateHints ?? []; track hint.level) {
               <div class="private-hint reveal">
-                <span class="tag">🕵️ espion · visible par toi seul</span>
+                <span class="tag">{{ 'auction.spyOnly' | t }}</span>
                 <app-hint [hint]="hint" />
               </div>
             }
-            <p class="floor">Palier {{ lot.hintLevel }}/{{ lot.maxHintLevel }} · offre minimale <strong>{{ lot.floorPrice }} 🪙</strong></p>
+            <p class="floor">{{ 'auction.tier' | t: { level: lot.hintLevel, max: lot.maxHintLevel } }}
+              <strong>{{ lot.floorPrice }} 🪙</strong></p>
           </div>
 
           @if (room.phase === 'BIDDING') {
@@ -36,35 +38,38 @@ import { CardComponent } from '../ui/card.component';
               <div class="live-bids">
                 @for (b of sortedBids(); track b.playerId; let first = $first) {
                   <span class="tag" [class.leader]="first">{{ game.playerName(b.playerId) }} : {{ b.amount }} 🪙</span>
-                } @empty { <span class="muted">Aucune offre pour l'instant</span> }
+                } @empty { <span class="muted">{{ 'auction.noBids' | t }}</span> }
               </div>
             } @else if (room.bidMode === 'market') {
-              <p class="muted">📈 Seul contre le marché : ton offre doit atteindre un prix caché, qui monte à chaque indice. Tu paies ton offre.</p>
-              @if (missed(); as m) { <p class="miss">Ton offre de {{ m }} 🪙 n'a pas suffi : nouvel indice.</p> }
+              <p class="muted">{{ 'auction.market' | t }}</p>
+              @if (missed(); as m) { <p class="miss">{{ 'auction.missed' | t: { amount: m } }}</p> }
             } @else {
-              <p class="muted">{{ lot.actedCount }} / {{ room.players.length }} joueurs ont joué ce palier · offres secrètes</p>
+              <p class="muted">{{ 'auction.acted' | t: { n: lot.actedCount, total: room.players.length } }}</p>
             }
             @if (me(); as me) {
               @if (me.canBid) {
                 <div class="bid-row">
                   <input class="input" type="number" [min]="minBid()" [max]="myBudget()" step="10" [(ngModel)]="amount" />
-                  <button class="btn primary" (click)="bid()">Miser</button>
-                  <button class="btn" (click)="pass()">Passer</button>
+                  <button class="btn primary" (click)="bid()">{{ 'auction.bid' | t }}</button>
+                  <button class="btn" (click)="pass()">{{ 'auction.pass' | t }}</button>
                 </div>
-                @if (me.myBid !== null) { <p>Ton offre : <strong>{{ me.myBid }} 🪙</strong>@if (room.bidMode === 'sealed') { (modifiable jusqu'à la fin)}</p> }
-                @if (me.passed) { <p class="muted">Tu passes ce palier.</p> }
+                @if (me.myBid !== null) {
+                  <p>{{ 'auction.yourBid' | t: { amount: me.myBid } }}
+                    @if (room.bidMode === 'sealed') { {{ 'auction.editable' | t }} }</p>
+                }
+                @if (me.passed) { <p class="muted">{{ 'auction.youPass' | t }}</p> }
               } @else {
-                <p class="muted">Ton équipe est complète : tu regardes ce lot.</p>
+                <p class="muted">{{ 'auction.teamFull' | t }}</p>
               }
               @if (game.jokersLeft('spy') > 0 || game.jokersLeft('steal') > 0) {
                 <div class="jokers">
                   @if (game.jokersLeft('spy') > 0) {
                     <button class="btn small" [disabled]="lot.hintLevel >= lot.maxHintLevel" (click)="game.useJoker('spy')">
-                      🕵️ Espion ({{ game.jokersLeft('spy') }}) : voir l'indice suivant
+                      {{ 'auction.spy' | t: { n: game.jokersLeft('spy') } }}
                     </button>
                   }
                   @if (game.jokersLeft('steal') > 0) {
-                    <span class="muted">🦝 Vol ({{ game.jokersLeft('steal') }}) : clique « Voler » sur une carte adverse dans Équipes</span>
+                    <span class="muted">{{ 'auction.stealInfo' | t: { n: game.jokersLeft('steal') } }}</span>
                   }
                 </div>
               }
@@ -73,33 +78,34 @@ import { CardComponent } from '../ui/card.component';
 
           @if (lot.cards && (room.phase === 'REVEALED' || room.phase === 'SLOT')) {
             <div class="revealed">
-              <p>🎉 <strong>{{ game.playerName(lot.winnerId) }}</strong> remporte le lot pour <strong>{{ lot.price }} 🪙</strong></p>
+              <p>{{ 'auction.won' | t: { name: game.playerName(lot.winnerId), amount: lot.price } }}</p>
               @for (card of lot.cards; track card.id) { <app-card [card]="card" /> }
               @if (room.verdictMode === 'value') {
-                <p>Valeur : <strong>{{ lotValue() }} 🪙</strong> · {{ lotValue() >= (lot.price ?? 0) ? 'bonne affaire 🟩' : 'payé trop cher 🟥' }}</p>
+                <p>{{ 'auction.value' | t: { value: lotValue() } }} ·
+                  {{ (lotValue() >= (lot.price ?? 0) ? 'auction.goodDeal' : 'auction.overpaid') | t }}</p>
               }
               @if (lot.bids && lot.bids.length > 1) {
-                <p class="muted">Offres : @for (b of lot.bids; track b.playerId) { {{ game.playerName(b.playerId) }} {{ b.amount }}@if (!$last) {, } }</p>
+                <p class="muted">{{ 'auction.bids' | t }} @for (b of lot.bids; track b.playerId) { {{ game.playerName(b.playerId) }} {{ b.amount }}@if (!$last) {, } }</p>
               }
               @if (me()?.mustPlace) {
-                <h3>Où places-tu cette carte ? (définitif)</h3>
+                <h3>{{ 'auction.where' | t }}</h3>
                 <div class="slot-choices">
                   @for (slot of placeable(); track slot.id) {
                     <button class="btn" (click)="game.assignSlot(slot.id)">{{ slot.label }}</button>
                   } @empty {
-                    <p class="muted">Aucun slot libre n'accepte cette carte.</p>
-                    <button class="btn" (click)="game.forfeit()">Défausser la carte</button>
+                    <p class="muted">{{ 'auction.noSlot' | t }}</p>
+                    <button class="btn" (click)="game.forfeit()">{{ 'auction.discard' | t }}</button>
                   }
                 </div>
               } @else {
-                <p class="muted">{{ game.playerName(lot.winnerId) }} choisit un slot…</p>
+                <p class="muted">{{ 'auction.choosing' | t: { name: game.playerName(lot.winnerId) } }}</p>
               }
             </div>
           }
         }
       </section>
     }
-  `,
+`,
 })
 export class AuctionComponent {
   readonly game = inject(GameService);

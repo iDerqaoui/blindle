@@ -1,5 +1,6 @@
 import { Component, computed, input } from '@angular/core';
 import { ArtView, CardView } from '../game/game.types';
+import { TranslatePipe } from '../i18n/i18n';
 
 /**
  * Carte à jouer : dos aux couleurs de l'univers, face avec l'illustration du personnage.
@@ -7,6 +8,7 @@ import { ArtView, CardView } from '../game/game.types';
  */
 @Component({
   selector: 'app-game-card',
+  imports: [TranslatePipe],
   template: `
     <div class="gcard" [class]="'gcard size-' + size()" [class.flipped]="faceUp() && !!card()"
          [style.--universe]="color()">
@@ -27,7 +29,7 @@ import { ArtView, CardView } from '../game/game.types';
             }
             <div class="gcard-caption">
               <span class="gcard-name">{{ c.name }}</span>
-              @if (c.rarity && size() !== 'xs') { <span class="gcard-rarity">{{ rarityLabel(c.rarity) }}</span> }
+              @if (c.rarity && size() !== 'xs') { <span class="gcard-rarity">{{ 'rarity.' + c.rarity | t }}</span> }
             </div>
           }
         </div>
@@ -44,8 +46,4 @@ export class GameCardComponent {
   readonly size = input<'xs' | 'sm' | 'lg'>('sm');
 
   readonly color = computed(() => this.art()?.color ?? '#6b5bd6');
-
-  rarityLabel(r: string): string {
-    return ({ common: 'Commun', rare: 'Rare', epic: 'Épique', legendary: 'Légendaire' } as Record<string, string>)[r] ?? r;
-  }
 }

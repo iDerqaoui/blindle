@@ -1,6 +1,7 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
 import { Client, IMessage, StompSubscription } from '@stomp/stompjs';
-import { BotProfile, DailySummary, ErrorMessage, PlayerView, PresetSummary, RoomView } from './game.types';
+import { BotProfile, DailySummary, ErrorMessage, PlayerSummary, PlayerView, PresetSummary, RoomView } from './game.types';
+import { I18nService } from '../i18n/i18n';
 
 /**
  * Connexion STOMP au serveur et état reçu. Le client ne fait qu'afficher :
@@ -8,6 +9,7 @@ import { BotProfile, DailySummary, ErrorMessage, PlayerView, PresetSummary, Room
  */
 @Injectable({ providedIn: 'root' })
 export class GameService {
+  private readonly i18n = inject(I18nService);
   readonly connected = signal(false);
   readonly room = signal<RoomView | null>(null);
   readonly me = signal<PlayerView | null>(null);
@@ -48,7 +50,7 @@ export class GameService {
       onWebSocketClose: () => {
         this.connected.set(false);
         if (this.room()) {
-          this.showError('Connexion perdue avec le serveur. Recharge la page pour rejouer.');
+          this.showError(this.i18n.t('err.connectionLost'));
         }
       },
     });
@@ -69,7 +71,7 @@ export class GameService {
         this.botProfiles.set(await bots.json());
       }
     } catch {
-      this.showError('Serveur injoignable');
+      this.showError(this.i18n.t('err.serverDown'));
     }
   }
 
@@ -131,7 +133,18 @@ export class GameService {
     if (!id) {
       return '';
     }
-    return this.room()?.players.find(p => p.id === id)?.name ?? '?';
+    const p = this.room()?.players.find(x => x.id === id);
+    return p ? this.displayName(p) : '?';
+  }
+
+  /** Nom affiché : un bot est nommé dans la langue choisie (« Aggressive bot 2 »), un humain par son pseudo. */
+  displayName(p: PlayerSummary): string {
+    if (!p.bot || !p.botProfile) {
+      return p.name;
+    }
+    const suffix = /\s(\d+)$/.exec(p.name)?.[1];
+    const base = this.i18n.t('bot.name', { profile: this.i18n.t('bot.' + p.botProfile) });
+    return suffix ? `${base} ${suffix}` : base;
   }
 
   // ------------------------------------------------------------------ interne
@@ -184,7 +197,8 @@ export class GameService {
 
   private onError(message: IMessage): void {
     const err = JSON.parse(message.body) as ErrorMessage;
-    this.showError(err.message);
+    // Message traduit à partir du code ; à défaut, celui du serveur.
+    this.showError(this.i18n.has('err.' + err.code) ? this.i18n.t('err.' + err.code) : err.message);
   }
 
   private showError(text: string): void {

@@ -1,49 +1,51 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { GameService } from '../game/game.service';
+import { TranslatePipe } from '../i18n/i18n';
 import { BoardComponent } from '../ui/board.component';
 
 /** Classement final et équipes ; en défi du jour, détail du score, rang et résultat à partager. */
 @Component({
   selector: 'app-results',
-  imports: [BoardComponent],
+  imports: [BoardComponent, TranslatePipe],
   template: `
     @if (game.room()?.result; as result) {
       @if (game.room()?.daily; as daily) {
         <section class="panel narrow">
-          <h2>☀️ Défi du jour terminé</h2>
+          <h2>{{ 'results.dailyDone' | t }}</h2>
           @if (breakdown(); as b) {
             <p class="score-line">
-              Valeur de l'équipe <strong>{{ b.value }}</strong> − pièces dépensées <strong>{{ b.spent }}</strong>
-              = <strong class="big">{{ b.score > 0 ? '+' : '' }}{{ b.score }}</strong>
+              {{ 'results.teamValue' | t }} <strong>{{ b.value }}</strong> − {{ 'results.spent' | t }}
+              <strong>{{ b.spent }}</strong> = <strong class="big">{{ b.score > 0 ? '+' : '' }}{{ b.score }}</strong>
             </p>
           }
-          @if (daily.rank) { <p>Classement du jour : <strong>{{ daily.rank }}{{ daily.rank === 1 ? 'er' : 'e' }}</strong></p> }
+          @if (daily.rank) { <p>{{ 'results.rank' | t: { rank: daily.rank } }}</p> }
           @if (daily.share) {
             <pre class="share">{{ daily.share }}</pre>
-            <button class="btn" (click)="copy(daily.share)">{{ copied() ? 'Copié ✔' : 'Copier le résultat' }}</button>
+            <button class="btn" (click)="copy(daily.share)">{{ (copied() ? 'results.copied' : 'results.copy') | t }}</button>
           }
           @if (board(); as top) {
-            <h3>Top du jour</h3>
+            <h3>{{ 'results.topToday' | t }}</h3>
             <ol class="ranking">
               @for (e of top; track $index; let i = $index) {
                 <li [class.winner]="i === 0"><span>{{ medal(i) }} {{ e.name }}</span><span>{{ e.score > 0 ? '+' : '' }}{{ e.score }}</span></li>
               }
             </ol>
           }
-          <button class="btn primary" (click)="game.leave()">Retour à l'accueil</button>
+          <button class="btn primary" (click)="game.leave()">{{ 'results.home' | t }}</button>
         </section>
       } @else {
         <section class="panel narrow">
-          <h2>Résultats</h2>
+          <h2>{{ 'results.title' | t }}</h2>
           <ol class="ranking">
             @for (id of result.ranking; track id; let i = $index) {
               <li [class.winner]="i === 0">
                 <span>{{ medal(i) }} {{ game.playerName(id) }}</span>
-                <span>{{ result.scores[id] }} {{ unit() }}@if (bonusOf(id) > 0) { <small class="muted"> · +{{ bonusOf(id) }} synergie</small> }</span>
+                <span>{{ result.scores[id] }} {{ unit() | t }}@if (bonusOf(id) > 0) {
+                  <small class="muted"> · {{ 'results.synergy' | t: { n: bonusOf(id) } }}</small> }</span>
               </li>
             }
           </ol>
-          <button class="btn primary" (click)="game.leave()">Nouvelle partie</button>
+          <button class="btn primary" (click)="game.leave()">{{ 'results.newGame' | t }}</button>
         </section>
       }
       <section class="boards">@for (p of game.room()?.players ?? []; track p.id) { <app-board [player]="p" /> }</section>
@@ -52,7 +54,7 @@ import { BoardComponent } from '../ui/board.component';
 })
 export class ResultsComponent {
   readonly game = inject(GameService);
-  readonly unit = computed(() => (this.game.room()?.verdictMode === 'vote' ? 'voix' : 'pts'));
+  readonly unit = computed(() => (this.game.room()?.verdictMode === 'vote' ? 'results.votes' : 'results.points'));
   readonly copied = signal(false);
 
   /** Détail du score « value » du joueur courant, recalculé pour l'affichage à partir des vues serveur. */

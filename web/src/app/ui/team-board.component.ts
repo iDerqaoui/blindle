@@ -1,22 +1,23 @@
 import { Component, computed, inject } from '@angular/core';
 import { GameService } from '../game/game.service';
 import { CardComponent } from './card.component';
+import { TranslatePipe } from '../i18n/i18n';
 import { PlayerSummary, TeamEntry } from '../game/game.types';
 
 /** Équipes de tous les joueurs, slot par slot ; bouton « Voler » si le joker est disponible. */
 @Component({
   selector: 'app-team-board',
-  imports: [CardComponent],
+  imports: [CardComponent, TranslatePipe],
   template: `
     <section class="panel">
-      <h2>Équipes</h2>
+      <h2>{{ 'teams.title' | t }}</h2>
       <div class="teams">
         @for (p of players(); track p.id) {
           <div class="team" [class.mine]="p.id === game.myId()">
             <div class="team-head">
-              <span>@if (p.bot) { 🤖 }{{ p.name }}@if (p.id === game.myId()) { <em> (toi)</em> }</span>
+              <span>@if (p.bot) { 🤖 }{{ game.displayName(p) }}@if (p.id === game.myId()) { <em> {{ 'teams.you' | t }}</em> }</span>
               <span>
-                @if (p.bonus > 0) { <span class="tag bonus">+{{ p.bonus }} synergie</span> }
+                @if (p.bonus > 0) { <span class="tag bonus">{{ 'results.synergy' | t: { n: p.bonus } }}</span> }
                 <span class="coins">{{ p.budget }} 🪙</span>
               </span>
             </div>
@@ -29,7 +30,7 @@ import { PlayerSummary, TeamEntry } from '../game/game.types';
                       @if (e.card) { <app-card [card]="e.card" [compact]="true" /> }
                       @if (canSteal(p)) {
                         <button class="btn small" (click)="game.useJoker('steal', p.id + '/' + slot.id)"
-                                [title]="'Payé ' + (e.paid ?? 0) + ' pièces'">Voler</button>
+                                [title]="'teams.paid' | t: { n: e.paid ?? 0 }">{{ 'teams.steal' | t }}</button>
                       }
                     </span>
                   } @else {

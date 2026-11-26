@@ -1,5 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { GameService } from './game/game.service';
+import { I18nService, LANGS, Lang, TranslatePipe } from './i18n/i18n';
 import { HomeComponent } from './screens/home.component';
 import { LobbyComponent } from './screens/lobby.component';
 import { AuctionComponent } from './screens/auction.component';
@@ -9,15 +10,15 @@ import { ResultsComponent } from './screens/results.component';
 import { TeamBoardComponent } from './ui/team-board.component';
 import { ModalComponent } from './ui/modal.component';
 
-/** Coque de l'application : barre du haut (room, quitter) et écran selon la phase reçue du serveur. */
+/** Coque : barre du haut (room, langue, quitter) et écran selon la phase reçue du serveur. */
 @Component({
   selector: 'app-root',
   imports: [HomeComponent, LobbyComponent, AuctionComponent, TableComponent, VerdictComponent, ResultsComponent,
-    TeamBoardComponent, ModalComponent],
+    TeamBoardComponent, ModalComponent, TranslatePipe],
   template: `
     <header class="topbar">
       <button class="brand" (click)="inRoom() ? confirmLeave.set(true) : null" [disabled]="!inRoom()"
-              aria-label="Blindle, accueil">
+              [attr.aria-label]="'app.home' | t">
         <span class="brand-mark">B</span><span class="brand-name">Blindle</span>
       </button>
 
@@ -25,18 +26,28 @@ import { ModalComponent } from './ui/modal.component';
         @if (game.me()) {
           <div class="room-info">
             <span class="room-universe">{{ room.themeName }}</span>
-            <button class="room-code-chip" (click)="copyCode(room.code)" title="Copier le code">
-              {{ room.code }} <small>{{ copied() ? 'copié' : 'copier' }}</small>
+            <button class="room-code-chip" (click)="copyCode(room.code)" [title]="'app.copyCode' | t">
+              {{ room.code }} <small>{{ (copied() ? 'app.copied' : 'app.copy') | t }}</small>
             </button>
-            <span class="muted small">{{ room.players.length }} joueur{{ room.players.length > 1 ? 's' : '' }}</span>
+            <span class="muted small">{{ i18n.plural('app.players', room.players.length) }}</span>
           </div>
         }
       }
 
       <div class="topbar-end">
-        <span class="status-dot" [class.ok]="game.connected()" [title]="game.connected() ? 'Connecté' : 'Hors ligne'"></span>
+        <label class="lang-select">
+          <span class="sr-only">{{ 'app.language' | t }}</span>
+          <span aria-hidden="true">🌐</span>
+          <select [value]="i18n.lang()" (change)="setLang($event)" [attr.aria-label]="'app.language' | t">
+            @for (l of langs; track l.code) {
+              <option [value]="l.code" [selected]="l.code === i18n.lang()">{{ l.label }}</option>
+            }
+          </select>
+        </label>
+        <span class="status-dot" [class.ok]="game.connected()"
+              [title]="(game.connected() ? 'app.connected' : 'app.offline') | t"></span>
         @if (inRoom()) {
-          <button class="btn ghost small" (click)="confirmLeave.set(true)">Quitter</button>
+          <button class="btn ghost small" (click)="confirmLeave.set(true)">{{ 'app.leave' | t }}</button>
         }
       </div>
     </header>
@@ -56,7 +67,7 @@ import { ModalComponent } from './ui/modal.component';
             <app-team-board />
           </div>
           <details class="panel log">
-            <summary>Journal</summary>
+            <summary>{{ 'app.log' | t }}</summary>
             <ul>@for (line of log(); track $index) { <li>{{ line }}</li> }</ul>
           </details>
         }
@@ -66,12 +77,11 @@ import { ModalComponent } from './ui/modal.component';
     </main>
 
     @if (confirmLeave()) {
-      <app-modal title="Quitter la partie ?" (closed)="confirmLeave.set(false)">
-        <p>Tu quittes la room <strong>{{ game.room()?.code }}</strong>. Tu ne pourras pas reprendre ta place
-          (rejoindre à nouveau te compte comme un nouveau joueur).</p>
+      <app-modal [title]="'leave.title' | t" (closed)="confirmLeave.set(false)">
+        <p>{{ 'leave.body' | t: { code: game.room()?.code } }}</p>
         <div class="modal-actions">
-          <button class="btn" (click)="confirmLeave.set(false)">Rester</button>
-          <button class="btn danger" (click)="leave()">Quitter</button>
+          <button class="btn" (click)="confirmLeave.set(false)">{{ 'leave.stay' | t }}</button>
+          <button class="btn danger" (click)="leave()">{{ 'leave.confirm' | t }}</button>
         </div>
       </app-modal>
     }
@@ -79,6 +89,8 @@ import { ModalComponent } from './ui/modal.component';
 })
 export class App {
   readonly game = inject(GameService);
+  readonly i18n = inject(I18nService);
+  readonly langs = LANGS;
   readonly confirmLeave = signal(false);
   readonly copied = signal(false);
 
@@ -99,6 +111,10 @@ export class App {
   });
 
   readonly log = computed(() => [...(this.game.room()?.log ?? [])].reverse());
+
+  setLang(event: Event): void {
+    this.i18n.use((event.target as HTMLSelectElement).value as Lang);
+  }
 
   leave(): void {
     this.confirmLeave.set(false);

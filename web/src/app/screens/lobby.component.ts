@@ -1,11 +1,12 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { GameService } from '../game/game.service';
+import { TranslatePipe } from '../i18n/i18n';
 
 /** Salle d'attente : univers, code à partager, joueurs et bots, réglages de l'hôte, démarrage. */
 @Component({
   selector: 'app-lobby',
-  imports: [FormsModule],
+  imports: [FormsModule, TranslatePipe],
   template: `
     @if (game.room(); as room) {
       <section class="lobby-banner" [style.--universe]="room.art?.color ?? '#6b5bd6'">
@@ -14,64 +15,66 @@ import { GameService } from '../game/game.service';
           <span class="eyebrow">{{ blindBid() ? 'Anime Blind Bid' : room.presetName }}</span>
           <h1>{{ room.themeName }}</h1>
           <div class="code-block">
-            <span class="muted">Code à partager</span>
-            <button class="room-code" (click)="copy(room.code)" title="Copier le code">{{ room.code }}</button>
-            <span class="muted small">{{ copied() ? 'Copié !' : 'Clique pour copier' }}</span>
+            <span class="muted">{{ 'lobby.shareCode' | t }}</span>
+            <button class="room-code" (click)="copy(room.code)" [title]="'app.copyCode' | t">{{ room.code }}</button>
+            <span class="muted small">{{ (copied() ? 'lobby.copied' : 'lobby.clickToCopy') | t }}</span>
           </div>
         </div>
       </section>
 
       <div class="lobby-grid">
         <section class="panel">
-          <h2>Joueurs <span class="muted">{{ room.players.length }}/8</span></h2>
+          <h2>{{ 'lobby.players' | t }} <span class="muted">{{ room.players.length }}/8</span></h2>
           <ul class="player-list">
             @for (p of room.players; track p.id) {
               <li>
                 <span class="avatar" [style.--hue]="hue(p.id)">{{ p.bot ? '🤖' : p.name.charAt(0).toUpperCase() }}</span>
-                <span>{{ p.name }}</span>
-                @if (p.host) { <span class="pill">hôte</span> }
-                @if (p.id === game.myId()) { <span class="pill pill-me">toi</span> }
+                <span>{{ game.displayName(p) }}</span>
+                @if (p.host) { <span class="pill">{{ 'lobby.host' | t }}</span> }
+                @if (p.id === game.myId()) { <span class="pill pill-me">{{ 'lobby.you' | t }}</span> }
               </li>
             }
           </ul>
           @if (isHost() && room.players.length < 8) {
             <div class="bot-row">
-              <span class="muted small">Ajouter un bot</span>
+              <span class="muted small">{{ 'lobby.addBot' | t }}</span>
               @for (b of game.botProfiles(); track b.profile) {
-                <button class="chip" [title]="botHelp[b.profile]" (click)="game.addBot(b.profile)">🤖 {{ b.label }}</button>
+                <button class="chip" [title]="'bot.help.' + b.profile | t" (click)="game.addBot(b.profile)">
+                  🤖 {{ 'bot.' + b.profile | t }}
+                </button>
               }
             </div>
           }
         </section>
 
         <section class="panel">
-          <h2>Partie</h2>
+          <h2>{{ 'lobby.game' | t }}</h2>
           @if (blindBid()) {
             <ul class="rules">
-              <li>Chaque joueur pioche à tour de rôle : <strong>lui seul voit le personnage</strong>.</li>
-              <li>Il ouvre l'enchère, les autres <strong>surenchérissent ou laissent</strong>, à l'aveugle.</li>
-              <li>La carte rejoint le tableau du gagnant. Personne n'en veut : <strong>poubelle</strong>, visible par tous.</li>
-              <li>Quand les équipes de {{ room.slots.length }} sont complètes, on vote pour la meilleure.</li>
+              <li>{{ 'lobby.rule1' | t }}</li>
+              <li>{{ 'lobby.rule2' | t }}</li>
+              <li>{{ 'lobby.rule3' | t }}</li>
+              <li>{{ 'lobby.rule4' | t: { n: room.slots.length } }}</li>
             </ul>
           }
           @if (isHost()) {
             <div class="settings">
-              <label class="field">Or par joueur
+              <label class="field">{{ 'lobby.gold' | t }}
                 <input class="input" type="number" min="100" step="50" [(ngModel)]="budget" />
               </label>
-              <label class="field">Temps d'enchère (s)
+              <label class="field">{{ 'lobby.timer' | t }}
                 <input class="input" type="number" min="5" max="600" [(ngModel)]="timer" />
               </label>
               @if (!blindBid()) {
-                <label class="field">Rounds
+                <label class="field">{{ 'lobby.rounds' | t }}
                   <input class="input" type="number" min="1" max="30" [(ngModel)]="rounds" />
                 </label>
               }
-              <button class="btn small" (click)="save()">Appliquer</button>
+              <button class="btn small" (click)="save()">{{ 'lobby.apply' | t }}</button>
             </div>
-            <button class="btn primary big" (click)="game.start()">Lancer la partie</button>
+            <button class="btn primary big" (click)="game.start()">{{ 'lobby.start' | t }}</button>
           } @else {
-            <p class="muted">En attente du lancement par l'hôte…</p>
+            <p class="muted">{{ 'lobby.waitingHost' | t }}</p>
           }
           @if (disclaimer(); as d) { <p class="disclaimer">{{ d }}</p> }
         </section>
@@ -89,15 +92,6 @@ export class LobbyComponent {
   budget = 1000;
   rounds = 10;
   timer = 30;
-
-  /** Personnalités des bots (§7), en infobulle. */
-  readonly botHelp: Record<string, string> = {
-    aggressive: 'Mise vite et fort, jusqu’à 120 % de son estimation',
-    stingy: 'Attend le dernier moment, plafonne à 80 %',
-    fan: 'Surenchérit sur son type de personnage favori',
-    bluffer: 'Fait monter les prix puis se retire',
-    strategist: 'Garde de l’or pour compléter son équipe',
-  };
 
   constructor() {
     // Réglages affichés = ceux du preset, une fois connus.

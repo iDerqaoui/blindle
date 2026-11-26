@@ -2,6 +2,7 @@ import { Component, computed, inject, input } from '@angular/core';
 import { GameService } from '../game/game.service';
 import { PlayerSummary } from '../game/game.types';
 import { GameCardComponent } from './game-card.component';
+import { TranslatePipe } from '../i18n/i18n';
 
 /**
  * Tableau d'un joueur : ses emplacements, remplis au fil des cartes gagnées (la carte
@@ -9,17 +10,17 @@ import { GameCardComponent } from './game-card.component';
  */
 @Component({
   selector: 'app-board',
-  imports: [GameCardComponent],
+  imports: [GameCardComponent, TranslatePipe],
   template: `
     @let p = player();
     <article class="board" [class.mine]="p.id === game.myId()" [class.is-drawer]="p.id === drawerId()"
              [class.is-leader]="p.id === leaderId()">
       <header class="board-head">
         <span class="avatar" [style.--hue]="hue()">{{ p.bot ? '🤖' : p.name.charAt(0).toUpperCase() }}</span>
-        <span class="board-name">{{ p.name }}@if (p.id === game.myId()) { <small> · toi</small> }</span>
-        @if (p.id === drawerId()) { <span class="pill pill-drawer">pioche</span> }
-        @if (p.id === leaderId()) { <span class="pill pill-leader">mène</span> }
-        <span class="gold">{{ p.budget }}<small> or</small></span>
+        <span class="board-name">{{ game.displayName(p) }}@if (p.id === game.myId()) { <small> · {{ 'board.you' | t }}</small> }</span>
+        @if (p.id === drawerId()) { <span class="pill pill-drawer">{{ 'board.drawing' | t }}</span> }
+        @if (p.id === leaderId()) { <span class="pill pill-leader">{{ 'board.leading' | t }}</span> }
+        <span class="gold">{{ p.budget }}<small> {{ 'board.gold' | t }}</small></span>
       </header>
       <div class="board-slots">
         @for (slot of slots(); track slot.id) {

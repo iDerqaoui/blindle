@@ -101,7 +101,7 @@ public final class Room {
 
     public synchronized RoomSnapshot snapshot() {
         return new RoomSnapshot(code, setup, state, hostId, phaseDeadline, votes, clock.instant(), history,
-                daily == null ? null : daily.date(), dailyRank);
+                daily == null ? null : daily.date(), dailyRank, profilesOfBots());
     }
 
     public synchronized boolean hasPlayer(String playerId) {
@@ -343,6 +343,12 @@ public final class Room {
         } catch (GameException e) {
             return false;
         }
+    }
+
+    private Map<String, String> profilesOfBots() {
+        Map<String, String> out = new LinkedHashMap<>();
+        bots.forEach((id, strategy) -> out.put(id, strategy.profile()));
+        return out;
     }
 
     private static String leaderId(LotState lot) {

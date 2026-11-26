@@ -30,6 +30,8 @@ export interface PlayerSummary {
   bonus: number;
   host: boolean;
   bot: boolean;
+  /** Profil du bot (aggressive, stingy…), null pour un humain. */
+  botProfile: string | null;
   acted: boolean;
   team: TeamEntry[];
 }
