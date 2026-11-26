@@ -10,7 +10,7 @@ Jeu d'enchères à l'aveugle multijoueur en ligne (3 à 8 joueurs, ou solo contr
 
 ## Stack
 
-- Back : Java 21, Spring Boot 3, Maven, WebSocket STOMP
+- Back : Java 17, Spring Boot 3, Maven, WebSocket STOMP
 - Front : Angular (standalone components), RxJS, client STOMP
 - Contenu : thèmes et presets JSON dans `content/`, validés par JSON Schema au démarrage
 - MVP : état des rooms en mémoire, pas de base de données
@@ -52,11 +52,11 @@ Jeu d'enchères à l'aveugle multijoueur en ligne (3 à 8 joueurs, ou solo contr
 - Lancer le back : `mvn -pl app -am spring-boot:run` (port 8080, STOMP sur `/ws`)
 - Front : à définir à l'étape 6 (`web/`)
 
-⚠️ JDK 21 absent du poste : `java.version` vaut 17 dans le `pom.xml` parent. Passer à 21 dès qu'il est installé.
+Java 17 retenu (décision du 2026-11-26) : pas de pattern matching dans `switch` ni de record patterns.
 
 Architecture et protocole STOMP proposés à l'étape 0 : `docs/ARCHITECTURE.md`.
 
 ## Étape en cours
 
-Étape 0 terminée (squelette qui compile). Prochaine : étape 1 — `engine-core` + machine à états (voir `docs/PROJECT.md` §11 et §12).
+Étape 1 terminée (`engine-core`, `GameEngine` + stubs). Prochaine : étape 2 — `RuleEngine` + `budget-cap` + `rising-floor` (voir `docs/PROJECT.md` §11 et §12).
 Mettre à jour cette ligne à chaque étape terminée.

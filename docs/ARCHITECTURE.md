@@ -7,7 +7,7 @@
 
 ```
 blindle/
-├── pom.xml                  parent Maven (Spring Boot 3, Java 21 cible)
+├── pom.xml                  parent Maven (Spring Boot 3, Java 17)
 ├── CLAUDE.md
 ├── docs/                    PROJECT.md, ARCHITECTURE.md
 ├── content/                 données, aucun code
@@ -112,6 +112,4 @@ Chaque tâche est testable seule.
 
 ## 5. Points à trancher
 
-- **JDK 21** non installé sur le poste : le build cible Java 17 (`java.version` dans le
-  `pom.xml` parent). Installer un JDK 21 puis passer la propriété à `21`.
 - **Dépôt GitLab** : le dépôt git est local ; ajouter le remote GitLab.
