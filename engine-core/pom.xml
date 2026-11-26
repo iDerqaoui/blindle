@@ -14,7 +14,20 @@
     <name>Blindle :: engine-core</name>
     <description>État de partie, événements, hooks, machine à états (Java pur)</description>
 
-    <dependencies>
-
-    </dependencies>
+    <build>
+        <plugins>
+            <!-- Expose les fixtures de test (me.blindle.core.Fixtures) aux autres modules. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>
