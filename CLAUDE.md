@@ -63,8 +63,25 @@ Architecture et protocole STOMP proposés à l'étape 0 : `docs/ARCHITECTURE.md`
 
 ## Étape en cours
 
-Étape 10 terminée. Hors feuille de route : mode principal « Anime Blind Bid » (mode `drawer`, thèmes MyAnimeList privés via Tenrai, rareté populaire-ou-puissant et verdict aux points, front refait — voir ARCHITECTURE §11). Prochaine : retours de test du mode, puis étape 11 — Discord Activity (voir `docs/PROJECT.md` §11 et §12).
+Étape 10 terminée. Hors feuille de route : mode principal « Anime Blind Bid » (mode `drawer`, thèmes MyAnimeList privés via Tenrai, rareté populaire-ou-puissant, verdict aux points, le piocheur vend, défausse payante — voir ARCHITECTURE §11). Prochaine : les deux demandes ci-dessous, puis étape 11 — Discord Activity (voir `docs/PROJECT.md` §11 et §12).
 Mettre à jour cette ligne à chaque étape terminée.
+
+### À faire à la prochaine session (demandes du 2026-11-26, dans l'ordre)
+
+1. **Or simplifié : l'or non dépensé ne vaut rien.** L'or sert uniquement à acheter ; il ne compte
+   plus dans le score. Retirer le terme « + or restant / 20 » de `PointsVerdictMode` (garder la
+   pénalité de slot vide et l'or restant comme simple départage), puis aligner les tests, le texte
+   `lobby.rule4points` (EN/FR), le détail `results.pointsDetail` et ARCHITECTURE §11. Vérifier
+   l'équilibre avec `seller-collects` et `discard-fee` (sans valeur de l'or, garder de l'or n'a
+   plus d'intérêt en fin de partie : les derniers lots peuvent devenir très chers).
+2. **Compte admin pour classer les personnages soi-même.** Aujourd'hui les rangs S–D sont dans
+   `content/curation/anime-*.json` (fichiers commités, appliqués par `tools/import-anime.mjs`).
+   Besoin : un accès admin (authentification à concevoir : le site n'a pas de comptes) et une page
+   pour changer le rang de puissance d'un personnage, ajouter ou retirer des personnages et voir la
+   rareté obtenue, sans relancer l'import à la main. Questions à trancher avec l'utilisateur avant de
+   coder : stockage des modifications (fichier de curation ou base), recalcul de la rareté à chaud
+   ou au redémarrage, forme de l'authentification (mot de passe unique en variable
+   d'environnement vs vrais comptes). Signaler toute nouvelle dépendance.
 
 ## Notes de passation (2026-11-26)
 
