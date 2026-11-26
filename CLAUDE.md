@@ -1,0 +1,62 @@
+# Blindle (blindle.me)
+
+Jeu d'enchères à l'aveugle multijoueur en ligne (3 à 8 joueurs, ou solo contre des bots).
+
+**Le concept** : chaque joueur a un budget fixe. Des cartes (personnages de manga, footballeurs, pays, plats…) passent aux enchères cachées derrière des indices révélés du plus vague au plus précis. Plus on mise tôt, moins on a d'information, mais moins c'est cher : le prix plancher monte à chaque indice. Le gagnant d'un lot place la carte dans un slot de son équipe (Capitaine, Bras droit…). À la fin, un verdict (vote entre joueurs, stats…) désigne la meilleure équipe.
+
+**Le moteur est générique** : un thème = un fichier JSON, une règle = une classe branchée sur un hook, une partie = un preset (thème + règles + mode d'enchère + mode de verdict).
+
+📄 **Spécification complète, feuille de route et prompts par étape : `docs/PROJECT.md`.** La lire avant toute tâche structurante ; elle fait foi en cas de doute.
+
+## Stack
+
+- Back : Java 21, Spring Boot 3, Maven, WebSocket STOMP
+- Front : Angular (standalone components), RxJS, client STOMP
+- Contenu : thèmes et presets JSON dans `content/`, validés par JSON Schema au démarrage
+- MVP : état des rooms en mémoire, pas de base de données
+- Plus tard : PostgreSQL, Redis, Discord Activity
+
+## Modules
+
+- `engine-core` : `GameState`, `GameEvent`, `GameHook`, `RuleEngine`, machine à états des phases
+- `engine-rules` : une classe `@Component` par règle, implémentant `Rule`
+- `engine-modes` : `BidMode`, `VerdictMode`
+- `content` : chargement et validation des thèmes / presets
+- `realtime` : contrôleurs STOMP, rooms, timers
+- `web/` : application Angular
+
+## Principes non négociables
+
+1. **Le serveur est la seule source de vérité** : timers, offres, budgets, résolution. Le client ne fait qu'afficher.
+2. **Vues filtrées** : chaque joueur ne reçoit que ce qu'il a le droit de voir (en enchère scellée, jamais les offres des autres avant résolution).
+3. **Déterminisme** : tout aléa passe par la seed de la partie (`Random` injecté, jamais `Math.random()` ni `new Random()` sans seed).
+4. **Aucun contenu en dur dans le moteur** : rien de spécifique à un thème dans `engine-*`.
+5. **Une règle = une classe** : hooks, priorité (validation < 100, effets ≥ 100), paramètres typés, `requires` / `conflictsWith`.
+6. **État immuable** : records Java, les règles renvoient un nouvel `GameState`.
+7. **Timers côté serveur** : le client reçoit l'heure de fin, pas un compte à rebours à lui.
+8. **Droits** : chaque thème a un champ `rights` ; pas d'images officielles ni de photos de personnes réelles dans le contenu commité.
+
+## Conventions
+
+- Code et identifiants en anglais ; textes affichés et documentation en français
+- Tests JUnit 5 obligatoires pour chaque règle et chaque mode : état initial + événement → état attendu
+- Une étape de la feuille de route par session ; petits commits clairs (GitLab)
+- Signaler toute nouvelle dépendance avant de l'ajouter
+- Si une étape exige de modifier `engine-*` pour un besoin propre à un thème : s'arrêter et le signaler
+
+## Commandes
+
+- Build + tests : `mvn verify`
+- Tests d'un module : `mvn -pl engine-core test` (ajouter `-am` pour construire ses dépendances)
+- Un test : `mvn -pl engine-rules -am test -Dtest=BudgetCapRuleTest -Dsurefire.failIfNoSpecifiedTests=false`
+- Lancer le back : `mvn -pl app -am spring-boot:run` (port 8080, STOMP sur `/ws`)
+- Front : à définir à l'étape 6 (`web/`)
+
+⚠️ JDK 21 absent du poste : `java.version` vaut 17 dans le `pom.xml` parent. Passer à 21 dès qu'il est installé.
+
+Architecture et protocole STOMP proposés à l'étape 0 : `docs/ARCHITECTURE.md`.
+
+## Étape en cours
+
+Étape 0 terminée (squelette qui compile). Prochaine : étape 1 — `engine-core` + machine à états (voir `docs/PROJECT.md` §11 et §12).
+Mettre à jour cette ligne à chaque étape terminée.
