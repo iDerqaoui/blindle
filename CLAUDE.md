@@ -118,17 +118,17 @@ Défi quotidien solo du mode anime, choisi par l'utilisateur (remplace à terme 
 - **Univers du jour** : rotation des thèmes illustrés avec rareté (anime), un jour « crossover » qui
   les mélange tous. 10 personnages, mêmes pour tout le monde (seed du jour) : 1 légendaire, 2 épiques,
   3 rares, 4 communes si possible.
-- **Une carte à la fois** : l'image part très floue (flou gaussien) et se précise par paliers (7 niveaux) ; le
-  prix monte avec chaque palier (40 → 400). Acheter quand on ose ; ne rien faire = la carte part,
-  gratuitement. 1000 d'or, 5 slots.
+- **Une carte à la fois, sans chrono** : l'image part très floue (flou gaussien) et ne se précise
+  qu'avec les essais (7 paliers) ; le prix monte avec chaque palier (40 → 400). Acheter à l'aveugle
+  quand on ose, ou laisser partir (gratuit). 1000 d'or, 5 slots.
 - **« Call it! »** : taper un nom, suggestions en liste déroulante dès 2 lettres (aucune liste
   affichée d'office) ; nom juste = achat au prix du moment, points doublés ; nom faux = l'image se
   précise d'un palier (et le prix monte).
-- **Jackpot** : la légendaire du jour reste floue 2 paliers de plus que les autres ; l'acheter = +30.
+- **Jackpot** : la légendaire du jour reste floue 2 essais de plus que les autres ; l'acheter = +30.
 - **Score** : points de rareté (×2 si nommé) + jackpot − 25 par slot vide ; égalité : or restant.
 - **Fin** : écran des regrets (ce qu'on a laissé passer, à quel prix), classement du jour, grille à
   partager sans spoiler (🟨🟪🟦⬜ achetée, ⬛ laissée, ⚡ nommée, 🎰 jackpot).
-- **Serveur seul juge** : prix et palier calculés à l'heure serveur ; images floutées **côté
+- **Serveur seul juge** : prix et palier calculés par le serveur ; images floutées **côté
   serveur**, un palier n'est servi que s'il est atteint ; l'URL d'origine n'est envoyée qu'à la
   révélation. Un essai par jour par compte (connecté) ou par navigateur (cookie).
 - Plus tard : classement en base, série de jours (streak), leurre (« decoy »), % du score maximal.

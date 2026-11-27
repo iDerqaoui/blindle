@@ -56,7 +56,7 @@ public class WhoController {
      * révélée ; {@code outcomes}, {@code share} et {@code leaderboard} n'arrivent qu'en fin de partie.
      */
     public record RunView(String date, String universe, String color, int total, int index, int budget,
-                          int slots, List<Integer> prices, long stepMs, long durationMs, long serverTime,
+                          int slots, List<Integer> prices, long serverTime,
                           LiveView live, OutcomeView last, List<OutcomeView> team, boolean finished,
                           int score, Integer rank, String share, List<OutcomeView> outcomes,
                           List<DailyLeaderboard.Entry> leaderboard, List<String> roster) {
@@ -66,8 +66,7 @@ public class WhoController {
      * Carte en jeu : ni nom ni image d'origine, seulement l'adresse des paliers.
      * {@code wrong} : mauvais noms déjà proposés (chacun a avancé l'image d'un palier).
      */
-    public record LiveView(int index, long startedAt, long expiresAt, int level, int imageLevel, int price,
-                           String image, List<String> wrong) {
+    public record LiveView(int index, int level, int imageLevel, int price, String image, List<String> wrong) {
     }
 
     public record OutcomeView(int index, String name, String image, String rarity, String universe, int points,
@@ -163,8 +162,7 @@ public class WhoController {
         boolean live = run.live(now);
         LiveView liveView = null;
         if (live) {
-            liveView = new LiveView(run.index(), run.startedAt().toEpochMilli(), run.expiresAt().toEpochMilli(),
-                    run.level(now), run.imageLevel(now), run.price(now),
+            liveView = new LiveView(run.index(), run.level(now), run.imageLevel(now), run.price(now),
                     "/api/daily/who/image/" + run.index() + "/", run.wrongGuesses());
         }
         List<Outcome> outcomes = run.outcomes();
@@ -173,8 +171,7 @@ public class WhoController {
         boolean finished = run.finished();
         List<Integer> prices = Arrays.stream(WhoRun.PRICES).boxed().toList();
         return new RunView(lineup.date().toString(), lineup.universe(), lineup.color(), lineup.cards().size(),
-                run.index(), run.budget(), WhoRun.SLOTS, prices, WhoRun.STEP.toMillis(),
-                WhoRun.DURATION.toMillis(), now.toEpochMilli(), liveView, last, team, finished,
+                run.index(), run.budget(), WhoRun.SLOTS, prices, now.toEpochMilli(), liveView, last, team, finished,
                 run.score(), run.rank(), finished ? share(run) : null,
                 finished ? outcomes.stream().map(WhoController::outcome).toList() : null,
                 finished ? who.top(TOP) : null, lineup.roster());

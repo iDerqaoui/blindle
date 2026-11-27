@@ -5,29 +5,23 @@ import me.blindle.modes.RarityPoints;
 import me.blindle.realtime.solo.who.WhoLineup.WhoCard;
 
 import java.text.Normalizer;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
 /**
- * Partie « Who's That? » d'un joueur pour un jour. Tout est calculé à l'heure serveur passée en
- * argument : palier de netteté, prix, expiration (principe 1). Non thread-safe : le service synchronise.
+ * Partie « Who's That? » d'un joueur pour un jour, jugée par le serveur (principe 1). Non thread-safe :
+ * le service synchronise.
  * <p>
- * Une carte à la fois : l'image se précise d'un palier toutes les {@link #STEP}, le prix monte avec
- * ({@link #PRICES}) ; au-delà de {@link #DURATION} la carte part, gratuitement.
- * <p>
- * Deviner : un nom juste achète la carte au prix courant, points doublés ; un nom faux (de l'univers)
- * rend l'image plus nette d'un palier, donc la carte plus chère.
+ * Une carte à la fois, sans limite de temps. L'image ne se précise qu'avec les essais : chaque mauvais
+ * nom la rend plus nette d'un palier et monte le prix ({@link #PRICES}). Un nom juste achète la carte
+ * au prix courant, points doublés. On peut aussi acheter sans nommer, ou laisser partir (gratuit).
  */
 public final class WhoRun {
 
     public static final int[] PRICES = {40, 70, 110, 160, 230, 310, 400};
     public static final int LEVELS = PRICES.length;
-    public static final Duration STEP = Duration.ofMillis(1500);
-    /** Dernier palier atteint à 9 s, puis 3 s pour se décider. */
-    public static final Duration DURATION = STEP.multipliedBy(LEVELS - 1).plusSeconds(3);
     public static final int BUDGET = 1000;
     public static final int SLOTS = 5;
     public static final int JACKPOT_LAG = 2;
@@ -185,10 +179,9 @@ public final class WhoRun {
 
     // ------------------------------------------------------------------ calculs
 
-    /** Palier atteint (0 à {@link #LEVELS} − 1) : le temps écoulé, plus un palier par mauvais nom. */
+    /** Palier atteint (0 à {@link #LEVELS} − 1) : un par mauvais nom, le temps ne compte pas. */
     public int level(Instant now) {
-        long elapsed = Math.max(0, Duration.between(startedAt, now).toMillis());
-        return (int) Math.min(LEVELS - 1, elapsed / STEP.toMillis() + wrong.size());
+        return Math.min(LEVELS - 1, wrong.size());
     }
 
     /** Palier de netteté de l'image : le jackpot reste flou {@link #JACKPOT_LAG} paliers de plus. */
@@ -199,10 +192,6 @@ public final class WhoRun {
 
     public int price(Instant now) {
         return PRICES[level(now)];
-    }
-
-    public Instant expiresAt() {
-        return startedAt.plus(DURATION);
     }
 
     public WhoCard current() {
@@ -235,11 +224,8 @@ public final class WhoRun {
         return n.toLowerCase(Locale.ROOT).replaceAll("[^\\p{L}\\p{N}]", "");
     }
 
-    /** La carte en jeu a expiré : elle part, gratuitement. */
+    /** Sans limite de temps : rien ne part tout seul (point d'extension si un minuteur revient). */
     private void settle(Instant now) {
-        if (live && !now.isBefore(expiresAt())) {
-            leave(LEVELS - 1);
-        }
     }
 
     private Outcome leave(int level) {

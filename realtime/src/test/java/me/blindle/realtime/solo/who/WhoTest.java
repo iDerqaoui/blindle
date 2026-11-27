@@ -44,17 +44,25 @@ class WhoTest {
     // ------------------------------------------------------------------ partie
 
     @Test
-    void priceAndSharpnessClimbTogetherAndTheJackpotStaysBlurry() {
+    void timeAloneNeverSharpensThePictureNorRaisesThePrice() {
         WhoRun run = new WhoRun("k", "Ana", lineup());
         run.next(T0);
 
-        assertThat(run.price(at(0))).isEqualTo(40);
-        assertThat(run.level(at(1.6))).isEqualTo(1);
-        assertThat(run.price(at(4.6))).isEqualTo(160);
-        assertThat(run.level(at(30 - 20))).isEqualTo(WhoRun.LEVELS - 1); // plafonné
-        // La légendaire jackpot reste floue 2 paliers de plus, au même prix.
-        assertThat(run.imageLevel(at(4.6))).isEqualTo(1);
-        assertThat(run.imageLevel(at(1))).isZero();
+        assertThat(run.level(at(3600))).isZero();
+        assertThat(run.price(at(3600))).isEqualTo(40);
+        assertThat(run.live(at(3600))).isTrue(); // pas de limite de temps
+    }
+
+    @Test
+    void theJackpotStaysBlurryTwoGuessesLonger() {
+        WhoRun run = new WhoRun("k", "Ana", lineup());
+        run.next(T0); // carte 0 = jackpot
+        for (String miss : List.of("Perso Numéro 1", "Perso Numéro 2", "Perso Numéro 3")) {
+            run.guess(at(1), miss);
+        }
+        assertThat(run.level(at(1))).isEqualTo(3);
+        assertThat(run.price(at(1))).isEqualTo(160);
+        assertThat(run.imageLevel(at(1))).isEqualTo(1);
     }
 
     @Test
@@ -62,7 +70,8 @@ class WhoTest {
         WhoRun run = new WhoRun("k", "Ana", lineup());
         run.next(T0);
 
-        var o = run.guess(at(1.6), "  perso numero 0 ");
+        run.guess(at(1), "Perso Numéro 5");
+        var o = run.guess(at(2), "  perso numero 0 ");
 
         assertThat(o.price()).isEqualTo(70);
         assertThat(o.called()).isTrue();
@@ -74,31 +83,47 @@ class WhoTest {
     }
 
     @Test
-    void doingNothingLetsTheCardGoForFree() {
+    void lettingACardGoIsFree() {
         WhoRun run = new WhoRun("k", "Ana", lineup());
         run.next(T0);
 
-        assertThat(run.live(at(11.9))).isTrue();
-        assertThat(run.live(at(12))).isFalse();
+        run.pass(at(5));
 
         assertThat(run.outcomes()).singleElement().matches(o -> !o.bought() && o.price() == 0);
         assertThat(run.budget()).isEqualTo(1000);
-        assertThatThrownBy(() -> run.pass(at(12))).hasFieldOrPropertyWithValue("code", "WHO_NOT_LIVE");
+        assertThatThrownBy(() -> run.pass(at(6))).hasFieldOrPropertyWithValue("code", "WHO_NOT_LIVE");
+    }
+
+    /** Achète la carte en jeu au palier voulu : autant de mauvais noms que de paliers. */
+    private static void buyAtLevel(WhoRun run, int level) {
+        int miss = 0;
+        while (run.level(T0) < level) {
+            String name = "Perso Numéro " + miss++;
+            if (!name.equals(run.current().name())) {
+                run.guess(T0, name);
+            }
+        }
+        run.buy(T0);
     }
 
     @Test
     void wrongNameIsNotCalledAndCannotOverspend() {
         WhoRun run = new WhoRun("k", "Ana", lineup());
         run.next(T0);
-        assertThat(run.buy(at(9)).called()).isFalse(); // 400
-        run.next(at(20));
-        run.buy(at(29)); // 400 de plus
-        run.next(at(40));
+        buyAtLevel(run, 6); // 400
+        run.next(T0);
+        buyAtLevel(run, 6); // 400 de plus
+        run.next(T0);
 
         assertThat(run.budget()).isEqualTo(200);
-        assertThat(run.buy(at(42)).price()).isEqualTo(70); // tôt : encore abordable
-        run.next(at(60));
-        assertThatThrownBy(() -> run.buy(at(69))).hasFieldOrPropertyWithValue("code", "WHO_TOO_EXPENSIVE");
+        buyAtLevel(run, 1); // 70 : encore abordable
+        run.next(T0);
+        for (int i = 3; i <= 9; i++) {
+            if (!("Perso Numéro " + i).equals(run.current().name())) {
+                run.guess(T0, "Perso Numéro " + i);
+            }
+        }
+        assertThatThrownBy(() -> run.buy(T0)).hasFieldOrPropertyWithValue("code", "WHO_TOO_EXPENSIVE");
         assertThat(run.budget()).isEqualTo(130);
     }
 
@@ -122,6 +147,7 @@ class WhoTest {
     void eachWrongNameMakesThePictureClearerAndPricier() {
         WhoRun run = new WhoRun("k", "Ana", lineup());
         run.next(at(20));
+        run.pass(at(21));
         run.next(at(40)); // carte 1 (épique, pas le jackpot)
         Instant t = at(40.5);
 

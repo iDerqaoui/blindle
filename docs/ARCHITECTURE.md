@@ -336,8 +336,8 @@ recalculée au redémarrage, ajout de personnages par recherche MyAnimeList depu
 - `WhoDaily` : univers éligibles = thèmes web dont toutes les cartes ont image et rareté connue
   (critère générique), rotation par jour + un jour « Crossover » ; 10 cartes seedées
   (`DailyChallenge.seed(date, "who")`) : 1 légendaire (le jackpot), 2 épiques, 3 rares, 4 communes.
-- `WhoRun` (logique pure, heure passée en argument) : palier = temps écoulé / 1,5 s (0 à 6), prix
-  40 / 70 / 110 / 160 / 230 / 310 / 400, départ gratuit à 12 s ; jackpot flou 2 paliers de plus (+30) ;
+- `WhoRun` (logique pure) : pas de chrono ; palier = nombre de mauvais noms (0 à 6), prix
+  40 / 70 / 110 / 160 / 230 / 310 / 400 ; laisser partir est gratuit ; jackpot flou 2 paliers de plus (+30) ;
   « Call it! » (`guess`) : un nom du roster (casse, accents, ponctuation ignorés) ; juste = achat ×2,
   faux = +1 palier pour cette carte (image plus nette, prix plus haut), un même nom ne compte qu'une fois ; équipe pleine ou or
   < 40 : cartes restantes sautées ; score = points − 25 par slot vide.

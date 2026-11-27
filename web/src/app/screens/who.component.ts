@@ -1,4 +1,4 @@
-import { Component, OnDestroy, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { apiFetch } from '../auth/auth.service';
 import { I18nService, TranslatePipe } from '../i18n/i18n';
@@ -11,7 +11,7 @@ interface WhoSummary {
 }
 
 interface LiveView {
-  index: number; startedAt: number; expiresAt: number; level: number; imageLevel: number; price: number; image: string;
+  index: number; level: number; imageLevel: number; price: number; image: string;
   /** Mauvais noms déjà proposés : chacun a rendu l'image plus nette d'un palier. */
   wrong: string[];
 }
@@ -23,7 +23,7 @@ interface OutcomeView {
 
 interface RunView {
   date: string; universe: string; color: string | null; total: number; index: number; budget: number; slots: number;
-  prices: number[]; stepMs: number; durationMs: number; serverTime: number;
+  prices: number[]; serverTime: number;
   live: LiveView | null; last: OutcomeView | null; team: OutcomeView[]; finished: boolean;
   score: number; rank: number | null; share: string | null; outcomes: OutcomeView[] | null;
   leaderboard: LeaderEntry[] | null; roster: string[];
@@ -95,7 +95,6 @@ const API = '/api/daily/who';
             <div class="who-stage">
               <div class="who-card">
                 <img class="who-blur" [class.shake]="shake()" [src]="live.image + level()" alt="?" />
-                <div class="who-timer"><span [style.width.%]="timeLeftPct()"></span></div>
               </div>
               <div class="who-side">
                 <ol class="who-ladder">
@@ -188,7 +187,7 @@ const API = '/api/daily/who';
     </section>
   `,
 })
-export class WhoComponent implements OnDestroy {
+export class WhoComponent {
   readonly i18n = inject(I18nService);
   readonly Math = Math;
   readonly summary = signal<WhoSummary | null>(null);
@@ -196,29 +195,17 @@ export class WhoComponent implements OnDestroy {
   readonly busy = signal(false);
   readonly error = signal<string | null>(null);
   readonly copied = signal(false);
-  /** Heure serveur estimée, rafraîchie 10 fois par seconde. */
-  readonly now = signal(Date.now());
   name = localStorage.getItem('blindle.name') ?? '';
   /** Texte tapé dans « Call it! » : les suggestions n'apparaissent qu'à partir de 2 lettres. */
   readonly guess = signal('');
   readonly active = signal(0);
   readonly shake = signal(false);
   private open = signal(false);
-  private offset = 0;
-  private refreshing = false;
-  private readonly tick = setInterval(() => this.onTick(), 100);
 
   readonly slotIndexes = computed(() => Array.from({ length: this.run()?.slots ?? 5 }, (_, i) => i));
 
-  /** Palier estimé : temps écoulé + un par mauvais nom (le serveur bride l'image et fixe le prix réel). */
-  readonly level = computed(() => {
-    const r = this.run();
-    if (!r?.live) {
-      return 0;
-    }
-    const elapsed = Math.max(0, this.now() - r.live.startedAt);
-    return Math.min(r.prices.length - 1, Math.floor(elapsed / r.stepMs) + r.live.wrong.length);
-  });
+  /** Palier : un par mauvais nom, le temps ne compte pas (le serveur bride l'image et fixe le prix). */
+  readonly level = computed(() => this.run()?.live?.level ?? 0);
 
   /** Noms de l'univers qui correspondent à la saisie : début d'un mot d'abord, 6 au plus. */
   readonly suggestions = computed(() => {
@@ -246,15 +233,6 @@ export class WhoComponent implements OnDestroy {
 
   readonly price = computed(() => this.run()?.prices[this.level()] ?? 0);
 
-  readonly timeLeftPct = computed(() => {
-    const live = this.run()?.live;
-    if (!live) {
-      return 0;
-    }
-    const total = live.expiresAt - live.startedAt;
-    return Math.max(0, Math.min(100, 100 * (live.expiresAt - this.now()) / total));
-  });
-
   /** Ce qu'on a laissé passer (ou jamais vu), légendaires et épiques d'abord. */
   readonly regrets = computed(() => {
     const order = ['legendary', 'epic', 'rare', 'common'];
@@ -264,10 +242,6 @@ export class WhoComponent implements OnDestroy {
 
   constructor() {
     this.load();
-  }
-
-  ngOnDestroy(): void {
-    clearInterval(this.tick);
   }
 
   async load(): Promise<void> {
@@ -356,16 +330,6 @@ export class WhoComponent implements OnDestroy {
     });
   }
 
-  private onTick(): void {
-    this.now.set(Date.now() + this.offset);
-    const live = this.run()?.live;
-    // Temps écoulé : le serveur fait partir la carte, on va chercher la révélation.
-    if (live && this.now() >= live.expiresAt + 150 && !this.refreshing && !this.busy()) {
-      this.refreshing = true;
-      this.call('GET', '/run').finally(() => (this.refreshing = false));
-    }
-  }
-
   private async call(method: string, path: string, body?: object): Promise<void> {
     this.busy.set(true);
     try {
@@ -379,10 +343,7 @@ export class WhoComponent implements OnDestroy {
         }
         return;
       }
-      const run = data as RunView;
-      this.offset = run.serverTime - Date.now();
-      this.now.set(run.serverTime);
-      this.run.set(run);
+      this.run.set(data as RunView);
     } catch {
       this.showError(this.i18n.t('err.serverDown'));
     } finally {
