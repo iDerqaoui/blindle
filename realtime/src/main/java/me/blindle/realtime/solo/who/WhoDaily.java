@@ -2,6 +2,7 @@ package me.blindle.realtime.solo.who;
 
 import me.blindle.content.ContentRegistry;
 import me.blindle.content.Theme;
+import me.blindle.core.GameException;
 import me.blindle.core.GameRandom;
 import me.blindle.modes.RarityPoints;
 import me.blindle.realtime.solo.DailyChallenge;
@@ -17,9 +18,9 @@ import java.util.Map;
 import java.util.TreeSet;
 
 /**
- * Choisit les personnages du jour. Univers éligibles : thèmes illustrés dont toutes les cartes ont une
- * image et une rareté connue (critère générique : aucun thème n'est nommé ici), jouables sur le web.
- * Rotation jour par jour ; le dernier jour du cycle mélange tous les univers (« Crossover »).
+ * Choisit les personnages du jour, univers par univers : chaque univers illustré a son propre défi
+ * quotidien. Univers éligibles : thèmes web dont toutes les cartes ont une image et une rareté connue
+ * (critère générique : aucun thème n'est nommé ici).
  */
 @Component
 public class WhoDaily {
@@ -27,10 +28,9 @@ public class WhoDaily {
     public static final int CARDS = 10;
     /** Composition visée : 1 légendaire, 2 épiques, 3 rares, 4 communes (complétée au hasard sinon). */
     private static final Map<String, Integer> MIX = mix();
-    static final String CROSSOVER = "Crossover";
 
     private final ContentRegistry content;
-    private final Map<LocalDate, WhoLineup> cache = new LinkedHashMap<>();
+    private final Map<String, WhoLineup> cache = new LinkedHashMap<>();
 
     public WhoDaily(ContentRegistry content) {
         this.content = content;
@@ -45,46 +45,37 @@ public class WhoDaily {
         return m;
     }
 
-    /** Univers éligibles, triés par identifiant (rotation stable). */
+    /** Univers qui ont un défi Who's That?, triés par nom. */
     public List<Theme> eligibleThemes() {
         return content.themes().stream()
                 .filter(t -> t.rights().channels().contains("web"))
                 .filter(t -> t.cards().size() >= CARDS)
                 .filter(t -> t.cards().stream().allMatch(c -> c.image() != null
                         && c.rarity() != null && RarityPoints.POINTS.containsKey(c.rarity())))
-                .sorted(Comparator.comparing(Theme::id))
+                .sorted(Comparator.comparing(Theme::name))
                 .toList();
     }
 
-    public synchronized boolean available() {
-        return !eligibleThemes().isEmpty();
-    }
-
-    /** Personnages du jour (calculés une fois par jour). */
-    public synchronized WhoLineup lineup(LocalDate date) {
-        WhoLineup cached = cache.get(date);
+    /** Personnages du jour de cet univers (calculés une fois par jour et par univers). */
+    public synchronized WhoLineup lineup(LocalDate date, String themeId) {
+        String key = date + "|" + themeId;
+        WhoLineup cached = cache.get(key);
         if (cached != null) {
             return cached;
         }
-        List<Theme> themes = eligibleThemes();
-        if (themes.isEmpty()) {
-            throw new IllegalStateException("Aucun univers illustré pour le défi Who's That?");
-        }
-        WhoLineup lineup = build(date, themes);
-        cache.keySet().removeIf(d -> d.isBefore(date.minusDays(1)));
-        cache.put(date, lineup);
+        Theme theme = eligibleThemes().stream().filter(t -> t.id().equals(themeId)).findFirst()
+                .orElseThrow(() -> new GameException("WHO_UNKNOWN_UNIVERSE", "Pas de défi Who's That? pour " + themeId));
+        WhoLineup lineup = build(date, theme);
+        cache.keySet().removeIf(k -> k.compareTo(date.minusDays(1).toString()) < 0);
+        cache.put(key, lineup);
         return lineup;
     }
 
-    static WhoLineup build(LocalDate date, List<Theme> themes) {
-        int slot = (int) Math.floorMod(date.toEpochDay(), (long) themes.size() + (themes.size() > 1 ? 1 : 0));
-        boolean crossover = slot == themes.size();
-        List<Theme> pool = crossover ? themes : List.of(themes.get(slot));
+    /** Défi d'un univers pour un jour : seed propre au jour et à l'univers. */
+    static WhoLineup build(LocalDate date, Theme theme) {
         List<WhoCard> all = new ArrayList<>();
-        for (Theme t : pool) {
-            t.cards().forEach(c -> all.add(new WhoCard(c.id(), c.name(), c.rarity(), c.image(), t.name())));
-        }
-        GameRandom random = GameRandom.derive(DailyChallenge.seed(date, "who"), "lineup");
+        theme.cards().forEach(c -> all.add(new WhoCard(c.id(), c.name(), c.rarity(), c.image(), theme.name())));
+        GameRandom random = GameRandom.derive(DailyChallenge.seed(date, "who|" + theme.id()), "lineup");
         List<WhoCard> shuffled = random.shuffled(all);
 
         List<WhoCard> chosen = new ArrayList<>();
@@ -108,9 +99,7 @@ public class WhoDaily {
         }
         TreeSet<String> roster = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
         all.forEach(c -> roster.add(c.name()));
-        Theme first = pool.get(0);
-        String color = crossover || first.art() == null ? null : first.art().color();
-        return new WhoLineup(date, crossover ? CROSSOVER : first.name(), color, order, jackpot,
-                new ArrayList<>(roster));
+        String color = theme.art() == null ? null : theme.art().color();
+        return new WhoLineup(date, theme.id(), theme.name(), color, order, jackpot, new ArrayList<>(roster));
     }
 }

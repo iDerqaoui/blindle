@@ -74,7 +74,7 @@ const TRAINING_BOTS = ['aggressive', 'strategist', 'bluffer'];
             </span>
           </div>
 
-          <a class="mode" href="#who">
+          <a class="mode" [href]="'#who/' + u.themeId">
             <span class="medallion">@if (u.faces[3]; as f) { <img [src]="f" alt="" /> } @else { ☀️ }</span>
             <span class="mode-text">
               <strong>{{ 'who.tileTitle' | t }}</strong>

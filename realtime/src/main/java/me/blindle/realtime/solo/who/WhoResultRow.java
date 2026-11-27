@@ -11,7 +11,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Objects;
 
-/** Ligne de la table {@code who_result} : résultat d'un joueur pour un jour. */
+/** Ligne de la table {@code who_result} : résultat d'un joueur, pour un univers et un jour. */
 @Entity(name = "WhoResultRow")
 @Table(name = "who_result")
 @IdClass(WhoResultRow.Key.class)
@@ -20,6 +20,10 @@ public class WhoResultRow {
     @Id
     @Column(name = "played_on")
     LocalDate playedOn;
+
+    @Id
+    @Column(name = "theme")
+    String theme;
 
     @Id
     @Column(name = "player_key")
@@ -49,6 +53,7 @@ public class WhoResultRow {
     static WhoResultRow of(WhoResults.Result r) {
         WhoResultRow row = new WhoResultRow();
         row.playedOn = r.date();
+        row.theme = r.theme();
         row.playerKey = r.key();
         row.name = r.name();
         row.universe = r.universe();
@@ -60,29 +65,32 @@ public class WhoResultRow {
     }
 
     WhoResults.Result toResult() {
-        return new WhoResults.Result(playedOn, playerKey, name, universe, score, goldLeft, share, finishedAt);
+        return new WhoResults.Result(playedOn, theme, playerKey, name, universe, score, goldLeft, share, finishedAt);
     }
 
     public static class Key implements Serializable {
         LocalDate playedOn;
+        String theme;
         String playerKey;
 
         protected Key() {
         }
 
-        Key(LocalDate playedOn, String playerKey) {
+        Key(LocalDate playedOn, String theme, String playerKey) {
             this.playedOn = playedOn;
+            this.theme = theme;
             this.playerKey = playerKey;
         }
 
         @Override
         public boolean equals(Object o) {
-            return o instanceof Key k && Objects.equals(playedOn, k.playedOn) && Objects.equals(playerKey, k.playerKey);
+            return o instanceof Key k && Objects.equals(playedOn, k.playedOn) && Objects.equals(theme, k.theme)
+                    && Objects.equals(playerKey, k.playerKey);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(playedOn, playerKey);
+            return Objects.hash(playedOn, theme, playerKey);
         }
     }
 }

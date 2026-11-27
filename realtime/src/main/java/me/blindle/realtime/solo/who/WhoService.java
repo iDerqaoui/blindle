@@ -3,6 +3,7 @@ package me.blindle.realtime.solo.who;
 import me.blindle.core.GameException;
 import me.blindle.realtime.solo.DailyLeaderboard;
 import me.blindle.realtime.solo.who.WhoRun.Outcome;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.time.Clock;
@@ -11,12 +12,13 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Défi « Who's That? » : un essai par jour et par joueur ({@code key} : compte connecté ou cookie du
- * navigateur). La partie en cours vit en mémoire ; le résultat final est enregistré ({@link WhoResults})
- * pour le classement, l'essai unique et la série de jours, même après un redémarrage.
+ * Défi « Who's That? » : un par univers et par jour, un essai par joueur ({@code key} : compte connecté
+ * ou cookie du navigateur). La partie en cours vit en mémoire ; le résultat final est enregistré
+ * ({@link WhoResults}) pour le classement, l'essai unique et la série de jours, même après un redémarrage.
  */
 @Component
 public class WhoService {
@@ -28,10 +30,11 @@ public class WhoService {
     private final Blurrer blurrer;
     private final Clock clock;
     private final ZoneId zone;
+    /** Parties en cours : « date|univers|joueur ». */
     private final Map<String, WhoRun> runs = new ConcurrentHashMap<>();
 
     public WhoService(WhoDaily daily, WhoResults results, Blurrer blurrer, Clock clock,
-                      @org.springframework.beans.factory.annotation.Value("${blindle.daily.zone:Europe/Paris}") String zone) {
+                      @Value("${blindle.daily.zone:Europe/Paris}") String zone) {
         this.daily = daily;
         this.results = results;
         this.blurrer = blurrer;
@@ -51,25 +54,37 @@ public class WhoService {
         return daily;
     }
 
-    public int players() {
-        return results.count(today());
+    public WhoLineup lineup(String theme) {
+        return daily.lineup(today(), theme);
     }
 
-    /** Résultat enregistré aujourd'hui pour ce joueur (même si le serveur a redémarré depuis). */
+    public int players(String theme) {
+        return results.count(today(), theme);
+    }
+
+    public List<DailyLeaderboard.Entry> top(String theme, int limit) {
+        return results.top(today(), theme, limit);
+    }
+
+    /** Résultat enregistré aujourd'hui dans cet univers (même si le serveur a redémarré depuis). */
     public record Mine(int score, int rank, int streak, String share) {
     }
 
-    public java.util.Optional<Mine> mine(String key) {
+    public Optional<Mine> mine(String theme, String key) {
         if (key == null) {
-            return java.util.Optional.empty();
+            return Optional.empty();
         }
         LocalDate date = today();
-        return results.find(date, key).map(r -> new Mine(r.score(), results.rank(r), results.streak(key, date), r.share()));
+        return results.find(date, theme, key)
+                .map(r -> new Mine(r.score(), results.rank(r), results.streak(key, date), r.share()));
     }
 
-    /** Partie du jour de ce joueur, ou null s'il n'a pas encore joué. */
-    public WhoRun find(String key) {
-        WhoRun run = runs.get(id(today(), key));
+    /** Partie du jour de ce joueur dans cet univers, ou null s'il n'en a pas en cours. */
+    public WhoRun find(String theme, String key) {
+        if (key == null) {
+            return null;
+        }
+        WhoRun run = runs.get(id(today(), theme, key));
         if (run != null) {
             synchronized (run) {
                 refresh(run);
@@ -78,14 +93,16 @@ public class WhoService {
         return run;
     }
 
-    /** Commence le défi (ou reprend celui du jour : un seul essai) et montre la première carte. */
-    public WhoRun start(String key, String name) {
+    /** Commence le défi de cet univers (ou reprend celui en cours : un seul essai) et montre la première carte. */
+    public WhoRun start(String theme, String key, String name) {
         LocalDate date = today();
         runs.keySet().removeIf(k -> !k.startsWith(date + "|") && !k.startsWith(date.minusDays(1) + "|"));
-        if (!runs.containsKey(id(date, key)) && results.find(date, key).isPresent()) {
-            throw new GameException("WHO_FINISHED", "Tu as déjà joué le défi du jour");
+        String id = id(date, theme, key);
+        if (!runs.containsKey(id) && results.find(date, theme, key).isPresent()) {
+            throw new GameException("WHO_FINISHED", "Tu as déjà joué le défi du jour de cet univers");
         }
-        WhoRun run = runs.computeIfAbsent(id(date, key), k -> new WhoRun(key, cleanName(name), daily.lineup(date)));
+        WhoLineup lineup = daily.lineup(date, theme);
+        WhoRun run = runs.computeIfAbsent(id, k -> new WhoRun(key, cleanName(name), lineup));
         synchronized (run) {
             if (run.index() < 0) {
                 run.next(now());
@@ -95,8 +112,8 @@ public class WhoService {
         return run;
     }
 
-    public Outcome buy(String key) {
-        WhoRun run = require(key);
+    public Outcome buy(String theme, String key) {
+        WhoRun run = require(theme, key);
         synchronized (run) {
             Outcome o = run.buy(now());
             refresh(run);
@@ -105,8 +122,8 @@ public class WhoService {
     }
 
     /** « Call it! » : achat si le nom est juste, sinon l'image se précise (null). */
-    public Outcome guess(String key, String name) {
-        WhoRun run = require(key);
+    public Outcome guess(String theme, String key, String name) {
+        WhoRun run = require(theme, key);
         synchronized (run) {
             Outcome o = run.guess(now(), name);
             refresh(run);
@@ -114,8 +131,8 @@ public class WhoService {
         }
     }
 
-    public Outcome pass(String key) {
-        WhoRun run = require(key);
+    public Outcome pass(String theme, String key) {
+        WhoRun run = require(theme, key);
         synchronized (run) {
             Outcome o = run.pass(now());
             refresh(run);
@@ -123,8 +140,8 @@ public class WhoService {
         }
     }
 
-    public void next(String key) {
-        WhoRun run = require(key);
+    public void next(String theme, String key) {
+        WhoRun run = require(theme, key);
         synchronized (run) {
             run.next(now());
             refresh(run);
@@ -135,8 +152,8 @@ public class WhoService {
      * Image de la carte en jeu : au palier demandé, sans jamais dépasser celui atteint (principe 2).
      * Le client ignore quelle carte est le jackpot : il demande le palier du prix, le serveur bride.
      */
-    public byte[] image(String key, int index, int level) {
-        WhoRun run = require(key);
+    public byte[] image(String theme, String key, int index, int level) {
+        WhoRun run = require(theme, key);
         String url;
         int served;
         synchronized (run) {
@@ -150,31 +167,30 @@ public class WhoService {
         return blurrer.render(url, served);
     }
 
-    public List<DailyLeaderboard.Entry> top(int limit) {
-        return results.top(today(), limit);
-    }
-
     /** Fin de partie : série du jour, puis résultat enregistré une seule fois. */
     private void refresh(WhoRun run) {
         run.live(now());
         if (run.finished() && run.rank() == null) {
-            LocalDate date = run.lineup().date();
-            run.streak(results.streak(run.key(), date.minusDays(1)) + 1);
-            run.rank(results.save(new WhoResults.Result(date, run.key(), run.name(), run.lineup().universe(),
-                    run.score(), run.budget(), run.share(), now())));
+            WhoLineup lineup = run.lineup();
+            LocalDate date = lineup.date();
+            // Série : jours joués jusqu'à hier, plus aujourd'hui (déjà compté si un autre univers est fait).
+            int streak = Math.max(results.streak(run.key(), date), results.streak(run.key(), date.minusDays(1)) + 1);
+            run.streak(streak);
+            run.rank(results.save(new WhoResults.Result(date, lineup.themeId(), run.key(), run.name(),
+                    lineup.universe(), run.score(), run.budget(), run.share(), now())));
         }
     }
 
-    private WhoRun require(String key) {
-        WhoRun run = runs.get(id(today(), key));
+    private WhoRun require(String theme, String key) {
+        WhoRun run = key == null ? null : runs.get(id(today(), theme, key));
         if (run == null) {
             throw new GameException("WHO_NOT_STARTED", "Lance d'abord le défi du jour");
         }
         return run;
     }
 
-    private static String id(LocalDate date, String key) {
-        return date + "|" + key;
+    private static String id(LocalDate date, String theme, String key) {
+        return date + "|" + theme + "|" + key;
     }
 
     static String cleanName(String name) {

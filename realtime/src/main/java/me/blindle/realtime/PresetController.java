@@ -43,7 +43,7 @@ public class PresetController {
         this.leaderboard = leaderboard;
     }
 
-    public record PresetSummary(String id, String name, String description, String themeName,
+    public record PresetSummary(String id, String name, String description, String themeId, String themeName,
                                 String bidMode, String verdictMode, boolean daily, Preset.Settings settings,
                                 String disclaimer, Views.ArtView art, int cards, List<String> faces) {
     }
@@ -58,7 +58,7 @@ public class PresetController {
         Channel channel = channelOf(request);
         return factory.presets().stream().filter(p -> access.allows(p, channel)).map(p -> {
             var setup = factory.setup(p.id());
-            return new PresetSummary(p.id(), p.name(), p.description(), setup.theme().name(),
+            return new PresetSummary(p.id(), p.name(), p.description(), setup.theme().id(), setup.theme().name(),
                     p.bidMode(), p.verdictMode(), p.daily(), p.settings(), setup.theme().rights().disclaimer(),
                     art(setup.theme()), setup.theme().cards().size(), faces(setup.theme()));
         }).toList();

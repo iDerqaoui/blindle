@@ -1,15 +1,20 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { apiFetch } from '../auth/auth.service';
 import { I18nService, TranslatePipe } from '../i18n/i18n';
 
 interface LeaderEntry { name: string; score: number; }
 
+interface Mine { score: number; rank: number; streak: number; share: string; }
+
+/** Un univers dans la liste des défis du jour. */
+interface UniverseCard { theme: string; universe: string; color: string | null; cover: string | null; players: number; mine: Mine | null; }
+
 interface WhoSummary {
-  available: boolean; date: string; universe: string | null; color: string | null;
+  available: boolean; date: string; theme: string; universe: string | null; color: string | null;
   started: boolean; finished: boolean; players: number; leaderboard: LeaderEntry[];
   /** Mon résultat du jour, déjà enregistré : on ne rejoue pas. */
-  mine: { score: number; rank: number; streak: number; share: string } | null;
+  mine: Mine | null;
 }
 
 interface LiveView {
@@ -24,14 +29,14 @@ interface OutcomeView {
 }
 
 interface RunView {
-  date: string; universe: string; color: string | null; total: number; index: number; budget: number; slots: number;
+  date: string; theme: string; universe: string; color: string | null; total: number; index: number; budget: number; slots: number;
   prices: number[]; serverTime: number;
   live: LiveView | null; last: OutcomeView | null; team: OutcomeView[]; finished: boolean;
   score: number; rank: number | null; streak: number; share: string | null; outcomes: OutcomeView[] | null;
   leaderboard: LeaderEntry[] | null; roster: string[];
 }
 
-const API = '/api/daily/who';
+const BASE = '/api/daily/who';
 
 /**
  * Défi du jour « Who's That? Auction » : l'image se précise, le prix monte ; acheter quand on ose,
@@ -44,16 +49,33 @@ const API = '/api/daily/who';
   template: `
     <section class="who" [style.--universe]="run()?.color ?? summary()?.color ?? '#6b5bd6'">
       <header class="who-head">
-        <a class="btn small ghost" href="#">← {{ 'who.back' | t }}</a>
+        <a class="btn small ghost" [href]="theme() ? '#who' : '#'">← {{ (theme() ? 'who.allUniverses' : 'who.back') | t }}</a>
         <div>
-          <p class="eyebrow">{{ 'who.eyebrow' | t }} · {{ run()?.date ?? summary()?.date }}</p>
+          <p class="eyebrow">{{ 'who.eyebrow' | t }}@if (run()?.date ?? summary()?.date; as d) { · {{ d }} }</p>
           <h1>{{ 'who.title' | t }} <span>{{ run()?.universe ?? summary()?.universe }}</span></h1>
         </div>
       </header>
 
       @if (error(); as e) { <p class="who-error">{{ e }}</p> }
 
-      @if (!run()) {
+      @if (!theme()) {
+        <p class="muted">{{ 'who.pickUniverse' | t }}</p>
+        <div class="who-universes">
+          @for (u of universes(); track u.theme) {
+            <a class="who-universe" [href]="'#who/' + u.theme" [style.--universe]="u.color ?? '#6b5bd6'">
+              @if (u.cover) { <img [src]="u.cover" [alt]="u.universe" loading="lazy" /> }
+              <span class="who-universe-name">{{ u.universe }}</span>
+              @if (u.mine; as m) {
+                <span class="pill pill-points">✓ {{ 'who.score' | t: { n: m.score } }} · #{{ m.rank }}</span>
+              } @else {
+                <span class="pill">{{ 'who.playToday' | t }}</span>
+              }
+            </a>
+          } @empty {
+            <p class="muted">{{ 'who.unavailable' | t }}</p>
+          }
+        </div>
+      } @else if (!run()) {
         @if (summary(); as s) {
           @if (!s.available) {
             <div class="panel narrow"><p class="muted">{{ 'who.unavailable' | t }}</p></div>
@@ -213,6 +235,9 @@ const API = '/api/daily/who';
 export class WhoComponent {
   readonly i18n = inject(I18nService);
   readonly Math = Math;
+  /** Univers choisi (#who/<thème>), ou null : liste des univers. */
+  readonly theme = input<string | null>(null);
+  readonly universes = signal<UniverseCard[]>([]);
   readonly summary = signal<WhoSummary | null>(null);
   readonly run = signal<RunView | null>(null);
   readonly busy = signal(false);
@@ -264,17 +289,40 @@ export class WhoComponent {
   });
 
   constructor() {
-    this.load();
+    // Changer d'univers (ou revenir à la liste) recharge l'écran.
+    effect(() => {
+      const theme = this.theme();
+      this.summary.set(null);
+      this.run.set(null);
+      this.guess.set('');
+      this.load(theme);
+    });
   }
 
-  async load(): Promise<void> {
-    const res = await fetch(API, { credentials: 'same-origin' });
-    if (res.ok) {
-      const s = (await res.json()) as WhoSummary;
-      this.summary.set(s);
-      if (s.started) {
-        await this.call('GET', '/run');
+  private get api(): string {
+    return `${BASE}/${encodeURIComponent(this.theme() ?? '')}`;
+  }
+
+  async load(theme: string | null): Promise<void> {
+    if (!theme) {
+      const res = await fetch(BASE, { credentials: 'same-origin' });
+      if (res.ok) {
+        this.universes.set(await res.json());
       }
+      return;
+    }
+    const res = await fetch(`${BASE}/${encodeURIComponent(theme)}`, { credentials: 'same-origin' });
+    if (!res.ok) {
+      this.summary.set({ available: false } as WhoSummary);
+      return;
+    }
+    const s = (await res.json()) as WhoSummary;
+    if (theme !== this.theme()) {
+      return; // l'univers a changé entre-temps
+    }
+    this.summary.set(s);
+    if (s.started) {
+      await this.call('GET', '/run');
     }
   }
 
@@ -356,7 +404,7 @@ export class WhoComponent {
   private async call(method: string, path: string, body?: object): Promise<void> {
     this.busy.set(true);
     try {
-      const res = await apiFetch(API + path, { method, body: body ? JSON.stringify(body) : undefined });
+      const res = await apiFetch(this.api + path, { method, body: body ? JSON.stringify(body) : undefined });
       const data = await res.json();
       if (!res.ok) {
         const key = 'err.' + data.code;

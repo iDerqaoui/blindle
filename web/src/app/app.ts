@@ -96,7 +96,7 @@ import { ModalComponent } from './ui/modal.component';
     <main [class.wide]="screen() === 'table'">
       @switch (screen()) {
         @case ('admin') { <app-admin /> }
-        @case ('who') { <app-who /> }
+        @case ('who') { <app-who [theme]="whoTheme()" /> }
         @case ('home') { <app-home /> }
         @case ('lobby') { <app-lobby /> }
         @case ('table') { <app-table /> }
@@ -184,6 +184,11 @@ export class App {
   readonly hash = signal(location.hash);
 
   readonly inRoom = computed(() => !!this.game.room() && !!this.game.me());
+  /** Défi Who's That? : univers choisi (#who/<thème>), ou null pour la liste des univers. */
+  readonly whoTheme = computed(() => {
+    const h = this.hash();
+    return h.startsWith('#who/') ? decodeURIComponent(h.slice('#who/'.length)) || null : null;
+  });
 
   constructor() {
     if (this.loginError()) {
@@ -201,7 +206,7 @@ export class App {
     const room = this.game.room();
     const phase = room?.phase;
     if (!phase || !this.game.me()) {
-      if (this.hash() === '#who') {
+      if (this.hash() === '#who' || this.hash().startsWith('#who/')) {
         return 'who';
       }
       return this.hash() === '#admin' && this.auth.isAdmin() ? 'admin' : 'home';

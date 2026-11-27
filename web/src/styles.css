@@ -770,3 +770,11 @@ a.btn { text-decoration: none; display: inline-block; }
 }
 a.mode { text-decoration: none; color: inherit; }
 .who-streak { font-size: 1.2rem; font-weight: 800; color: #ff8a3d; }
+.who-universes { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 14px; }
+.who-universe {
+  position: relative; display: grid; gap: 6px; padding: 10px; border-radius: var(--radius); text-decoration: none;
+  color: var(--text); background: var(--panel); border: 2px solid var(--universe);
+}
+.who-universe:hover { box-shadow: 0 0 0 3px color-mix(in srgb, var(--universe) 35%, transparent); }
+.who-universe img { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; border-radius: var(--radius-sm); }
+.who-universe-name { font-weight: 800; }

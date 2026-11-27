@@ -162,6 +162,8 @@ export interface PresetSummary {
   id: string;
   name: string;
   description: string | null;
+  /** Thème (univers) : lien vers son défi Who's That? (#who/<themeId>). */
+  themeId: string;
   themeName: string;
   bidMode: string;
   verdictMode: string;

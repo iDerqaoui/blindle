@@ -24,6 +24,7 @@ class WhoTest {
 
     private static final Instant T0 = Instant.parse("2026-11-27T10:00:00Z");
     private static final LocalDate DAY = LocalDate.of(2026, 11, 27);
+    private static final String U = "univers";
 
     /** 10 cartes : légendaire en 0 (jackpot), puis épique, rares, communes. */
     private static WhoLineup lineup() {
@@ -33,7 +34,7 @@ class WhoTest {
             cards.add(new WhoCard("c" + i, "Perso Numéro " + i, rarities[i], "https://img.test/" + i + ".jpg", "Univers"));
         }
         List<String> roster = cards.stream().map(WhoCard::name).toList();
-        return new WhoLineup(DAY, "Univers", "#123456", cards, 0, roster);
+        return new WhoLineup(DAY, "univers", "Univers", "#123456", cards, 0, roster);
     }
 
     private static Instant at(double seconds) {
@@ -182,10 +183,8 @@ class WhoTest {
 
     @Test
     void sameDaySameLineupWithTheTargetMixAndAJackpot() {
-        List<Theme> themes = List.of(theme("aa", 40), theme("bb", 40));
-
-        WhoLineup a = WhoDaily.build(DAY, themes);
-        WhoLineup b = WhoDaily.build(DAY, themes);
+        WhoLineup a = WhoDaily.build(DAY, theme("aa", 40));
+        WhoLineup b = WhoDaily.build(DAY, theme("aa", 40));
 
         assertThat(a.cards()).isEqualTo(b.cards()).hasSize(WhoDaily.CARDS);
         assertThat(a.cards()).filteredOn(c -> c.rarity().equals("legendary")).hasSize(1);
@@ -195,13 +194,15 @@ class WhoTest {
     }
 
     @Test
-    void universesRotateWithACrossoverDay() {
-        List<Theme> themes = List.of(theme("aa", 40), theme("bb", 40));
-        List<String> universes = new ArrayList<>();
-        for (int d = 0; d < 3; d++) {
-            universes.add(WhoDaily.build(LocalDate.ofEpochDay(d), themes).universe());
-        }
-        assertThat(universes).containsExactlyInAnyOrder("AA", "BB", WhoDaily.CROSSOVER);
+    void eachUniverseHasItsOwnDailyLineupThatChangesEveryDay() {
+        WhoLineup aa = WhoDaily.build(DAY, theme("aa", 40));
+        WhoLineup bb = WhoDaily.build(DAY, theme("bb", 40));
+
+        assertThat(aa.themeId()).isEqualTo("aa");
+        assertThat(aa.cards()).allMatch(c -> c.id().startsWith("aa-"));
+        assertThat(bb.cards()).allMatch(c -> c.id().startsWith("bb-"));
+        assertThat(aa.roster()).noneMatch(n -> n.startsWith("bb"));
+        assertThat(WhoDaily.build(DAY.plusDays(1), theme("aa", 40)).cards()).isNotEqualTo(aa.cards());
     }
 
     // ------------------------------------------------------------------ service et images
@@ -227,7 +228,7 @@ class WhoTest {
         };
         WhoDaily daily = new WhoDaily(null) {
             @Override
-            public synchronized WhoLineup lineup(LocalDate date) {
+            public synchronized WhoLineup lineup(LocalDate date, String theme) {
                 return WhoTest.lineup();
             }
         };
@@ -238,51 +239,59 @@ class WhoTest {
         });
         MemoryWhoResults results = new MemoryWhoResults();
         // Ana a joué hier : sa série continue aujourd'hui.
-        results.save(new WhoResults.Result(DAY.minusDays(1), "u:1", "Ana", "U", 10, 0, "", T0.minusSeconds(86400)));
+        results.save(new WhoResults.Result(DAY.minusDays(1), "autre-univers", "u:1", "Ana", "U", 10, 0, "",
+                T0.minusSeconds(86400)));
         WhoService who = new WhoService(daily, results, blurrer, clock, "UTC");
 
-        WhoRun run = who.start("u:1", "Ana");
-        assertThat(who.start("u:1", "Autre")).isSameAs(run); // pas de deuxième essai
+        WhoRun run = who.start(U, "u:1", "Ana");
+        assertThat(who.start(U, "u:1", "Autre")).isSameAs(run); // pas de deuxième essai
 
-        assertThat(who.image("u:1", 0, 0)).isNotEmpty();
+        assertThat(who.image(U, "u:1", 0, 0)).isNotEmpty();
         // Palier pas encore atteint : on reçoit le palier atteint, jamais plus net.
-        assertThat(who.image("u:1", 0, 3)).isEqualTo(who.image("u:1", 0, 0));
-        assertThatThrownBy(() -> who.image("u:1", 1, 0)).hasFieldOrPropertyWithValue("code", "WHO_IMAGE_LOCKED");
-        assertThatThrownBy(() -> who.image("u:2", 0, 0)).isInstanceOf(GameException.class);
+        assertThat(who.image(U, "u:1", 0, 3)).isEqualTo(who.image(U, "u:1", 0, 0));
+        assertThatThrownBy(() -> who.image(U, "u:1", 1, 0)).hasFieldOrPropertyWithValue("code", "WHO_IMAGE_LOCKED");
+        assertThatThrownBy(() -> who.image(U, "u:2", 0, 0)).isInstanceOf(GameException.class);
 
         // Jusqu'au bout en laissant tout passer : score au classement, une seule fois.
         for (int i = 0; i < 10; i++) {
             if (i > 0) {
-                who.next("u:1");
+                who.next(U, "u:1");
             }
-            who.pass("u:1");
+            who.pass(U, "u:1");
         }
-        assertThat(who.find("u:1").finished()).isTrue();
-        assertThat(who.find("u:1").rank()).isEqualTo(1);
-        assertThat(results.count(DAY)).isEqualTo(1);
-        assertThat(who.find("u:1").streak()).isEqualTo(2);
-        assertThat(who.find("u:1").share()).contains("🔥2");
+        assertThat(who.find(U, "u:1").finished()).isTrue();
+        assertThat(who.find(U, "u:1").rank()).isEqualTo(1);
+        assertThat(results.count(DAY, U)).isEqualTo(1);
+        assertThat(who.find(U, "u:1").streak()).isEqualTo(2);
+        assertThat(who.find(U, "u:1").share()).contains("🔥2");
         assertThat(fetched).containsExactly("https://img.test/0.jpg");
 
         // Redémarrage : la partie en mémoire est perdue, le résultat enregistré interdit un 2e essai.
         WhoService restarted = new WhoService(daily, results, blurrer, clock, "UTC");
-        assertThatThrownBy(() -> restarted.start("u:1", "Ana")).hasFieldOrPropertyWithValue("code", "WHO_FINISHED");
-        assertThat(restarted.mine("u:1")).hasValueSatisfying(m -> {
+        assertThatThrownBy(() -> restarted.start(U, "u:1", "Ana")).hasFieldOrPropertyWithValue("code", "WHO_FINISHED");
+        assertThat(restarted.mine(U, "u:1")).hasValueSatisfying(m -> {
             assertThat(m.rank()).isEqualTo(1);
             assertThat(m.streak()).isEqualTo(2);
         });
-        assertThat(restarted.start("u:2", "Bob").index()).isZero(); // un autre joueur, lui, peut jouer
+        assertThat(restarted.start(U, "u:2", "Bob").index()).isZero(); // un autre joueur, lui, peut jouer
     }
 
     @Test
     void rankingByScoreThenGoldLeftAndStreaksStopAtAGap() {
         MemoryWhoResults results = new MemoryWhoResults();
-        results.save(new WhoResults.Result(DAY, "a", "A", "U", 100, 50, "", T0));
-        results.save(new WhoResults.Result(DAY, "b", "B", "U", 100, 300, "", T0.plusSeconds(5)));
-        int rank = results.save(new WhoResults.Result(DAY, "c", "C", "U", 120, 0, "", T0.plusSeconds(9)));
+        results.save(new WhoResults.Result(DAY, U, "a", "A", "U", 100, 50, "", T0));
+        results.save(new WhoResults.Result(DAY, U, "b", "B", "U", 100, 300, "", T0.plusSeconds(5)));
+        int rank = results.save(new WhoResults.Result(DAY, U, "c", "C", "U", 120, 0, "", T0.plusSeconds(9)));
+        results.save(new WhoResults.Result(DAY, "autre", "d", "D", "U", 999, 0, "", T0)); // autre classement
 
         assertThat(rank).isEqualTo(1);
-        assertThat(results.top(DAY, 10)).extracting(e -> e.name()).containsExactly("C", "B", "A");
+        assertThat(results.top(DAY, U, 10)).extracting(e -> e.name()).containsExactly("C", "B", "A");
+        assertThat(results.count(DAY, U)).isEqualTo(3);
+
+        // Deux univers le même jour : la série ne compte ce jour qu'une fois.
+        results.save(new WhoResults.Result(DAY, "autre", "a", "A", "U", 10, 0, "", T0));
+        results.save(new WhoResults.Result(DAY.minusDays(1), U, "a", "A", "U", 10, 0, "", T0));
+        assertThat(results.streak("a", DAY)).isEqualTo(2);
 
         List<LocalDate> days = List.of(DAY, DAY.minusDays(1), DAY.minusDays(2), DAY.minusDays(4));
         assertThat(WhoResults.streakOf(days, DAY)).isEqualTo(3);

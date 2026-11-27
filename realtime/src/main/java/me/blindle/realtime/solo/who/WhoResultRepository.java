@@ -11,15 +11,15 @@ import java.util.List;
 /** Accès à la table {@code who_result}. */
 public interface WhoResultRepository extends JpaRepository<WhoResultRow, WhoResultRow.Key> {
 
-    long countByPlayedOn(LocalDate playedOn);
+    long countByPlayedOnAndTheme(LocalDate playedOn, String theme);
 
-    @Query("select count(r) from WhoResultRow r where r.playedOn = :d and "
+    @Query("select count(r) from WhoResultRow r where r.playedOn = :d and r.theme = :theme and "
             + "(r.score > :score or (r.score = :score and r.goldLeft > :gold))")
-    long countBetter(@Param("d") LocalDate date, @Param("score") int score, @Param("gold") int goldLeft);
+    long countBetter(@Param("d") LocalDate date, @Param("theme") String theme, @Param("score") int score, @Param("gold") int goldLeft);
 
-    @Query("select r from WhoResultRow r where r.playedOn = :d "
+    @Query("select r from WhoResultRow r where r.playedOn = :d and r.theme = :theme "
             + "order by r.score desc, r.goldLeft desc, r.finishedAt asc")
-    List<WhoResultRow> ranking(@Param("d") LocalDate date, Pageable page);
+    List<WhoResultRow> ranking(@Param("d") LocalDate date, @Param("theme") String theme, Pageable page);
 
     @Query("select r.playedOn from WhoResultRow r where r.playerKey = :key order by r.playedOn desc")
     List<LocalDate> days(@Param("key") String key, Pageable page);

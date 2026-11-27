@@ -118,9 +118,9 @@ joueur), stats des parties sans compte. Signaler toute nouvelle dépendance.
 Défi quotidien solo du mode anime, choisi par l'utilisateur (remplace à terme `defi-manga` /
 `defi-pays` comme défi principal) : reconnaître des personnages flous et les acheter à l'aveugle.
 
-- **Univers du jour** : rotation des thèmes illustrés avec rareté (anime), un jour « crossover » qui
-  les mélange tous. 10 personnages, mêmes pour tout le monde (seed du jour) : 1 légendaire, 2 épiques,
-  3 rares, 4 communes si possible.
+- **Un défi par univers anime, chaque jour** (demande du 2026-11-27) : 10 personnages de l'univers,
+  mêmes pour tout le monde (seed du jour et de l'univers) : 1 légendaire, 2 épiques, 3 rares,
+  4 communes si possible. Classement et essai unique par univers ; la série compte les jours joués.
 - **Une carte à la fois, sans chrono** : l'image part très floue (flou gaussien) et ne se précise
   qu'avec les essais (7 paliers) ; le prix monte avec chaque palier (40 → 400). Acheter à l'aveugle
   quand on ose, ou laisser partir (gratuit). 1000 d'or, 5 slots.

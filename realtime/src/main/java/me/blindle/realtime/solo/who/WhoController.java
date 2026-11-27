@@ -28,8 +28,9 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Défi du jour « Who's That? Auction » (REST). Le joueur est le compte connecté s'il y en a un,
- * sinon un cookie de navigateur : un essai par jour. Tout est jugé à l'heure serveur.
+ * Défi du jour « Who's That? Auction » (REST), un par univers anime : {@code /api/daily/who/{theme}/…}.
+ * Le joueur est le compte connecté s'il y en a un, sinon un cookie de navigateur : un essai par jour et
+ * par univers. Tout est jugé par le serveur.
  */
 @RestController
 @RequestMapping("/api/daily/who")
@@ -46,12 +47,16 @@ public class WhoController {
 
     // ------------------------------------------------------------------ vues
 
-    /** Accueil : univers du jour, déjà joué ou non, classement. */
+    /** Un univers dans la liste des défis du jour : déjà joué ou non, nombre de joueurs. */
+    public record UniverseCard(String theme, String universe, String color, String cover, int players,
+                               WhoService.Mine mine) {
+    }
+
     /**
-     * Accueil du défi. {@code started} : une partie est en cours en mémoire ; {@code mine} : mon résultat du
+     * Accueil du défi d'un univers. {@code started} : une partie est en cours en mémoire ; {@code mine} : mon résultat du
      * jour, s'il est enregistré (rejouer est alors impossible, même après un redémarrage).
      */
-    public record Summary(boolean available, String date, String universe, String color, boolean started,
+    public record Summary(boolean available, String date, String theme, String universe, String color, boolean started,
                           boolean finished, int players, List<DailyLeaderboard.Entry> leaderboard,
                           WhoService.Mine mine) {
     }
@@ -60,7 +65,7 @@ public class WhoController {
      * État de ma partie. {@code live} est null entre deux cartes ; {@code last} est la dernière carte
      * révélée ; {@code outcomes}, {@code share} et {@code leaderboard} n'arrivent qu'en fin de partie.
      */
-    public record RunView(String date, String universe, String color, int total, int index, int budget,
+    public record RunView(String date, String theme, String universe, String color, int total, int index, int budget,
                           int slots, List<Integer> prices, long serverTime,
                           LiveView live, OutcomeView last, List<OutcomeView> team, boolean finished,
                           int score, Integer rank, int streak, String share, List<OutcomeView> outcomes,
@@ -87,71 +92,76 @@ public class WhoController {
 
     // ------------------------------------------------------------------ endpoints
 
+    /** Défis du jour : un par univers, avec mon résultat là où j'ai déjà joué. */
     @GetMapping
-    public Summary summary(HttpServletRequest req) {
-        if (!who.daily().available()) {
-            return new Summary(false, who.today().toString(), null, null, false, false, 0, List.of(), null);
-        }
-        WhoLineup lineup = who.daily().lineup(who.today());
+    public List<UniverseCard> universes(HttpServletRequest req) {
         String key = keyOrNull(req);
-        WhoRun run = who.find(key);
-        WhoService.Mine mine = who.mine(key).orElse(null);
-        return new Summary(true, lineup.date().toString(), lineup.universe(), lineup.color(), run != null,
-                mine != null || (run != null && run.finished()), who.players(), who.top(TOP), mine);
+        return who.daily().eligibleThemes().stream().map(t -> new UniverseCard(t.id(), t.name(),
+                t.art() == null ? null : t.art().color(), t.art() == null ? null : t.art().cover(),
+                who.players(t.id()), who.mine(t.id(), key).orElse(null))).toList();
     }
 
-    @PostMapping("/start")
-    public RunView start(@RequestBody Start body, HttpServletRequest req, HttpServletResponse res) {
-        return view(who.start(key(req, res), body == null ? null : body.name()));
+    @GetMapping("/{theme}")
+    public Summary summary(@PathVariable String theme, HttpServletRequest req) {
+        WhoLineup lineup = who.lineup(theme);
+        String key = keyOrNull(req);
+        WhoRun run = who.find(theme, key);
+        WhoService.Mine mine = who.mine(theme, key).orElse(null);
+        return new Summary(true, lineup.date().toString(), theme, lineup.universe(), lineup.color(), run != null,
+                mine != null || (run != null && run.finished()), who.players(theme), who.top(theme, TOP), mine);
     }
 
-    @GetMapping("/run")
-    public RunView run(HttpServletRequest req) {
-        WhoRun run = who.find(keyOrNull(req));
+    @PostMapping("/{theme}/start")
+    public RunView start(@PathVariable String theme, @RequestBody Start body, HttpServletRequest req,
+                         HttpServletResponse res) {
+        return view(who.start(theme, key(req, res), body == null ? null : body.name()));
+    }
+
+    @GetMapping("/{theme}/run")
+    public RunView run(@PathVariable String theme, HttpServletRequest req) {
+        WhoRun run = who.find(theme, keyOrNull(req));
         if (run == null) {
             throw new GameException("WHO_NOT_STARTED", "Lance d'abord le défi du jour");
         }
         return view(run);
     }
 
-    @PostMapping("/buy")
-    public RunView buy(HttpServletRequest req, HttpServletResponse res) {
+    @PostMapping("/{theme}/buy")
+    public RunView buy(@PathVariable String theme, HttpServletRequest req, HttpServletResponse res) {
         String key = key(req, res);
-        who.buy(key);
-        return view(who.find(key));
+        who.buy(theme, key);
+        return view(who.find(theme, key));
     }
 
     /** « Call it! » : nom juste = achat ×2, nom faux = image plus nette (et plus chère). */
-    @PostMapping("/guess")
-    public RunView guess(@RequestBody Guess body, HttpServletRequest req, HttpServletResponse res) {
+    @PostMapping("/{theme}/guess")
+    public RunView guess(@PathVariable String theme, @RequestBody Guess body, HttpServletRequest req,
+                         HttpServletResponse res) {
         String key = key(req, res);
-        who.guess(key, body == null ? null : body.name());
-        return view(who.find(key));
+        who.guess(theme, key, body == null ? null : body.name());
+        return view(who.find(theme, key));
     }
 
-    @PostMapping("/pass")
-    public RunView pass(HttpServletRequest req, HttpServletResponse res) {
+    @PostMapping("/{theme}/pass")
+    public RunView pass(@PathVariable String theme, HttpServletRequest req, HttpServletResponse res) {
         String key = key(req, res);
-        who.pass(key);
-        return view(who.find(key));
+        who.pass(theme, key);
+        return view(who.find(theme, key));
     }
 
-    @PostMapping("/next")
-    public RunView next(HttpServletRequest req, HttpServletResponse res) {
+    @PostMapping("/{theme}/next")
+    public RunView next(@PathVariable String theme, HttpServletRequest req, HttpServletResponse res) {
         String key = key(req, res);
-        who.next(key);
-        return view(who.find(key));
+        who.next(theme, key);
+        return view(who.find(theme, key));
     }
 
     /** Image floutée de la carte en jeu, au palier demandé sans dépasser celui atteint. */
-    @GetMapping(value = "/image/{index}/{level}", produces = MediaType.IMAGE_PNG_VALUE)
-    public ResponseEntity<byte[]> image(@PathVariable int index, @PathVariable int level, HttpServletRequest req) {
-        String key = keyOrNull(req);
-        if (key == null) {
-            throw new GameException("WHO_NOT_STARTED", "Lance d'abord le défi du jour");
-        }
+    @GetMapping(value = "/{theme}/image/{index}/{level}", produces = MediaType.IMAGE_PNG_VALUE)
+    public ResponseEntity<byte[]> image(@PathVariable String theme, @PathVariable int index, @PathVariable int level,
+                                        HttpServletRequest req) {
         return ResponseEntity.ok().cacheControl(CacheControl.noStore()).contentType(MediaType.IMAGE_PNG)
-                .body(who.image(key, index, level));
+                .body(who.image(theme, keyOrNull(req), index, level));
     }
 
     @ExceptionHandler(GameException.class)
@@ -169,18 +179,19 @@ public class WhoController {
         LiveView liveView = null;
         if (live) {
             liveView = new LiveView(run.index(), run.level(now), run.imageLevel(now), run.price(now),
-                    "/api/daily/who/image/" + run.index() + "/", run.wrongGuesses());
+                    "/api/daily/who/" + lineup.themeId() + "/image/" + run.index() + "/", run.wrongGuesses());
         }
         List<Outcome> outcomes = run.outcomes();
         OutcomeView last = outcomes.isEmpty() ? null : outcome(outcomes.get(outcomes.size() - 1));
         List<OutcomeView> team = outcomes.stream().filter(Outcome::bought).map(WhoController::outcome).toList();
         boolean finished = run.finished();
         List<Integer> prices = Arrays.stream(WhoRun.PRICES).boxed().toList();
-        return new RunView(lineup.date().toString(), lineup.universe(), lineup.color(), lineup.cards().size(),
+        return new RunView(lineup.date().toString(), lineup.themeId(), lineup.universe(), lineup.color(),
+                lineup.cards().size(),
                 run.index(), run.budget(), WhoRun.SLOTS, prices, now.toEpochMilli(), liveView, last, team, finished,
                 run.score(), run.rank(), run.streak(), finished ? run.share() : null,
                 finished ? outcomes.stream().map(WhoController::outcome).toList() : null,
-                finished ? who.top(TOP) : null, lineup.roster());
+                finished ? who.top(lineup.themeId(), TOP) : null, lineup.roster());
     }
 
     private static OutcomeView outcome(Outcome o) {

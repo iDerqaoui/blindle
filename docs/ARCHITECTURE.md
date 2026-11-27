@@ -339,8 +339,10 @@ recalculée au redémarrage, ajout de personnages par recherche MyAnimeList depu
 
 ## 14. Défi du jour « Who's That? Auction » (2026-11-27)
 
-- Package `realtime/solo/who`, en REST (`/api/daily/who`) : `GET` (accueil), `POST /start {name}`,
-  `GET /run`, `POST /buy`, `POST /guess {name}`, `POST /pass`, `POST /next`, `GET /image/{index}/{level}` (PNG).
+- Package `realtime/solo/who`, en REST, un défi par univers : `GET /api/daily/who` (univers du jour et
+  mon résultat dans chacun), puis sous `/api/daily/who/{theme}` : `GET` (accueil), `POST /start {name}`,
+  `GET /run`, `POST /buy`, `POST /guess {name}`, `POST /pass`, `POST /next`, `GET /image/{index}/{level}`.
+  Table `who_result` clé (jour, univers, joueur) depuis `V5`. Front : `#who` (liste) et `#who/<thème>`.
 - `WhoDaily` : univers éligibles = thèmes web dont toutes les cartes ont image et rareté connue
   (critère générique), rotation par jour + un jour « Crossover » ; 10 cartes seedées
   (`DailyChallenge.seed(date, "who")`) : 1 légendaire (le jackpot), 2 épiques, 3 rares, 4 communes.
