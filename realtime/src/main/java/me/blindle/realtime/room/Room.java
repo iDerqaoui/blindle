@@ -30,9 +30,7 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.LinkedHashSet;
 import java.util.Optional;
-import java.util.Set;
 
 /**
  * Une partie en cours : tient le {@link GameState} courant, enchaîne les phases
@@ -45,6 +43,8 @@ public final class Room {
     private static final int MAX_NAME = 20;
     private static final int MAX_BOT_TURNS = 200;
     static final int BOT_REVEAL_SEC = 4;
+    /** Délai de reconnexion : un joueur déconnecté garde sa place (et le rôle d'hôte) jusque-là. */
+    public static final java.time.Duration RECONNECT_GRACE = java.time.Duration.ofSeconds(15);
 
     private final String code;
     private GameSetup setup;
@@ -65,8 +65,8 @@ public final class Room {
     private final DailyContext daily;
     private Integer dailyRank;
     private final Map<String, BotStrategy> bots = new LinkedHashMap<>();
-    /** Joueurs humains dont la connexion est tombée (en partie : ils restent, les minuteries jouent pour eux). */
-    private final Set<String> disconnected = new LinkedHashSet<>();
+    /** Joueurs humains dont la connexion est tombée, et depuis quand (en partie, les minuteries jouent pour eux). */
+    private final Map<String, Instant> disconnected = new LinkedHashMap<>();
 
     public Room(String code, long seed, GameSetup setup, RoomSettings settings, TimerScheduler timers,
                 Broadcaster broadcaster, Clock clock) {
@@ -105,7 +105,7 @@ public final class Room {
 
     public synchronized RoomSnapshot snapshot() {
         return new RoomSnapshot(code, setup, state, hostId, phaseDeadline, votes, clock.instant(), history,
-                daily == null ? null : daily.date(), dailyRank, profilesOfBots(), disconnected);
+                daily == null ? null : daily.date(), dailyRank, profilesOfBots(), disconnected.keySet());
     }
 
     public synchronized boolean hasPlayer(String playerId) {
@@ -124,23 +124,56 @@ public final class Room {
     // ------------------------------------------------------------------ connexion et hôte
 
     /**
-     * La connexion d'un joueur est tombée. En salle d'attente il quitte la room ; en partie il reste,
-     * marqué déconnecté. S'il était hôte, l'hôte passe au joueur humain connecté suivant.
+     * La connexion d'un joueur est tombée : il est marqué déconnecté et garde sa place pendant
+     * {@link #RECONNECT_GRACE} (une page rechargée ne lui coûte rien). Passé ce délai ({@link #sweep}),
+     * l'hôte passe au joueur humain connecté suivant et, en salle d'attente, le joueur est retiré.
      */
     public synchronized void disconnect(String playerId) {
-        if (state.player(playerId).isEmpty() || disconnected.contains(playerId)) {
+        if (state.player(playerId).isEmpty() || disconnected.containsKey(playerId)) {
             return;
         }
-        if (state.phase() == Phase.LOBBY) {
-            apply(engine.removePlayer(state, playerId));
-        } else {
-            disconnected.add(playerId);
-            lastActivity = clock.instant();
-        }
-        if (playerId.equals(hostId)) {
-            hostId = nextHost(playerId);
-        }
+        disconnected.put(playerId, clock.instant());
+        lastActivity = clock.instant();
         publish();
+    }
+
+    /** Applique les fins de délai de reconnexion (appelé régulièrement par le registre). */
+    public synchronized void sweep() {
+        sweep(clock.instant());
+    }
+
+    synchronized void sweep(Instant now) {
+        Instant limit = now.minus(RECONNECT_GRACE);
+        List<String> expired = disconnected.entrySet().stream()
+                .filter(e -> !e.getValue().isAfter(limit)).map(Map.Entry::getKey).toList();
+        if (expired.isEmpty()) {
+            return;
+        }
+        boolean changed = false;
+        if (hostId != null && expired.contains(hostId)) {
+            hostId = nextHost(hostId);
+            changed = true;
+        }
+        if (state.phase() == Phase.LOBBY) {
+            for (String id : expired) {
+                apply(engine.removePlayer(state, id));
+                disconnected.remove(id);
+                changed = true;
+            }
+        }
+        if (changed) {
+            publish();
+        }
+    }
+
+    /** Le joueur est revenu (même identité grâce à son jeton) : il retrouve sa place. */
+    private void reconnected(String playerId) {
+        if (disconnected.remove(playerId) != null) {
+            if (hostId == null) {
+                hostId = playerId;
+            }
+            publish();
+        }
     }
 
     /** L'hôte cède sa place à un autre joueur humain connecté. */
@@ -148,7 +181,7 @@ public final class Room {
         requireHost(playerId);
         PlayerState target = state.player(targetId)
                 .orElseThrow(() -> new GameException("UNKNOWN_PLAYER", "Joueur inconnu"));
-        if (target.bot() || disconnected.contains(targetId)) {
+        if (target.bot() || disconnected.containsKey(targetId)) {
             throw new GameException("BAD_HOST", "L'hôte doit être un joueur connecté");
         }
         hostId = targetId;
@@ -166,7 +199,7 @@ public final class Room {
         }
         for (int k = 0; k < ps.size(); k++) {
             PlayerState p = ps.get((from + k) % ps.size());
-            if (!p.bot() && !p.id().equals(leaving) && !disconnected.contains(p.id())) {
+            if (!p.bot() && !p.id().equals(leaving) && !disconnected.containsKey(p.id())) {
                 return p.id();
             }
         }
@@ -201,7 +234,7 @@ public final class Room {
 
     public synchronized void join(String playerId, String name) {
         if (state.player(playerId).isPresent()) {
-            disconnected.remove(playerId);
+            reconnected(playerId);
             broadcaster.sendTo(snapshot(), playerId);
             return;
         }
@@ -218,6 +251,7 @@ public final class Room {
 
     public synchronized void sync(String playerId) {
         requirePlayer(playerId);
+        reconnected(playerId);
         broadcaster.sendTo(snapshot(), playerId);
     }
 

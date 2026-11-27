@@ -273,6 +273,7 @@ export const EN: Record<string, string> = {
   'teams.paid': 'Paid {n} gold',
 
   // Errors (server codes)
+  'err.reconnecting': 'Connection lost, reconnecting…',
   'err.connectionLost': 'Lost connection to the server. Reload the page to play again.',
   'err.serverDown': 'Server unreachable',
   'err.ALREADY_VOTED': 'You have already voted.',

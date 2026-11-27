@@ -9,6 +9,7 @@ import me.blindle.realtime.game.RoomOverrides;
 import me.blindle.realtime.room.RoomTest.ManualTimers;
 import me.blindle.realtime.room.RoomTest.Recorder;
 import me.blindle.realtime.view.ViewProjector;
+import me.blindle.realtime.view.Views;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -41,9 +42,18 @@ class RoomHostTest {
 
     // ------------------------------------------------------------------ passation
 
+    /** Fin du délai de reconnexion. */
+    private void graceOver() {
+        room.sweep(clock.instant().plus(Room.RECONNECT_GRACE).plusSeconds(1));
+    }
+
     @Test
-    void lobbyDisconnectRemovesPlayerAndPassesHostToNextArrival() {
+    void lobbyDisconnectRemovesPlayerAndPassesHostAfterTheGrace() {
         room.disconnect("a");
+        assertThat(room.snapshot().state().players()).hasSize(3); // encore dans le délai
+        assertThat(room.snapshot().hostId()).isEqualTo("a");
+
+        graceOver();
 
         var snap = room.snapshot();
         assertThat(snap.state().players()).extracting(p -> p.id()).containsExactly("b", "c");
@@ -57,6 +67,7 @@ class RoomHostTest {
         room.start("a");
         room.disconnect("b");
         room.disconnect("a");
+        graceOver();
 
         var snap = room.snapshot();
         assertThat(snap.state().players()).hasSize(3);
@@ -73,11 +84,42 @@ class RoomHostTest {
         room.transferHost("a", "c");
         room.disconnect("b");
         room.disconnect("c");
+        graceOver();
 
         // Après « c » vient le bot, puis on reprend au début : « a ».
         assertThat(room.snapshot().hostId()).isEqualTo("a");
         room.disconnect("a");
+        graceOver();
         assertThat(room.snapshot().hostId()).isNull();
+
+        room.sync("b"); // « b » revient : la room retrouve un hôte
+        assertThat(room.snapshot().hostId()).isEqualTo("b");
+    }
+
+    @Test
+    void reloadingWithinTheGraceKeepsSeatAndHost() {
+        room.disconnect("a");
+        room.sync("a"); // reconnecté avec son jeton : même identité
+        graceOver();
+
+        var snap = room.snapshot();
+        assertThat(snap.hostId()).isEqualTo("a");
+        assertThat(snap.state().players()).hasSize(3);
+        assertThat(ViewProjector.room(snap).players()).allMatch(Views.PlayerSummary::connected);
+    }
+
+    @Test
+    void inGameReturningPlayerFindsTeamAndBudget() {
+        room.start("a");
+        room.disconnect("b");
+        graceOver();
+        int budget = room.snapshot().state().player("b").orElseThrow().budget();
+
+        room.sync("b");
+
+        assertThat(room.snapshot().disconnected()).doesNotContain("b");
+        assertThat(room.snapshot().state().player("b").orElseThrow().budget()).isEqualTo(budget);
+        assertThat(room.snapshot().hostId()).isEqualTo("a");
     }
 
     @Test

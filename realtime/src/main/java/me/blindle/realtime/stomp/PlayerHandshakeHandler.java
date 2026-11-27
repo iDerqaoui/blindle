@@ -6,6 +6,7 @@ import me.blindle.realtime.channel.ChannelAuthenticator;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.support.DefaultHandshakeHandler;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.security.Principal;
 import java.util.Map;
@@ -35,14 +36,19 @@ public class PlayerHandshakeHandler extends DefaultHandshakeHandler {
     }
 
     private final ChannelAuthenticator channels;
+    private final SessionTokens tokens;
 
-    public PlayerHandshakeHandler(ChannelAuthenticator channels) {
+    public PlayerHandshakeHandler(ChannelAuthenticator channels, SessionTokens tokens) {
         this.channels = channels;
+        this.tokens = tokens;
     }
 
     @Override
     protected Principal determineUser(ServerHttpRequest request, WebSocketHandler wsHandler,
                                       Map<String, Object> attributes) {
-        return new PlayerPrincipal("p-" + UUID.randomUUID(), channels.channelOf(request));
+        // Reconnexion : un jeton authentique (paramètre « resume ») rend l'identité précédente.
+        String resume = UriComponentsBuilder.fromUri(request.getURI()).build().getQueryParams().getFirst("resume");
+        String id = tokens.resolve(resume).orElseGet(() -> "p-" + UUID.randomUUID());
+        return new PlayerPrincipal(id, channels.channelOf(request));
     }
 }

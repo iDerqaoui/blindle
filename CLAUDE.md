@@ -104,9 +104,12 @@ joueur), stats des parties sans compte. Signaler toute nouvelle dépendance.
   du budget, des manches et du minuteur. Mêmes contrôles que pour un preset (`requires`,
   `conflictsWith`, paramètres, assez de cartes) ; personnalisation en mémoire, perdue avec la room.
   Ce que l'hôte peut changer reste borné par l'admin (les règles du catalogue, les cartes du thème).
-- **Passation d'hôte** : si l'hôte se déconnecte, l'hôte passe au joueur humain connecté suivant
-  dans l'ordre d'arrivée ; l'hôte peut aussi céder sa place. En salle d'attente, un joueur
-  déconnecté est retiré ; en partie, il reste (affiché déconnecté) et les minuteries jouent pour lui.
+- **Passation d'hôte** : si l'hôte se déconnecte, il garde sa place 15 s (le temps de recharger la
+  page) ; ensuite l'hôte passe au joueur humain connecté suivant dans l'ordre d'arrivée. L'hôte peut
+  aussi céder sa place. Passé ce délai, en salle d'attente, un joueur déconnecté est retiré ; en
+  partie, il reste (affiché hors ligne) et les minuteries jouent pour lui.
+- **Reconnexion** (faite le 2026-11-27) : jeton signé par onglet, la page rechargée ou la connexion
+  revenue rend sa place, son équipe et son rôle d'hôte au joueur (ARCHITECTURE §13).
 - Fait le 2026-11-27 : passation, cession, retrait en LOBBY, personnalisation de room (cartes,
   rareté, règles) côté serveur et front. Reste : édition par l'admin de la base (points 1 à 3).
 
@@ -145,12 +148,12 @@ Défi quotidien solo du mode anime, choisi par l'utilisateur (remplace à terme 
 
 - Pas encore vérifié visuellement dans un navigateur (extension Chrome non connectée) : le front compile sans avertissement et des parties scriptées passent par le proxy de dev.
 - À relire avant diffusion publique : cartes pièges du thème manga et les 40 cartes de `pays-du-monde`.
-- Reconnexion = nouveau joueur (pas de reprise de session) ; rooms en mémoire.
+- Reconnexion : faite le 2026-11-27 (jeton par onglet, 15 s de grâce) ; rooms toujours en mémoire.
 - Défi du jour rejouable à volonté (pas de compte) ; classement en mémoire. Équilibrage du prix du marché et des bots à ajuster en jouant.
 - Dépôt : GitHub `iDerqaoui/blindle` (origin). Hébergement de test : Cloudflare Tunnel (voir `docs/DEPLOY.md`).
 - Prochaines étapes convenues (2026-11-26), dans l'ordre :
   1. Mise en ligne sur un seul serveur : front construit embarqué dans le jar (ou Nginx devant), image Docker, HTTPS/WSS, `blindle.allowed-origins`, guide de déploiement, base PostgreSQL (le serveur génère les thèmes anime au démarrage).
-  2. Reconnexion (jeton qui rend sa place au joueur) et passation d'hôte quand l'hôte part.
+  2. ~~Reconnexion (jeton qui rend sa place au joueur) et passation d'hôte quand l'hôte part.~~ Faite le 2026-11-27.
   3. Snapshots des rooms dans Redis (survivre aux redémarrages).
   4. Classement du jour et retraits de thèmes dans un stockage partagé (Redis / PostgreSQL).
   5. Si la charge l'exige : une room = un serveur propriétaire, table room → serveur dans Redis.

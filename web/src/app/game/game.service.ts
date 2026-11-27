@@ -38,17 +38,33 @@ export class GameService {
   private roomSub: StompSubscription | null = null;
   private errorTimer: ReturnType<typeof setTimeout> | undefined;
   private pending: (() => void)[] = [];
+  /** Retour dans une room après rechargement : une room disparue entre-temps est oubliée sans bruit. */
+  private resuming = false;
 
   constructor() {
     const scheme = location.protocol === 'https:' ? 'wss' : 'ws';
     this.client = new Client({
       brokerURL: `${scheme}://${location.host}/ws`,
-      reconnectDelay: 0,
+      // Connexion perdue : on se reconnecte seul, avec le jeton qui rend sa place au joueur.
+      reconnectDelay: 2000,
+      beforeConnect: () => {
+        const session = readSession();
+        const resume = session ? `?resume=${encodeURIComponent(session.token)}` : '';
+        this.client.brokerURL = `${scheme}://${location.host}/ws${resume}`;
+      },
       onConnect: () => {
         this.connected.set(true);
         this.client.subscribe('/user/queue/room', m => this.onMessage(m));
         this.client.subscribe('/user/queue/errors', m => this.onError(m));
         this.client.subscribe('/user/queue/catalog', m => this.catalog.set(JSON.parse(m.body)));
+        this.client.subscribe('/user/queue/session', m => saveSession(JSON.parse(m.body)));
+        // Page rechargée ou connexion revenue : on retourne dans sa room (sync rend les vues).
+        const session = readSession();
+        const code = this.me()?.code ?? session?.code;
+        if (code) {
+          this.resuming = !this.me();
+          this.watchRoom(code);
+        }
         const queued = this.pending;
         this.pending = [];
         queued.forEach(fn => fn());
@@ -56,7 +72,7 @@ export class GameService {
       onWebSocketClose: () => {
         this.connected.set(false);
         if (this.room()) {
-          this.showError(this.i18n.t('err.connectionLost'));
+          this.showError(this.i18n.t('err.reconnecting'));
         }
       },
     });
@@ -140,6 +156,7 @@ export class GameService {
     this.room.set(null);
     this.me.set(null);
     this.catalog.set(null);
+    clearSession(); // nouvelle connexion sans jeton = nouvelle identité
     this.loadDaily();
     this.client.deactivate().then(() => this.client.activate());
   }
@@ -183,6 +200,7 @@ export class GameService {
   private onMessage(message: IMessage): void {
     const data = JSON.parse(message.body) as PlayerView | RoomView;
     if (data.type === 'player') {
+      this.resuming = false;
       const first = this.me() === null || this.me()!.code !== data.code;
       if (!this.me() || data.version >= this.me()!.version || first) {
         this.me.set(data);
@@ -201,7 +219,11 @@ export class GameService {
   }
 
   private watchRoom(code: string): void {
-    this.roomSub?.unsubscribe();
+    try {
+      this.roomSub?.unsubscribe();
+    } catch {
+      // abonnement d'une connexion précédente
+    }
     this.roomSub = this.client.subscribe(`/topic/room/${code}`, m => this.acceptRoom(JSON.parse(m.body)));
     this.send(`/app/room/${code}/sync`, {});
   }
@@ -217,6 +239,14 @@ export class GameService {
 
   private onError(message: IMessage): void {
     const err = JSON.parse(message.body) as ErrorMessage;
+    if (this.resuming && (err.code === 'NOT_IN_ROOM' || err.code === 'ROOM_NOT_FOUND')) {
+      // La room a fermé (ou la place a été rendue) pendant l'absence : retour à l'accueil.
+      this.resuming = false;
+      clearSession();
+      this.roomSub?.unsubscribe();
+      this.roomSub = null;
+      return;
+    }
     // Message traduit à partir du code ; à défaut, celui du serveur.
     const text = this.i18n.has('err.' + err.code) ? this.i18n.t('err.' + err.code) : err.message;
     // Personnalisation refusée : le détail du serveur dit quelle règle ou quelle carte pose problème.
@@ -227,5 +257,35 @@ export class GameService {
     this.error.set(text);
     clearTimeout(this.errorTimer);
     this.errorTimer = setTimeout(() => this.error.set(null), 4000);
+  }
+}
+
+/** Jeton de reconnexion de l'onglet (sessionStorage : survit au rechargement, propre à l'onglet). */
+interface StoredSession { code: string; token: string; }
+
+const SESSION_KEY = 'blindle.session';
+
+function readSession(): StoredSession | null {
+  try {
+    const raw = sessionStorage.getItem(SESSION_KEY);
+    return raw ? (JSON.parse(raw) as StoredSession) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveSession(s: { code: string; token: string }): void {
+  try {
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify({ code: s.code, token: s.token }));
+  } catch {
+    // stockage indisponible : pas de reconnexion, le jeu marche quand même
+  }
+}
+
+function clearSession(): void {
+  try {
+    sessionStorage.removeItem(SESSION_KEY);
+  } catch {
+    // idem
   }
 }

@@ -83,6 +83,7 @@ joueur par la session (`Principal` attribué au `join`), jamais par un champ du 
 | `/topic/room/{code}` | `RoomView` public (`type: "room"`) : phase, joueurs (pseudo, budget restant, équipe, a agi ou non), indices révélés, prix plancher, `deadline` et `serverTime` (epoch ms), nombre d'offres reçues (pas leur montant en `sealed`), journal, résultat |
 | `/user/queue/room` | `PlayerView` privé (`type: "player"`) : mon id, mon offre, passe, `canBid`, `mustPlace`, slots libres, mon vote. Reçoit aussi la `RoomView` lors d'un `sync` |
 | `/user/queue/errors` | `{ code, message }` : offre rejetée, action interdite |
+| `/user/queue/session` | `{ type: "session", code, token }` : jeton de reconnexion (`/ws?resume=<jeton>`), §13 |
 | `/user/queue/catalog` | `RoomCatalogView` (`type: "catalog"`), hôte seul : cartes du thème (rareté de base et de la room, incluse ou non), raretés du thème, règles du catalogue (active, paramètres, défauts, modes requis) |
 | `GET /api/daily` (REST) | Défis du jour : preset, thème, date, nombre de parties, top 10 du classement |
 | `GET /api/bots` (REST) | Profils de bots : `{ profile, label }` |
@@ -322,12 +323,19 @@ recalculée au redémarrage, ajout de personnages par recherche MyAnimeList depu
 - `Rule.defaultParams()` : paramètres par défaut affichés à l'hôte quand il active une règle.
 - `RoomView` : `customized`, `deckSize`, `rules` = règles réellement actives ; `PlayerSummary.connected`.
 - **Passation** : `DisconnectListener` (`SessionDisconnectEvent`) → `RoomRegistry.disconnect` →
-  `Room.disconnect`. En LOBBY le joueur est retiré (`GameEngine.removePlayer`) ; en partie il reste,
-  marqué déconnecté, et les minuteries jouent pour lui. Si c'était l'hôte, le rôle passe au joueur
-  humain connecté suivant dans l'ordre d'arrivée (en boucle, jamais un bot) ; personne : `hostId` null,
-  repris par le prochain arrivant en LOBBY.
-- Pas encore : reconnexion (une nouvelle connexion reste un nouveau joueur), édition de la base par
-  l'admin pour les thèmes non anime et les presets.
+  `Room.disconnect` : le joueur est marqué déconnecté (affiché « hors ligne ») et garde sa place et
+  le rôle d'hôte pendant `Room.RECONNECT_GRACE` (15 s). `RoomRegistry.sweepDisconnected` (toutes les
+  2 s) → `Room.sweep` : délai écoulé, le rôle d'hôte passe au joueur humain connecté suivant dans
+  l'ordre d'arrivée (en boucle, jamais un bot ; personne : `hostId` null, repris par le prochain qui
+  revient ou arrive) et, en LOBBY, le joueur est retiré (`GameEngine.removePlayer`). En partie il
+  reste, et les minuteries jouent pour lui.
+- **Reconnexion** (2026-11-27) : `SessionTokens` signe l'identifiant du joueur (HMAC-SHA256, secret
+  tiré au démarrage, rien de stocké). Le jeton est envoyé sur `/user/queue/session` en réponse à
+  `room.create`, `room.join` et `daily.start`. Le client le garde dans `sessionStorage` (propre à
+  l'onglet, survit au rechargement) et se connecte à `/ws?resume=<jeton>` : `PlayerHandshakeHandler`
+  lui rend son identité, puis `sync` le sort de la liste des déconnectés. Reconnexion automatique
+  côté client toutes les 2 s. Un redémarrage du serveur invalide les jetons (et efface les rooms).
+- Pas encore : édition de la base par l'admin pour les thèmes non anime et les presets.
 
 ## 14. Défi du jour « Who's That? Auction » (2026-11-27)
 

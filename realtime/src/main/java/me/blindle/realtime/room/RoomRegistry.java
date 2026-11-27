@@ -92,6 +92,18 @@ public class RoomRegistry {
         return rooms.size();
     }
 
+    /** Fins de délai de reconnexion : passation d'hôte, retrait des absents en salle d'attente. */
+    @Scheduled(fixedDelay = 2000)
+    public void sweepDisconnected() {
+        for (Room room : rooms.values()) {
+            try {
+                room.sweep();
+            } catch (RuntimeException e) {
+                LOG.warn("Room {} : délai de reconnexion mal traité", room.code(), e);
+            }
+        }
+    }
+
     /** Supprime les rooms inactives depuis longtemps. */
     @Scheduled(fixedDelay = 10 * 60 * 1000)
     public void evictIdle() {

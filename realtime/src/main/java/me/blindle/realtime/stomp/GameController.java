@@ -38,10 +38,12 @@ public class GameController {
     private final ChannelAccess access;
     private final ContentRegistry content;
     private final GameFactory factory;
+    private final SessionTokens tokens;
 
     public GameController(RoomRegistry rooms, DailyChallenge daily, BotCatalog bots, ChannelAccess access,
-                          ContentRegistry content, GameFactory factory) {
+                          ContentRegistry content, GameFactory factory, SessionTokens tokens) {
         this.factory = factory;
+        this.tokens = tokens;
         this.access = access;
         this.content = content;
         this.rooms = rooms;
@@ -50,28 +52,41 @@ public class GameController {
     }
 
     @MessageMapping("/room.create")
-    public void create(Requests.CreateRoom req, Principal player) {
+    @SendToUser(destinations = "/queue/session", broadcast = false)
+    public Session create(Requests.CreateRoom req, Principal player) {
         access.require(preset(req.presetId()), PlayerPrincipal.channelOf(player));
         if (daily.dailyPresets().stream().anyMatch(p -> p.id().equals(req.presetId()))) {
             throw new GameException("DAILY_IS_SOLO", "Le défi du jour se joue seul");
         }
         Room room = rooms.create(req.presetId());
         room.join(player.getName(), req.name());
+        return session(room, player);
+    }
+
+    /** Jeton de reconnexion, envoyé au seul joueur sur {@code /user/queue/session}. */
+    public record Session(String type, String code, String token) {
+    }
+
+    private Session session(Room room, Principal player) {
+        return new Session("session", room.code(), tokens.issue(player.getName()));
     }
 
     /** Lance le défi du jour : room solo créée, rejointe et démarrée d'un coup. */
     @MessageMapping("/daily.start")
-    public void startDaily(Requests.StartDaily req, Principal player) {
+    @SendToUser(destinations = "/queue/session", broadcast = false)
+    public Session startDaily(Requests.StartDaily req, Principal player) {
         access.require(preset(req.presetId()), PlayerPrincipal.channelOf(player));
-        daily.start(player.getName(), req.name(), req.presetId());
+        return session(daily.start(player.getName(), req.name(), req.presetId()), player);
     }
 
     @MessageMapping("/room.join")
-    public void join(Requests.JoinRoom req, Principal player) {
+    @SendToUser(destinations = "/queue/session", broadcast = false)
+    public Session join(Requests.JoinRoom req, Principal player) {
         Room room = rooms.require(req.code());
         // Un joueur ne rejoint pas une room dont le thème n'est pas ouvert sur son canal (ou en a été retiré).
         access.require(room.preset(), PlayerPrincipal.channelOf(player));
         room.join(player.getName(), req.name());
+        return session(room, player);
     }
 
     @MessageMapping("/room/{code}/sync")

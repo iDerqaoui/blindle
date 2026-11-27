@@ -44,7 +44,7 @@ class ChannelRightsTest {
         DailyChallenge daily = new DailyChallenge(rooms, RoomTest.FACTORY, new DailyLeaderboard(), clock,
                 "Europe/Paris");
         controller = new GameController(rooms, daily, new BotCatalog(List.of()), access, CONTENT,
-                RoomTest.FACTORY);
+                RoomTest.FACTORY, new me.blindle.realtime.stomp.SessionTokens());
     }
 
     @Test
