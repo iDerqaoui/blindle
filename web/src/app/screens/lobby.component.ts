@@ -2,11 +2,12 @@ import { Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { GameService } from '../game/game.service';
 import { TranslatePipe } from '../i18n/i18n';
+import { RoomSetupComponent } from './room-setup.component';
 
 /** Salle d'attente : univers, code à partager, joueurs et bots, réglages de l'hôte, démarrage. */
 @Component({
   selector: 'app-lobby',
-  imports: [FormsModule, TranslatePipe],
+  imports: [FormsModule, TranslatePipe, RoomSetupComponent],
   template: `
     @if (game.room(); as room) {
       <section class="lobby-banner" [style.--universe]="room.art?.color ?? '#6b5bd6'">
@@ -32,6 +33,11 @@ import { TranslatePipe } from '../i18n/i18n';
                 <span>{{ game.displayName(p) }}</span>
                 @if (p.host) { <span class="pill">{{ 'lobby.host' | t }}</span> }
                 @if (p.id === game.myId()) { <span class="pill pill-me">{{ 'lobby.you' | t }}</span> }
+                @if (isHost() && !p.bot && !p.host) {
+                  <button class="chip small" (click)="game.transferHost(p.id)" [title]="'lobby.makeHostHelp' | t">
+                    {{ 'lobby.makeHost' | t }}
+                  </button>
+                }
               </li>
             }
           </ul>
@@ -67,7 +73,11 @@ import { TranslatePipe } from '../i18n/i18n';
               }
             </ul>
           }
+          @if (room.customized) {
+            <p class="pill pill-points">{{ 'lobby.customized' | t: { n: room.deckSize } }}</p>
+          }
           @if (isHost()) {
+            <button class="btn small" (click)="setupOpen.set(true)">{{ 'lobby.customize' | t }}</button>
             <div class="settings">
               <label class="field">{{ 'lobby.gold' | t }}
                 <input class="input" type="number" min="100" step="50" [(ngModel)]="budget" />
@@ -89,6 +99,7 @@ import { TranslatePipe } from '../i18n/i18n';
           @if (disclaimer(); as d) { <p class="disclaimer">{{ d }}</p> }
         </section>
       </div>
+      @if (setupOpen() && isHost()) { <app-room-setup (closed)="setupOpen.set(false)" /> }
     }
   `,
 })
@@ -97,6 +108,7 @@ export class LobbyComponent {
   readonly isHost = computed(() => this.game.me()?.host ?? false);
   readonly blindBid = computed(() => this.game.room()?.bidMode === 'drawer');
   readonly copied = signal(false);
+  readonly setupOpen = signal(false);
   readonly preset = computed(() => this.game.presets().find(p => p.id === this.game.room()?.presetId) ?? null);
   readonly disclaimer = computed(() => this.preset()?.disclaimer ?? null);
   budget = 1000;

@@ -683,3 +683,20 @@ a.btn { text-decoration: none; display: inline-block; }
 .admin-table tr.out td { opacity: 0.55; }
 .admin .input.name { margin: 0; min-width: 180px; padding: 6px 8px; }
 .admin .input.tier { margin: 0; width: auto; padding: 6px 8px; }
+
+/* ------------------------------------------------------------------ personnalisation de room (hôte) */
+
+.setup-rules, .setup-cards { list-style: none; padding: 0; margin: 0 0 14px; display: grid; gap: 8px; }
+.setup-rules li { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; }
+.setup-rules li.off, .setup-cards li.off { opacity: 0.55; }
+.setup-rule-head { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.setup-params { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin-top: 8px; }
+.setup-toolbar { display: flex; gap: 8px; align-items: center; }
+.setup-toolbar .input { margin-bottom: 0; }
+.setup-cards { max-height: 360px; overflow-y: auto; padding-right: 4px; }
+.setup-cards li { display: grid; grid-template-columns: auto 36px 1fr 140px; align-items: center; gap: 10px; }
+.setup-cards img { width: 36px; height: 36px; object-fit: cover; border-radius: 6px; }
+.setup-cards .input { margin-bottom: 0; padding: 6px 8px; font-size: 0.9rem; }
+.setup-card-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.setup-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 12px; }
+.player-offline { opacity: 0.5; }

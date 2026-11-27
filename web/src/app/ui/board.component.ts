@@ -17,7 +17,7 @@ import { TranslatePipe } from '../i18n/i18n';
              [class.is-leader]="p.id === leaderId()">
       <header class="board-head">
         <span class="avatar" [style.--hue]="hue()">{{ p.bot ? '🤖' : p.name.charAt(0).toUpperCase() }}</span>
-        <span class="board-name">{{ game.displayName(p) }}@if (p.id === game.myId()) { <small> · {{ 'board.you' | t }}</small> }</span>
+        <span class="board-name" [class.player-offline]="!p.connected">{{ game.displayName(p) }}@if (p.id === game.myId()) { <small> · {{ 'board.you' | t }}</small> }@if (!p.connected) { <small> · {{ 'lobby.offline' | t }}</small> }@if (p.host) { <small> · {{ 'lobby.host' | t }}</small> }</span>
         @if (p.id === drawerId()) { <span class="pill pill-drawer">{{ 'board.drawing' | t }}</span> }
         @if (p.id === leaderId()) { <span class="pill pill-leader">{{ 'board.leading' | t }}</span> }
         @if (points() > 0) { <span class="pill pill-points" [title]="'board.pointsHint' | t">{{ 'card.points' | t: { n: points() } }}</span> }

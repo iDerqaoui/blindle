@@ -1,6 +1,6 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Client, IMessage, StompSubscription } from '@stomp/stompjs';
-import { ArtView, BotProfile, DailySummary, ErrorMessage, PlayerSummary, PlayerView, PresetSummary, RoomView } from './game.types';
+import { ArtView, BotProfile, DailySummary, ErrorMessage, PlayerSummary, PlayerView, PresetSummary, RoomCatalogView, RoomCustomization, RoomView } from './game.types';
 import { I18nService } from '../i18n/i18n';
 
 /**
@@ -20,6 +20,8 @@ export class GameService {
   private pendingBots: string[] = [];
   readonly daily = signal<DailySummary[]>([]);
   readonly botProfiles = signal<BotProfile[]>([]);
+  /** Catalogue de personnalisation de la room (hôte seulement). */
+  readonly catalog = signal<RoomCatalogView | null>(null);
 
   /** Horloge locale corrigée de l'écart avec le serveur, rafraîchie 4 fois par seconde. */
   readonly now = signal(Date.now());
@@ -46,6 +48,7 @@ export class GameService {
         this.connected.set(true);
         this.client.subscribe('/user/queue/room', m => this.onMessage(m));
         this.client.subscribe('/user/queue/errors', m => this.onError(m));
+        this.client.subscribe('/user/queue/catalog', m => this.catalog.set(JSON.parse(m.body)));
         const queued = this.pending;
         this.pending = [];
         queued.forEach(fn => fn());
@@ -118,6 +121,12 @@ export class GameService {
   vote(teamOwnerId: string): void { this.sendToRoom('vote', { teamOwnerId }); }
   useJoker(jokerId: string, targetId: string | null = null): void { this.sendToRoom('joker', { jokerId, targetId }); }
   forfeit(): void { this.sendToRoom('forfeit'); }
+  /** L'hôte cède sa place à un autre joueur connecté. */
+  transferHost(playerId: string): void { this.sendToRoom('host', { playerId }); }
+  /** Demande le catalogue de personnalisation (réponse sur `catalog`). */
+  loadCatalog(): void { this.sendToRoom('catalog'); }
+  /** L'hôte personnalise sa room ; le serveur valide et renvoie le catalogue à jour. */
+  customize(c: RoomCustomization): void { this.sendToRoom('customize', c); }
 
   /** Utilisations restantes d'un joker pour le joueur courant. */
   jokersLeft(jokerId: string): number {
@@ -130,6 +139,7 @@ export class GameService {
     this.roomSub = null;
     this.room.set(null);
     this.me.set(null);
+    this.catalog.set(null);
     this.loadDaily();
     this.client.deactivate().then(() => this.client.activate());
   }
@@ -208,7 +218,9 @@ export class GameService {
   private onError(message: IMessage): void {
     const err = JSON.parse(message.body) as ErrorMessage;
     // Message traduit à partir du code ; à défaut, celui du serveur.
-    this.showError(this.i18n.has('err.' + err.code) ? this.i18n.t('err.' + err.code) : err.message);
+    const text = this.i18n.has('err.' + err.code) ? this.i18n.t('err.' + err.code) : err.message;
+    // Personnalisation refusée : le détail du serveur dit quelle règle ou quelle carte pose problème.
+    this.showError(err.code === 'BAD_ROOM_SETUP' ? `${text} ${err.message}` : text);
   }
 
   private showError(text: string): void {

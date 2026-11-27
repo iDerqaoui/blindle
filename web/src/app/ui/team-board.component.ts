@@ -15,7 +15,7 @@ import { PlayerSummary, TeamEntry } from '../game/game.types';
         @for (p of players(); track p.id) {
           <div class="team" [class.mine]="p.id === game.myId()">
             <div class="team-head">
-              <span>@if (p.bot) { 🤖 }{{ game.displayName(p) }}@if (p.id === game.myId()) { <em> {{ 'teams.you' | t }}</em> }</span>
+              <span [class.player-offline]="!p.connected">@if (p.bot) { 🤖 }{{ game.displayName(p) }}@if (p.id === game.myId()) { <em> {{ 'teams.you' | t }}</em> }@if (!p.connected) { <em> · {{ 'lobby.offline' | t }}</em> }</span>
               <span>
                 @if (p.bonus > 0) { <span class="tag bonus">{{ 'results.synergy' | t: { n: p.bonus } }}</span> }
                 <span class="coins">{{ p.budget }} 🪙</span>

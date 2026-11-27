@@ -36,6 +36,8 @@ export interface PlayerSummary {
   botProfile: string | null;
   acted: boolean;
   team: TeamEntry[];
+  /** Faux si la connexion du joueur est tombée en cours de partie. */
+  connected: boolean;
 }
 
 export interface HintView { level: number; type: string; value: string; }
@@ -84,6 +86,49 @@ export interface RoomView {
   /** Poubelle : cartes que personne n'a voulues, visibles par tous. */
   trash: CardView[];
   art: ArtView | null;
+  /** Vrai si l'hôte a personnalisé cette room (cartes, raretés, règles). */
+  customized: boolean;
+  /** Cartes du paquet de cette room. */
+  deckSize: number;
+}
+
+/** Carte du thème, telle que l'hôte la voit pour personnaliser sa room. */
+export interface CatalogCard {
+  id: string;
+  name: string;
+  image: string | null;
+  /** Rareté fixée par l'administrateur ; `rarity` est celle de la room. */
+  baseRarity: string | null;
+  rarity: string | null;
+  trap: boolean;
+  included: boolean;
+}
+
+export type RuleParamValue = number | string | boolean;
+
+export interface CatalogRule {
+  type: string;
+  active: boolean;
+  params: Record<string, RuleParamValue>;
+  defaults: Record<string, RuleParamValue>;
+  requiredBidModes: string[];
+  conflictsWith: string[];
+}
+
+/** Ce que l'hôte peut personnaliser dans sa room (envoyé à lui seul). */
+export interface RoomCatalogView {
+  type: 'catalog';
+  code: string;
+  cards: CatalogCard[];
+  rarities: string[];
+  rules: CatalogRule[];
+}
+
+/** Personnalisation envoyée par l'hôte. `rules` null : règles du preset. */
+export interface RoomCustomization {
+  excludedCards: string[];
+  rarities: Record<string, string>;
+  rules: { ref: string; params: Record<string, RuleParamValue> }[] | null;
 }
 
 /** Défi du jour : rang et texte à partager une fois la partie terminée. */
