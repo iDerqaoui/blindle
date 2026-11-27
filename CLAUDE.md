@@ -68,7 +68,8 @@ Architecture et protocole STOMP proposés à l'étape 0 : `docs/ARCHITECTURE.md`
 
 ## Étape en cours
 
-Étape 10 terminée. Hors feuille de route : mode principal « Anime Blind Bid » (mode `drawer`, thèmes MyAnimeList privés via Tenrai, rareté populaire-ou-puissant, verdict aux points, le piocheur vend, défausse payante — voir ARCHITECTURE §11). Faits le 2026-11-27 : or non dépensé sans valeur (`PointsVerdictMode`) ; comptes Google / Discord et page admin des personnages (ARCHITECTURE §12). Prochaine : les demandes ci-dessous, puis étape 11 — Discord Activity (voir `docs/PROJECT.md` §11 et §12). Admin sans Google/Discord : `BLINDLE_ADMIN_PASSWORD`.
+Étape 10 terminée. Hors feuille de route : mode principal « Anime Blind Bid » (mode `drawer`, thèmes MyAnimeList privés via Tenrai, rareté populaire-ou-puissant, verdict aux points, le piocheur vend, défausse payante — voir ARCHITECTURE §11). Faits le 2026-11-27 : or non dépensé sans valeur (`PointsVerdictMode`) ; comptes Google / Discord et page admin des personnages (ARCHITECTURE §12) ; personnalisation de
+room par l'hôte et passation d'hôte (ARCHITECTURE §13). Prochaine : les demandes ci-dessous, puis étape 11 — Discord Activity (voir `docs/PROJECT.md` §11 et §12). Admin sans Google/Discord : `BLINDLE_ADMIN_PASSWORD`.
 Mettre à jour cette ligne à chaque étape terminée.
 
 ### À faire à la prochaine session (demandes du 2026-11-27)
@@ -90,6 +91,24 @@ personnage anime, d'en ajouter un depuis MyAnimeList, d'en retirer un et de voir
 
 Questions à poser avant de coder : ordre de priorité, qui voit les stats (admin seul ou chaque
 joueur), stats des parties sans compte. Signaler toute nouvelle dépendance.
+
+### Deux niveaux de contrôle : administrateur et hôte (demande du 2026-11-27)
+
+- **Administrateur principal** (le propriétaire du site, via `BLINDLE_ADMIN_EMAILS` ou
+  `BLINDLE_ADMIN_PASSWORD`) : définit la **base commune à toutes les rooms** : classement de
+  puissance S–D et rareté, cartes des thèmes, presets (budget, règles, paramètres, modes). C'est
+  le contenu de référence (base + `content/`) ; les points 1 à 3 ci-dessus en relèvent.
+- **Hôte d'une room** : personnalise **sa room seulement**, en salle d'attente (LOBBY), sans
+  jamais toucher à la base : retirer / remettre des cartes du paquet, changer la rareté d'une carte
+  pour cette room, activer / désactiver des règles du catalogue et régler leurs paramètres, en plus
+  du budget, des manches et du minuteur. Mêmes contrôles que pour un preset (`requires`,
+  `conflictsWith`, paramètres, assez de cartes) ; personnalisation en mémoire, perdue avec la room.
+  Ce que l'hôte peut changer reste borné par l'admin (les règles du catalogue, les cartes du thème).
+- **Passation d'hôte** : si l'hôte se déconnecte, l'hôte passe au joueur humain connecté suivant
+  dans l'ordre d'arrivée ; l'hôte peut aussi céder sa place. En salle d'attente, un joueur
+  déconnecté est retiré ; en partie, il reste (affiché déconnecté) et les minuteries jouent pour lui.
+- Fait le 2026-11-27 : passation, cession, retrait en LOBBY, personnalisation de room (cartes,
+  rareté, règles) côté serveur et front. Reste : édition par l'admin de la base (points 1 à 3).
 
 ### Notes du 2026-11-27
 

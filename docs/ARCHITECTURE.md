@@ -72,6 +72,9 @@ joueur par la session (`Principal` attribué au `join`), jamais par un champ du 
 | `/app/room/{code}/joker` | `{ jokerId, targetId? }` | Active un joker pendant les enchères : `spy` (sans cible), `steal` (cible `"<joueur>/<slot>"`) |
 | `/app/room/{code}/forfeit` | `{}` | Le gagnant défausse la carte, seulement si aucun slot libre ne l'accepte |
 | `/app/room/{code}/vote` | `{ teamOwnerId }` | Vote (verdict `vote`) |
+| `/app/room/{code}/host` | `{ playerId }` | Hôte seulement : cède le rôle à un joueur humain connecté |
+| `/app/room/{code}/catalog` | `{}` | Hôte seulement : renvoie le catalogue de personnalisation sur `/user/queue/catalog` |
+| `/app/room/{code}/customize` | `{ excludedCards, rarities, rules }` | Hôte seulement, en LOBBY (§13) ; `rules: null` = règles du preset ; renvoie le catalogue à jour |
 
 ### Serveur → client
 
@@ -80,6 +83,7 @@ joueur par la session (`Principal` attribué au `join`), jamais par un champ du 
 | `/topic/room/{code}` | `RoomView` public (`type: "room"`) : phase, joueurs (pseudo, budget restant, équipe, a agi ou non), indices révélés, prix plancher, `deadline` et `serverTime` (epoch ms), nombre d'offres reçues (pas leur montant en `sealed`), journal, résultat |
 | `/user/queue/room` | `PlayerView` privé (`type: "player"`) : mon id, mon offre, passe, `canBid`, `mustPlace`, slots libres, mon vote. Reçoit aussi la `RoomView` lors d'un `sync` |
 | `/user/queue/errors` | `{ code, message }` : offre rejetée, action interdite |
+| `/user/queue/catalog` | `RoomCatalogView` (`type: "catalog"`), hôte seul : cartes du thème (rareté de base et de la room, incluse ou non), raretés du thème, règles du catalogue (active, paramètres, défauts, modes requis) |
 | `GET /api/daily` (REST) | Défis du jour : preset, thème, date, nombre de parties, top 10 du classement |
 | `GET /api/bots` (REST) | Profils de bots : `{ profile, label }` |
 | `/api/admin/themes[/{theme}/channels/{canal}/block]` (REST) | Admin, en-tête `X-Admin-Token` = `blindle.admin.token` : état (GET), retrait (POST), rétablissement (DELETE). 404 si aucun jeton n'est configuré |
@@ -294,3 +298,24 @@ recalculée au redémarrage, ajout de personnages par recherche MyAnimeList depu
 - Front : bouton « Connexion » (fournisseurs configurés seulement), puce du compte (pseudo modifiable,
   déconnexion, lien admin), pseudo pré-rempli à l'accueil s'il est vide, page `#admin`.
 - Pas encore : lier le compte au joueur en partie (reconnexion), classement du jour par compte.
+
+## 13. Base de l'administrateur, personnalisation de l'hôte, passation (2026-11-27)
+
+- **Deux niveaux** : l'administrateur fixe la base commune (contenu, classement S–D, presets) ;
+  l'hôte d'une room la personnalise **pour sa room seulement**, en LOBBY. Rien n'est écrit : la
+  personnalisation (`RoomOverrides`) vit dans le `GameSetup` de la room et disparaît avec elle.
+- `RoomOverrides(excludedCards, rarities, rules)` : cartes retirées, rareté imposée (parmi celles
+  déjà présentes dans le thème), règles actives à la place de celles du preset (`null` = preset).
+  `GameFactory.customized` applique les mêmes contrôles qu'à un preset (règle connue, `requires`,
+  `conflictsWith`, modes d'enchère, paramètres) et lève `BAD_ROOM_SETUP` sinon.
+- `Room.customize` remplace slots, cartes et moteur via `GameEngine.replaceContent` (LOBBY seulement,
+  joueurs et version conservés) ; les manches sont ramenées à la taille du paquet. Refusé en défi du jour.
+- `Rule.defaultParams()` : paramètres par défaut affichés à l'hôte quand il active une règle.
+- `RoomView` : `customized`, `deckSize`, `rules` = règles réellement actives ; `PlayerSummary.connected`.
+- **Passation** : `DisconnectListener` (`SessionDisconnectEvent`) → `RoomRegistry.disconnect` →
+  `Room.disconnect`. En LOBBY le joueur est retiré (`GameEngine.removePlayer`) ; en partie il reste,
+  marqué déconnecté, et les minuteries jouent pour lui. Si c'était l'hôte, le rôle passe au joueur
+  humain connecté suivant dans l'ordre d'arrivée (en boucle, jamais un bot) ; personne : `hostId` null,
+  repris par le prochain arrivant en LOBBY.
+- Pas encore : reconnexion (une nouvelle connexion reste un nouveau joueur), édition de la base par
+  l'admin pour les thèmes non anime et les presets.
