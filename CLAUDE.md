@@ -68,7 +68,7 @@ Architecture et protocole STOMP proposés à l'étape 0 : `docs/ARCHITECTURE.md`
 
 ## Étape en cours
 
-Étape 10 terminée. Hors feuille de route : mode principal « Anime Blind Bid » (mode `drawer`, thèmes MyAnimeList privés via Tenrai, rareté populaire-ou-puissant, verdict aux points, le piocheur vend, défausse payante — voir ARCHITECTURE §11). Faits le 2026-11-27 : or non dépensé sans valeur (`PointsVerdictMode`) ; comptes Google / Discord et page admin des personnages (ARCHITECTURE §12) ; personnalisation de
+Étape 10 terminée. Hors feuille de route : mode principal « Anime Blind Bid » (mode `drawer`, thèmes MyAnimeList privés via Tenrai, rareté populaire-ou-puissant, verdict aux points, on ne gagne jamais d'or, laisser filer une carte coûte 150 au piocheur — voir ARCHITECTURE §11). Faits le 2026-11-27 : or non dépensé sans valeur (`PointsVerdictMode`) ; comptes Google / Discord et page admin des personnages (ARCHITECTURE §12) ; personnalisation de
 room par l'hôte et passation d'hôte (ARCHITECTURE §13). Prochaine : les demandes ci-dessous, puis étape 11 — Discord Activity (voir `docs/PROJECT.md` §11 et §12). Admin sans Google/Discord : `BLINDLE_ADMIN_PASSWORD`.
 Mettre à jour cette ligne à chaque étape terminée.
 
