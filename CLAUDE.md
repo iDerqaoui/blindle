@@ -68,8 +68,28 @@ Architecture et protocole STOMP proposés à l'étape 0 : `docs/ARCHITECTURE.md`
 
 ## Étape en cours
 
-Étape 10 terminée. Hors feuille de route : mode principal « Anime Blind Bid » (mode `drawer`, thèmes MyAnimeList privés via Tenrai, rareté populaire-ou-puissant, verdict aux points, le piocheur vend, défausse payante — voir ARCHITECTURE §11). Faits le 2026-11-27 : or non dépensé sans valeur (`PointsVerdictMode`) ; comptes Google / Discord et page admin des personnages (ARCHITECTURE §12). Prochaine : les demandes du 2026-11-27 listées dans `README.md` (« À faire » : valeurs des personnages, cartes, modes de jeu, stats joueurs), puis étape 11 — Discord Activity (voir `docs/PROJECT.md` §11 et §12). Admin sans Google/Discord : `BLINDLE_ADMIN_PASSWORD`.
+Étape 10 terminée. Hors feuille de route : mode principal « Anime Blind Bid » (mode `drawer`, thèmes MyAnimeList privés via Tenrai, rareté populaire-ou-puissant, verdict aux points, le piocheur vend, défausse payante — voir ARCHITECTURE §11). Faits le 2026-11-27 : or non dépensé sans valeur (`PointsVerdictMode`) ; comptes Google / Discord et page admin des personnages (ARCHITECTURE §12). Prochaine : les demandes ci-dessous, puis étape 11 — Discord Activity (voir `docs/PROJECT.md` §11 et §12). Admin sans Google/Discord : `BLINDLE_ADMIN_PASSWORD`.
 Mettre à jour cette ligne à chaque étape terminée.
+
+### À faire à la prochaine session (demandes du 2026-11-27)
+
+Aujourd'hui la page admin (`#admin`) permet seulement de changer le rang S–D et le nom d'un
+personnage anime, d'en ajouter un depuis MyAnimeList, d'en retirer un et de voir la rareté prévue.
+
+1. **Modifier les valeurs des personnages depuis l'admin** : forcer une rareté, corriger la
+   popularité, changer l'image, les indices, les tags. À trancher : une valeur forcée remplace-t-elle
+   le calcul (rareté imposée hors quotas) ou l'ajuste-t-elle seulement ?
+2. **Personnaliser les cartes** de tous les thèmes (manga, pays… pas seulement anime) depuis
+   l'admin, en base plutôt que dans `content/`. Garder la validation JSON Schema et le champ `rights`.
+3. **Personnaliser les modes de jeu (presets)** depuis l'admin : budget, manches, taille d'équipe,
+   minuteurs, règles actives et paramètres (`discard-fee`, `anti-snipe`…), modes d'enchère et de
+   verdict. À trancher : à chaud (nouvelles rooms) ou au redémarrage comme la curation.
+4. **Statistiques des joueurs** : parties, victoires, scores, cartes préférées par compte ; vue admin
+   (comptes, activité), peut-être un profil joueur. Prérequis : lier le compte connecté au joueur en
+   partie (aujourd'hui il ne fait que pré-remplir le pseudo) et enregistrer les résultats en base.
+
+Questions à poser avant de coder : ordre de priorité, qui voit les stats (admin seul ou chaque
+joueur), stats des parties sans compte. Signaler toute nouvelle dépendance.
 
 ### Notes du 2026-11-27
 
