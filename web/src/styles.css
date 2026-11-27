@@ -726,7 +726,21 @@ a.btn { text-decoration: none; display: inline-block; }
 .who-slot.rare { border-color: #4c9be8; }
 .who-stage { display: grid; grid-template-columns: minmax(220px, 300px) 1fr; gap: 22px; align-items: start; }
 .who-card { border-radius: var(--radius); overflow: hidden; border: 2px solid var(--universe); background: #000; }
-.who-pixel { display: block; width: 100%; aspect-ratio: 240 / 340; object-fit: cover; image-rendering: pixelated; }
+.who-blur { display: block; width: 100%; aspect-ratio: 240 / 340; object-fit: cover; transition: filter 0.3s; }
+.who-blur.shake { animation: who-shake 0.45s; }
+@keyframes who-shake { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+.who-guess { position: relative; }
+.who-guess .input { margin-bottom: 0; }
+.who-suggest {
+  position: absolute; left: 0; right: 0; top: 100%; z-index: 20; margin: 4px 0 0; padding: 4px; list-style: none;
+  background: var(--panel); border: 1px solid var(--accent); border-radius: var(--radius-sm);
+  box-shadow: 0 12px 30px rgb(0 0 0 / 45%);
+}
+.who-suggest li { padding: 8px 10px; border-radius: 6px; cursor: pointer; }
+.who-suggest li.active { background: rgb(255 181 71 / 18%); }
+.who-suggest b { color: var(--accent); }
+.who-wrong { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 0; }
+.who-wrong .pill { background: rgb(240 96 93 / 18%); color: var(--danger); text-decoration: line-through; }
 .who-timer { height: 6px; background: var(--bg-2); }
 .who-timer span { display: block; height: 100%; background: var(--accent); transition: width 0.1s linear; }
 .who-side { display: grid; gap: 10px; }

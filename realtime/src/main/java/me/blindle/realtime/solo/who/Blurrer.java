@@ -1,5 +1,6 @@
 package me.blindle.realtime.solo.who;
 
+import com.jhlabs.image.GaussianFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -23,41 +24,41 @@ import java.util.Map;
 import java.util.function.Function;
 
 /**
- * Pixelise les images du défi côté serveur : le client ne reçoit que le palier atteint, jamais
+ * Floute les images du défi côté serveur (flou gaussien de JH Labs Image Filters) : le client ne reçoit que le palier atteint, jamais
  * l'image nette avant la révélation (principe 2). Les images viennent du contenu (URL des cartes),
  * jamais d'une valeur envoyée par le client.
  */
 @Component
-public class Pixelator {
+public class Blurrer {
 
-    private static final Logger LOG = LoggerFactory.getLogger(Pixelator.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Blurrer.class);
     static final int WIDTH = 240;
     static final int HEIGHT = 340;
-    /** Taille des blocs par palier : du très flou au net. */
-    static final int[] BLOCKS = {40, 28, 18, 11, 7, 4, 1};
+    /** Rayon du flou gaussien par palier : d'une tache de couleurs au net. */
+    static final float[] RADII = {36, 24, 15, 9, 5, 2, 0};
 
     private final Function<String, BufferedImage> source;
     private final Map<String, BufferedImage> originals = lru(32);
     private final Map<String, byte[]> rendered = lru(256);
 
-    public Pixelator() {
-        this(Pixelator::download);
+    public Blurrer() {
+        this(Blurrer::download);
     }
 
-    Pixelator(Function<String, BufferedImage> source) {
+    Blurrer(Function<String, BufferedImage> source) {
         this.source = source;
     }
 
     /** Image au palier donné (PNG). Une image introuvable donne un aplat gris (la partie continue). */
     public synchronized byte[] render(String url, int level) {
-        int l = Math.max(0, Math.min(BLOCKS.length - 1, level));
+        int l = Math.max(0, Math.min(RADII.length - 1, level));
         String key = l + "|" + url;
         byte[] cached = rendered.get(key);
         if (cached != null) {
             return cached;
         }
         BufferedImage base = originals.computeIfAbsent(url, this::load);
-        byte[] png = png(pixelate(base, BLOCKS[l], l == 0));
+        byte[] png = png(blur(base, RADII[l], l == 0));
         rendered.put(key, png);
         return png;
     }
@@ -89,33 +90,19 @@ public class Pixelator {
         return out;
     }
 
-    /** Moyenne par bloc ; au premier palier, assombri façon silhouette. */
-    static BufferedImage pixelate(BufferedImage img, int block, boolean dark) {
-        BufferedImage out = new BufferedImage(img.getWidth(), img.getHeight(), BufferedImage.TYPE_INT_RGB);
-        for (int y = 0; y < img.getHeight(); y += block) {
-            for (int x = 0; x < img.getWidth(); x += block) {
-                int w = Math.min(block, img.getWidth() - x);
-                int h = Math.min(block, img.getHeight() - y);
-                long r = 0, gr = 0, b = 0;
-                for (int yy = y; yy < y + h; yy++) {
-                    for (int xx = x; xx < x + w; xx++) {
-                        int rgb = img.getRGB(xx, yy);
-                        r += (rgb >> 16) & 0xff;
-                        gr += (rgb >> 8) & 0xff;
-                        b += rgb & 0xff;
-                    }
-                }
-                int n = w * h;
-                double f = dark ? 0.55 : 1;
-                int rgb = ((int) (r / n * f) << 16) | ((int) (gr / n * f) << 8) | (int) (b / n * f);
-                for (int yy = y; yy < y + h; yy++) {
-                    for (int xx = x; xx < x + w; xx++) {
-                        out.setRGB(xx, yy, rgb);
-                    }
-                }
-            }
+    /** Flou gaussien (bords étirés, pas de cadre noir) ; au premier palier, assombri façon silhouette. */
+    static BufferedImage blur(BufferedImage img, float radius, boolean dark) {
+        BufferedImage out = radius <= 0 ? img : new GaussianFilter(radius).filter(img, null);
+        if (!dark) {
+            return out;
         }
-        return out;
+        BufferedImage shaded = new BufferedImage(out.getWidth(), out.getHeight(), BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = shaded.createGraphics();
+        g.drawImage(out, 0, 0, null);
+        g.setColor(new Color(0, 0, 0, 110));
+        g.fillRect(0, 0, out.getWidth(), out.getHeight());
+        g.dispose();
+        return shaded;
     }
 
     private static byte[] png(BufferedImage img) {

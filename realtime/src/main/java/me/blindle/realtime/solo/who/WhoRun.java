@@ -17,6 +17,9 @@ import java.util.Locale;
  * <p>
  * Une carte à la fois : l'image se précise d'un palier toutes les {@link #STEP}, le prix monte avec
  * ({@link #PRICES}) ; au-delà de {@link #DURATION} la carte part, gratuitement.
+ * <p>
+ * Deviner : un nom juste achète la carte au prix courant, points doublés ; un nom faux (de l'univers)
+ * rend l'image plus nette d'un palier, donc la carte plus chère.
  */
 public final class WhoRun {
 
@@ -34,10 +37,11 @@ public final class WhoRun {
     /**
      * Issue d'une carte. {@code skipped} : jamais montrée (équipe pleine ou or épuisé avant son tour).
      *
-     * @param level palier au moment de l'achat (ou du départ)
+     * @param level  palier au moment de l'achat (ou du départ)
+     * @param misses mauvais noms proposés pour cette carte
      */
     public record Outcome(int index, WhoCard card, boolean bought, int price, int level, boolean called,
-                          boolean jackpot, boolean skipped) {
+                          boolean jackpot, boolean skipped, int misses) {
     }
 
     private final String key;
@@ -49,6 +53,8 @@ public final class WhoRun {
     private boolean live;
     private int budget = BUDGET;
     private Integer rank;
+    /** Mauvais noms proposés pour la carte en jeu (chacun la rend plus nette d'un palier). */
+    private final List<String> wrong = new ArrayList<>();
 
     public WhoRun(String key, String name, WhoLineup lineup) {
         this.key = key;
@@ -88,6 +94,10 @@ public final class WhoRun {
         return rank;
     }
 
+    public List<String> wrongGuesses() {
+        return List.copyOf(wrong);
+    }
+
     void rank(int rank) {
         this.rank = rank;
     }
@@ -119,7 +129,7 @@ public final class WhoRun {
         }
         if (teamSize() >= SLOTS || budget < PRICES[0]) {
             for (int i = index + 1; i < lineup.cards().size(); i++) {
-                outcomes.add(new Outcome(i, lineup.cards().get(i), false, 0, 0, false, i == lineup.jackpotIndex(), true));
+                outcomes.add(new Outcome(i, lineup.cards().get(i), false, 0, 0, false, i == lineup.jackpotIndex(), true, 0));
             }
             index = lineup.cards().size() - 1;
             return;
@@ -127,19 +137,41 @@ public final class WhoRun {
         index++;
         startedAt = now;
         live = true;
+        wrong.clear();
     }
 
-    /** Achète la carte au prix du palier courant ; {@code guess} : nom proposé (« Call it! »), ou null. */
-    public Outcome buy(Instant now, String guess) {
+    /** Achète la carte au prix du palier courant, sans la nommer. */
+    public Outcome buy(Instant now) {
         requireLive(now);
+        return purchase(now, false);
+    }
+
+    /**
+     * « Call it! » : un nom de l'univers. Juste : achat au prix courant, points doublés. Faux : l'image
+     * se précise d'un palier (et le prix monte) ; renvoie null. Un même mauvais nom ne compte qu'une fois.
+     */
+    public Outcome guess(Instant now, String name) {
+        requireLive(now);
+        String n = name == null ? "" : normalize(name);
+        String known = lineup.roster().stream().filter(r -> normalize(r).equals(n)).findFirst()
+                .orElseThrow(() -> new GameException("WHO_UNKNOWN_NAME", "Choisis un nom dans les suggestions"));
+        if (matches(known, current().name())) {
+            return purchase(now, true);
+        }
+        if (wrong.stream().noneMatch(w -> normalize(w).equals(n))) {
+            wrong.add(known);
+        }
+        return null;
+    }
+
+    private Outcome purchase(Instant now, boolean called) {
         int price = price(now);
         if (price > budget) {
             throw new GameException("WHO_TOO_EXPENSIVE", "Pas assez d'or");
         }
-        WhoCard card = current();
         budget -= price;
-        Outcome o = new Outcome(index, card, true, price, level(now), matches(guess, card.name()),
-                index == lineup.jackpotIndex(), false);
+        Outcome o = new Outcome(index, current(), true, price, level(now), called,
+                index == lineup.jackpotIndex(), false, wrong.size());
         outcomes.add(o);
         live = false;
         return o;
@@ -153,10 +185,10 @@ public final class WhoRun {
 
     // ------------------------------------------------------------------ calculs
 
-    /** Palier de prix atteint (0 à {@link #LEVELS} − 1). */
+    /** Palier atteint (0 à {@link #LEVELS} − 1) : le temps écoulé, plus un palier par mauvais nom. */
     public int level(Instant now) {
         long elapsed = Math.max(0, Duration.between(startedAt, now).toMillis());
-        return (int) Math.min(LEVELS - 1, elapsed / STEP.toMillis());
+        return (int) Math.min(LEVELS - 1, elapsed / STEP.toMillis() + wrong.size());
     }
 
     /** Palier de netteté de l'image : le jackpot reste flou {@link #JACKPOT_LAG} paliers de plus. */
@@ -211,7 +243,8 @@ public final class WhoRun {
     }
 
     private Outcome leave(int level) {
-        Outcome o = new Outcome(index, current(), false, 0, level, false, index == lineup.jackpotIndex(), false);
+        Outcome o = new Outcome(index, current(), false, 0, level, false, index == lineup.jackpotIndex(), false,
+                wrong.size());
         outcomes.add(o);
         live = false;
         return o;

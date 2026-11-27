@@ -62,20 +62,23 @@ public class WhoController {
                           List<DailyLeaderboard.Entry> leaderboard, List<String> roster) {
     }
 
-    /** Carte en jeu : ni nom ni image d'origine, seulement l'adresse du palier atteint. */
+    /**
+     * Carte en jeu : ni nom ni image d'origine, seulement l'adresse des paliers.
+     * {@code wrong} : mauvais noms déjà proposés (chacun a avancé l'image d'un palier).
+     */
     public record LiveView(int index, long startedAt, long expiresAt, int level, int imageLevel, int price,
-                           String image) {
+                           String image, List<String> wrong) {
     }
 
     public record OutcomeView(int index, String name, String image, String rarity, String universe, int points,
                               boolean bought, int price, int level, boolean called, boolean jackpot,
-                              boolean skipped) {
+                              boolean skipped, int misses) {
     }
 
     public record Start(String name) {
     }
 
-    public record Buy(String guess) {
+    public record Guess(String name) {
     }
 
     // ------------------------------------------------------------------ endpoints
@@ -107,9 +110,17 @@ public class WhoController {
     }
 
     @PostMapping("/buy")
-    public RunView buy(@RequestBody(required = false) Buy body, HttpServletRequest req, HttpServletResponse res) {
+    public RunView buy(HttpServletRequest req, HttpServletResponse res) {
         String key = key(req, res);
-        who.buy(key, body == null ? null : body.guess());
+        who.buy(key);
+        return view(who.find(key));
+    }
+
+    /** « Call it! » : nom juste = achat ×2, nom faux = image plus nette (et plus chère). */
+    @PostMapping("/guess")
+    public RunView guess(@RequestBody Guess body, HttpServletRequest req, HttpServletResponse res) {
+        String key = key(req, res);
+        who.guess(key, body == null ? null : body.name());
         return view(who.find(key));
     }
 
@@ -127,7 +138,7 @@ public class WhoController {
         return view(who.find(key));
     }
 
-    /** Image pixelisée de la carte en jeu, au palier demandé s'il est atteint. */
+    /** Image floutée de la carte en jeu, au palier demandé sans dépasser celui atteint. */
     @GetMapping(value = "/image/{index}/{level}", produces = MediaType.IMAGE_PNG_VALUE)
     public ResponseEntity<byte[]> image(@PathVariable int index, @PathVariable int level, HttpServletRequest req) {
         String key = keyOrNull(req);
@@ -154,7 +165,7 @@ public class WhoController {
         if (live) {
             liveView = new LiveView(run.index(), run.startedAt().toEpochMilli(), run.expiresAt().toEpochMilli(),
                     run.level(now), run.imageLevel(now), run.price(now),
-                    "/api/daily/who/image/" + run.index() + "/");
+                    "/api/daily/who/image/" + run.index() + "/", run.wrongGuesses());
         }
         List<Outcome> outcomes = run.outcomes();
         OutcomeView last = outcomes.isEmpty() ? null : outcome(outcomes.get(outcomes.size() - 1));
@@ -173,7 +184,7 @@ public class WhoController {
         var c = o.card();
         return new OutcomeView(o.index(), c.name(), c.image(), c.rarity(), c.universe(),
                 RarityPoints.POINTS.getOrDefault(c.rarity(), 0), o.bought(), o.price(), o.level(), o.called(),
-                o.jackpot(), o.skipped());
+                o.jackpot(), o.skipped(), o.misses());
     }
 
     /** Grille à partager, sans spoiler : une case par carte. */

@@ -332,17 +332,18 @@ recalculée au redémarrage, ajout de personnages par recherche MyAnimeList depu
 ## 14. Défi du jour « Who's That? Auction » (2026-11-27)
 
 - Package `realtime/solo/who`, en REST (`/api/daily/who`) : `GET` (accueil), `POST /start {name}`,
-  `GET /run`, `POST /buy {guess}`, `POST /pass`, `POST /next`, `GET /image/{index}/{level}` (PNG).
+  `GET /run`, `POST /buy`, `POST /guess {name}`, `POST /pass`, `POST /next`, `GET /image/{index}/{level}` (PNG).
 - `WhoDaily` : univers éligibles = thèmes web dont toutes les cartes ont image et rareté connue
   (critère générique), rotation par jour + un jour « Crossover » ; 10 cartes seedées
   (`DailyChallenge.seed(date, "who")`) : 1 légendaire (le jackpot), 2 épiques, 3 rares, 4 communes.
 - `WhoRun` (logique pure, heure passée en argument) : palier = temps écoulé / 1,5 s (0 à 6), prix
   40 / 70 / 110 / 160 / 230 / 310 / 400, départ gratuit à 12 s ; jackpot flou 2 paliers de plus (+30) ;
-  « Call it! » = nom complet (casse, accents, ponctuation ignorés) → points ×2 ; équipe pleine ou or
+  « Call it! » (`guess`) : un nom du roster (casse, accents, ponctuation ignorés) ; juste = achat ×2,
+  faux = +1 palier pour cette carte (image plus nette, prix plus haut), un même nom ne compte qu'une fois ; équipe pleine ou or
   < 40 : cartes restantes sautées ; score = points − 25 par slot vide.
-- `Pixelator` : images téléchargées depuis l'URL des cartes (jamais une URL du client), recadrées
-  240×340, moyennées par blocs (40 → 1 px), PNG en cache. Le serveur sert au plus le palier atteint ;
+- `Blurrer` : images téléchargées depuis l'URL des cartes (jamais une URL du client), recadrées
+  240×340, flou gaussien JH Labs (`com.jhlabs:filters`, rayon 36 → 0), PNG en cache. Le serveur sert au plus le palier atteint ;
   l'URL d'origine n'est envoyée qu'à la révélation.
 - Joueur : compte connecté (`Principal`) sinon cookie `blindle_who` (HttpOnly, 3 jours) ; un essai par
   jour, parties et classement (`DailyLeaderboard`, id `who`) en mémoire.
-- Front : écran `#who` (`who.component.ts`), bandeau à l'accueil et tuile « défi du jour » des univers.
+- Front : écran `#who` (`who.component.ts`), saisie avec suggestions déroulantes (2 lettres, 6 noms),, bandeau à l'accueil et tuile « défi du jour » des univers.

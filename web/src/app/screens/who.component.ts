@@ -10,11 +10,15 @@ interface WhoSummary {
   started: boolean; finished: boolean; players: number; leaderboard: LeaderEntry[];
 }
 
-interface LiveView { index: number; startedAt: number; expiresAt: number; level: number; imageLevel: number; price: number; image: string; }
+interface LiveView {
+  index: number; startedAt: number; expiresAt: number; level: number; imageLevel: number; price: number; image: string;
+  /** Mauvais noms déjà proposés : chacun a rendu l'image plus nette d'un palier. */
+  wrong: string[];
+}
 
 interface OutcomeView {
   index: number; name: string; image: string; rarity: string; universe: string; points: number;
-  bought: boolean; price: number; level: number; called: boolean; jackpot: boolean; skipped: boolean;
+  bought: boolean; price: number; level: number; called: boolean; jackpot: boolean; skipped: boolean; misses: number;
 }
 
 interface RunView {
@@ -90,7 +94,7 @@ const API = '/api/daily/who';
           @if (r.live; as live) {
             <div class="who-stage">
               <div class="who-card">
-                <img class="who-pixel" [src]="live.image + level()" alt="?" />
+                <img class="who-blur" [class.shake]="shake()" [src]="live.image + level()" alt="?" />
                 <div class="who-timer"><span [style.width.%]="timeLeftPct()"></span></div>
               </div>
               <div class="who-side">
@@ -99,13 +103,28 @@ const API = '/api/daily/who';
                     <li [class.now]="$index === level()" [class.past]="$index < level()">{{ p }}</li>
                   }
                 </ol>
-                <label class="field">{{ 'who.callIt' | t }}
-                  <input class="input" [(ngModel)]="guess" list="who-roster" [placeholder]="'who.callHint' | t"
-                         autocomplete="off" />
-                </label>
-                <datalist id="who-roster">
-                  @for (n of r.roster; track n) { <option [value]="n"></option> }
-                </datalist>
+                <div class="who-guess">
+                  <label class="field" for="who-guess">⚡ {{ 'who.callIt' | t }}</label>
+                  <input id="who-guess" class="input" [ngModel]="guess()" (ngModelChange)="onType($event)"
+                         [placeholder]="'who.callHint' | t" autocomplete="off" spellcheck="false"
+                         role="combobox" aria-autocomplete="list" [attr.aria-expanded]="suggestions().length > 0"
+                         (keydown)="onKey($event)" (blur)="closeSoon()" />
+                  @if (suggestions().length) {
+                    <ul class="who-suggest" role="listbox">
+                      @for (n of suggestions(); track n; let i = $index) {
+                        <li role="option" [class.active]="i === active()" [attr.aria-selected]="i === active()"
+                            (mousedown)="$event.preventDefault(); pick(n)" (mouseenter)="active.set(i)">
+                          <span [innerHTML]="highlight(n)"></span>
+                        </li>
+                      }
+                    </ul>
+                  }
+                  @if (live.wrong.length) {
+                    <p class="who-wrong">
+                      @for (w of live.wrong; track w) { <span class="pill">✕ {{ w }}</span> }
+                    </p>
+                  }
+                </div>
                 <button class="btn primary big" [disabled]="busy() || price() > r.budget" (click)="buy()">
                   {{ 'who.buy' | t: { n: price() } }}
                 </button>
@@ -180,21 +199,49 @@ export class WhoComponent implements OnDestroy {
   /** Heure serveur estimée, rafraîchie 10 fois par seconde. */
   readonly now = signal(Date.now());
   name = localStorage.getItem('blindle.name') ?? '';
-  guess = '';
+  /** Texte tapé dans « Call it! » : les suggestions n'apparaissent qu'à partir de 2 lettres. */
+  readonly guess = signal('');
+  readonly active = signal(0);
+  readonly shake = signal(false);
+  private open = signal(false);
   private offset = 0;
   private refreshing = false;
   private readonly tick = setInterval(() => this.onTick(), 100);
 
   readonly slotIndexes = computed(() => Array.from({ length: this.run()?.slots ?? 5 }, (_, i) => i));
 
-  /** Palier estimé (le serveur bride l'image et fixe le prix réel à l'achat). */
+  /** Palier estimé : temps écoulé + un par mauvais nom (le serveur bride l'image et fixe le prix réel). */
   readonly level = computed(() => {
     const r = this.run();
     if (!r?.live) {
       return 0;
     }
     const elapsed = Math.max(0, this.now() - r.live.startedAt);
-    return Math.min(r.prices.length - 1, Math.floor(elapsed / r.stepMs));
+    return Math.min(r.prices.length - 1, Math.floor(elapsed / r.stepMs) + r.live.wrong.length);
+  });
+
+  /** Noms de l'univers qui correspondent à la saisie : début d'un mot d'abord, 6 au plus. */
+  readonly suggestions = computed(() => {
+    const r = this.run();
+    const q = norm(this.guess());
+    if (!r?.live || !this.open() || q.length < 2) {
+      return [];
+    }
+    const tried = new Set(r.live.wrong.map(norm));
+    const starts: string[] = [];
+    const contains: string[] = [];
+    for (const n of r.roster) {
+      const k = norm(n);
+      if (tried.has(k)) {
+        continue;
+      }
+      if (k.startsWith(q) || n.split(/[\s\-·.]+/).some(w => norm(w).startsWith(q))) {
+        starts.push(n);
+      } else if (k.includes(q)) {
+        contains.push(n);
+      }
+    }
+    return [...starts, ...contains].slice(0, 6);
   });
 
   readonly price = computed(() => this.run()?.prices[this.level()] ?? 0);
@@ -240,7 +287,57 @@ export class WhoComponent implements OnDestroy {
   }
 
   buy(): void {
-    this.call('POST', '/buy', { guess: this.guess.trim() || null });
+    this.call('POST', '/buy');
+  }
+
+  onType(value: string): void {
+    this.guess.set(value);
+    this.active.set(0);
+    this.open.set(true);
+  }
+
+  onKey(e: KeyboardEvent): void {
+    const list = this.suggestions();
+    if (e.key === 'ArrowDown' && list.length) {
+      e.preventDefault();
+      this.active.set((this.active() + 1) % list.length);
+    } else if (e.key === 'ArrowUp' && list.length) {
+      e.preventDefault();
+      this.active.set((this.active() - 1 + list.length) % list.length);
+    } else if (e.key === 'Enter' && list.length) {
+      e.preventDefault();
+      this.pick(list[Math.min(this.active(), list.length - 1)]);
+    } else if (e.key === 'Escape') {
+      this.open.set(false);
+    }
+  }
+
+  closeSoon(): void {
+    setTimeout(() => this.open.set(false), 120);
+  }
+
+  /** Propose ce nom : juste = achat ×2 ; faux = l'image se précise (et le prix monte). */
+  async pick(name: string): Promise<void> {
+    this.open.set(false);
+    this.guess.set('');
+    const before = this.run()?.live?.wrong.length ?? 0;
+    await this.call('POST', '/guess', { name });
+    const live = this.run()?.live;
+    if (live && live.wrong.length > before) {
+      this.shake.set(true);
+      setTimeout(() => this.shake.set(false), 450);
+    }
+  }
+
+  /** Met en gras la partie tapée (texte échappé : les noms viennent du contenu). */
+  highlight(name: string): string {
+    const esc = (t: string) => t.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
+    const q = this.guess().trim();
+    const i = q ? name.toLowerCase().indexOf(q.toLowerCase()) : -1;
+    if (i < 0) {
+      return esc(name);
+    }
+    return esc(name.slice(0, i)) + '<b>' + esc(name.slice(i, i + q.length)) + '</b>' + esc(name.slice(i + q.length));
   }
 
   pass(): void {
@@ -248,7 +345,7 @@ export class WhoComponent implements OnDestroy {
   }
 
   next(): void {
-    this.guess = '';
+    this.guess.set('');
     this.call('POST', '/next');
   }
 
@@ -297,4 +394,9 @@ export class WhoComponent implements OnDestroy {
     this.error.set(text);
     setTimeout(() => this.error.set(null), 3000);
   }
+}
+
+/** Comparaison tolérante : sans accents, casse ni ponctuation. */
+function norm(s: string): string {
+  return s.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
 }

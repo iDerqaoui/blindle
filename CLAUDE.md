@@ -45,7 +45,7 @@ Jeu d'enchères à l'aveugle multijoueur en ligne (3 à 8 joueurs, ou solo contr
 - Tests JUnit 5 obligatoires pour chaque règle et chaque mode : état initial + événement → état attendu
 - Une étape de la feuille de route par session ; petits commits clairs (GitLab)
 - Signaler toute nouvelle dépendance avant de l'ajouter
-- Dépendances ajoutées (validées) : `com.networknt:json-schema-validator` (content) ; `spring-boot-starter-security`, `spring-boot-starter-oauth2-client`, `spring-boot-starter-data-jpa`, `org.postgresql:postgresql`, `flyway-core` + `flyway-database-postgresql`, `com.h2database:h2` (tests) — validées le 2026-11-27 ; front : Angular 21 LTS, `@stomp/stompjs` 7.1.1 (version exacte)
+- Dépendances ajoutées (validées) : `com.networknt:json-schema-validator` (content) ; `spring-boot-starter-security`, `spring-boot-starter-oauth2-client`, `spring-boot-starter-data-jpa`, `org.postgresql:postgresql`, `flyway-core` + `flyway-database-postgresql`, `com.h2database:h2` (tests) — validées le 2026-11-27 ; `com.jhlabs:filters` 2.0.235-1 (flou gaussien du défi Who's That?, realtime), demandée le 2026-11-27 ; front : Angular 21 LTS, `@stomp/stompjs` 7.1.1 (version exacte)
 - Appels d'API qui modifient quelque chose côté front : `apiFetch` (`web/src/app/auth/auth.service.ts`), qui envoie le jeton CSRF
 - Si une étape exige de modifier `engine-*` pour un besoin propre à un thème : s'arrêter et le signaler
 
@@ -118,16 +118,17 @@ Défi quotidien solo du mode anime, choisi par l'utilisateur (remplace à terme 
 - **Univers du jour** : rotation des thèmes illustrés avec rareté (anime), un jour « crossover » qui
   les mélange tous. 10 personnages, mêmes pour tout le monde (seed du jour) : 1 légendaire, 2 épiques,
   3 rares, 4 communes si possible.
-- **Une carte à la fois** : l'image part en gros pixels et se précise par paliers (7 niveaux) ; le
+- **Une carte à la fois** : l'image part très floue (flou gaussien) et se précise par paliers (7 niveaux) ; le
   prix monte avec chaque palier (40 → 400). Acheter quand on ose ; ne rien faire = la carte part,
   gratuitement. 1000 d'or, 5 slots.
-- **« Call it! »** : nommer le personnage avant d'acheter (liste du roster de l'univers en
-  autocomplétion) ; nom juste = points de la carte doublés.
+- **« Call it! »** : taper un nom, suggestions en liste déroulante dès 2 lettres (aucune liste
+  affichée d'office) ; nom juste = achat au prix du moment, points doublés ; nom faux = l'image se
+  précise d'un palier (et le prix monte).
 - **Jackpot** : la légendaire du jour reste floue 2 paliers de plus que les autres ; l'acheter = +30.
 - **Score** : points de rareté (×2 si nommé) + jackpot − 25 par slot vide ; égalité : or restant.
 - **Fin** : écran des regrets (ce qu'on a laissé passer, à quel prix), classement du jour, grille à
   partager sans spoiler (🟨🟪🟦⬜ achetée, ⬛ laissée, ⚡ nommée, 🎰 jackpot).
-- **Serveur seul juge** : prix et palier calculés à l'heure serveur ; images pixelisées **côté
+- **Serveur seul juge** : prix et palier calculés à l'heure serveur ; images floutées **côté
   serveur**, un palier n'est servi que s'il est atteint ; l'URL d'origine n'est envoyée qu'à la
   révélation. Un essai par jour par compte (connecté) ou par navigateur (cookie).
 - Plus tard : classement en base, série de jours (streak), leurre (« decoy »), % du score maximal.

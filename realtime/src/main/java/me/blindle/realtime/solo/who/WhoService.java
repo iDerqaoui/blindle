@@ -25,16 +25,16 @@ public class WhoService {
 
     private final WhoDaily daily;
     private final DailyLeaderboard leaderboard;
-    private final Pixelator pixelator;
+    private final Blurrer blurrer;
     private final Clock clock;
     private final ZoneId zone;
     private final Map<String, WhoRun> runs = new ConcurrentHashMap<>();
 
-    public WhoService(WhoDaily daily, DailyLeaderboard leaderboard, Pixelator pixelator, Clock clock,
+    public WhoService(WhoDaily daily, DailyLeaderboard leaderboard, Blurrer blurrer, Clock clock,
                       @org.springframework.beans.factory.annotation.Value("${blindle.daily.zone:Europe/Paris}") String zone) {
         this.daily = daily;
         this.leaderboard = leaderboard;
-        this.pixelator = pixelator;
+        this.blurrer = blurrer;
         this.clock = clock;
         this.zone = ZoneId.of(zone);
     }
@@ -80,10 +80,20 @@ public class WhoService {
         return run;
     }
 
-    public Outcome buy(String key, String guess) {
+    public Outcome buy(String key) {
         WhoRun run = require(key);
         synchronized (run) {
-            Outcome o = run.buy(now(), guess);
+            Outcome o = run.buy(now());
+            refresh(run);
+            return o;
+        }
+    }
+
+    /** « Call it! » : achat si le nom est juste, sinon l'image se précise (null). */
+    public Outcome guess(String key, String name) {
+        WhoRun run = require(key);
+        synchronized (run) {
+            Outcome o = run.guess(now(), name);
             refresh(run);
             return o;
         }
@@ -122,7 +132,7 @@ public class WhoService {
             served = Math.max(0, Math.min(level, run.imageLevel(now)));
             url = run.current().image();
         }
-        return pixelator.render(url, served);
+        return blurrer.render(url, served);
     }
 
     public List<me.blindle.realtime.solo.DailyLeaderboard.Entry> top(int limit) {

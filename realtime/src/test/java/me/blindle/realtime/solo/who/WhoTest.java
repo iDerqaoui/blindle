@@ -33,7 +33,8 @@ class WhoTest {
         for (int i = 0; i < rarities.length; i++) {
             cards.add(new WhoCard("c" + i, "Perso Numéro " + i, rarities[i], "https://img.test/" + i + ".jpg", "Univers"));
         }
-        return new WhoLineup(DAY, "Univers", "#123456", cards, 0, List.of("Perso Numéro 0"));
+        List<String> roster = cards.stream().map(WhoCard::name).toList();
+        return new WhoLineup(DAY, "Univers", "#123456", cards, 0, roster);
     }
 
     private static Instant at(double seconds) {
@@ -61,7 +62,7 @@ class WhoTest {
         WhoRun run = new WhoRun("k", "Ana", lineup());
         run.next(T0);
 
-        var o = run.buy(at(1.6), "  perso numero 0 ");
+        var o = run.guess(at(1.6), "  perso numero 0 ");
 
         assertThat(o.price()).isEqualTo(70);
         assertThat(o.called()).isTrue();
@@ -69,7 +70,7 @@ class WhoTest {
         assertThat(run.budget()).isEqualTo(930);
         // 60 × 2 + 30 (jackpot) − 4 slots vides × 25
         assertThat(run.score()).isEqualTo(120 + 30 - 100);
-        assertThatThrownBy(() -> run.buy(at(2), null)).hasFieldOrPropertyWithValue("code", "WHO_NOT_LIVE");
+        assertThatThrownBy(() -> run.buy(at(2))).hasFieldOrPropertyWithValue("code", "WHO_NOT_LIVE");
     }
 
     @Test
@@ -89,15 +90,15 @@ class WhoTest {
     void wrongNameIsNotCalledAndCannotOverspend() {
         WhoRun run = new WhoRun("k", "Ana", lineup());
         run.next(T0);
-        assertThat(run.buy(at(9), "Quelqu'un d'autre").called()).isFalse(); // 400
+        assertThat(run.buy(at(9)).called()).isFalse(); // 400
         run.next(at(20));
-        run.buy(at(29), null); // 400 de plus
+        run.buy(at(29)); // 400 de plus
         run.next(at(40));
 
         assertThat(run.budget()).isEqualTo(200);
-        assertThat(run.buy(at(42), null).price()).isEqualTo(70); // tôt : encore abordable
+        assertThat(run.buy(at(42)).price()).isEqualTo(70); // tôt : encore abordable
         run.next(at(60));
-        assertThatThrownBy(() -> run.buy(at(69), null)).hasFieldOrPropertyWithValue("code", "WHO_TOO_EXPENSIVE");
+        assertThatThrownBy(() -> run.buy(at(69))).hasFieldOrPropertyWithValue("code", "WHO_TOO_EXPENSIVE");
         assertThat(run.budget()).isEqualTo(130);
     }
 
@@ -106,7 +107,7 @@ class WhoTest {
         WhoRun run = new WhoRun("k", "Ana", lineup());
         for (int i = 0; i < 5; i++) {
             run.next(at(i * 20));
-            run.buy(at(i * 20), null); // 40 chacune
+            run.buy(at(i * 20)); // 40 chacune
         }
         run.next(at(200));
 
@@ -115,6 +116,30 @@ class WhoTest {
         assertThat(run.outcomes().subList(5, 10)).allMatch(WhoRun.Outcome::skipped);
         assertThat(run.score()).isEqualTo(60 + 30 + 35 + 35 + 20 + 20); // aucun slot vide
         assertThat(WhoController.share(run)).contains("🟨🟪🟪🟦🟦⬛⬛⬛⬛⬛").contains("🎰");
+    }
+
+    @Test
+    void eachWrongNameMakesThePictureClearerAndPricier() {
+        WhoRun run = new WhoRun("k", "Ana", lineup());
+        run.next(at(20));
+        run.next(at(40)); // carte 1 (épique, pas le jackpot)
+        Instant t = at(40.5);
+
+        assertThat(run.guess(t, "Perso Numéro 7")).isNull();
+        assertThat(run.level(t)).isEqualTo(1);
+        assertThat(run.price(t)).isEqualTo(70);
+        assertThat(run.guess(t, "perso numero 7")).isNull(); // même nom : pas de nouvelle pénalité
+        assertThat(run.guess(t, "Perso Numéro 8")).isNull();
+        assertThat(run.imageLevel(t)).isEqualTo(2);
+        assertThat(run.wrongGuesses()).containsExactly("Perso Numéro 7", "Perso Numéro 8");
+        assertThatThrownBy(() -> run.guess(t, "Inconnu au bataillon"))
+                .hasFieldOrPropertyWithValue("code", "WHO_UNKNOWN_NAME");
+
+        var o = run.guess(t, "Perso Numéro 1");
+        assertThat(o.bought()).isTrue();
+        assertThat(o.called()).isTrue();
+        assertThat(o.price()).isEqualTo(110);
+        assertThat(o.misses()).isEqualTo(2);
     }
 
     // ------------------------------------------------------------------ choix du jour
@@ -182,12 +207,12 @@ class WhoTest {
             }
         };
         List<String> fetched = new ArrayList<>();
-        Pixelator pixelator = new Pixelator(url -> {
+        Blurrer blurrer = new Blurrer(url -> {
             fetched.add(url);
             return new BufferedImage(300, 400, BufferedImage.TYPE_INT_RGB);
         });
         DailyLeaderboard board = new DailyLeaderboard();
-        WhoService who = new WhoService(daily, board, pixelator, clock, "UTC");
+        WhoService who = new WhoService(daily, board, blurrer, clock, "UTC");
 
         WhoRun run = who.start("u:1", "Ana");
         assertThat(who.start("u:1", "Autre")).isSameAs(run); // pas de deuxième essai
