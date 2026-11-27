@@ -1,4 +1,6 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, HostListener, computed, inject, signal } from '@angular/core';
+import { AuthService } from './auth/auth.service';
+import { AdminComponent } from './screens/admin.component';
 import { GameService } from './game/game.service';
 import { I18nService, LANGS, Lang, TranslatePipe } from './i18n/i18n';
 import { HomeComponent } from './screens/home.component';
@@ -14,7 +16,7 @@ import { ModalComponent } from './ui/modal.component';
 @Component({
   selector: 'app-root',
   imports: [HomeComponent, LobbyComponent, AuctionComponent, TableComponent, VerdictComponent, ResultsComponent,
-    TeamBoardComponent, ModalComponent, TranslatePipe],
+    TeamBoardComponent, ModalComponent, AdminComponent, TranslatePipe],
   template: `
     <div class="backdrop" aria-hidden="true">
       @if (ambiance(); as a) {
@@ -70,9 +72,21 @@ import { ModalComponent } from './ui/modal.component';
               [title]="(game.connected() ? 'app.connected' : 'app.offline') | t"></span>
         @if (inRoom()) {
           <button class="btn ghost small" (click)="confirmLeave.set(true)">{{ 'app.leave' | t }}</button>
+        } @else if (auth.me(); as me) {
+          <button class="account-chip" (click)="accountOpen.set(true)" [title]="'account.title' | t">
+            @if (me.avatarUrl) { <img [src]="me.avatarUrl" alt="" referrerpolicy="no-referrer" /> }
+            @else { <span class="account-initial">{{ me.displayName.charAt(0) }}</span> }
+            <span class="account-name">{{ me.displayName }}</span>
+          </button>
+        } @else if (auth.providers().length) {
+          <button class="btn ghost small" (click)="loginOpen.set(true)">{{ 'account.login' | t }}</button>
         }
       </div>
     </header>
+
+    @if (loginError()) {
+      <div class="toast" role="alert">{{ 'account.loginError' | t }}</div>
+    }
 
     @if (game.error(); as error) {
       <div class="toast" role="alert">{{ error }}</div>
@@ -80,6 +94,7 @@ import { ModalComponent } from './ui/modal.component';
 
     <main [class.wide]="screen() === 'table'">
       @switch (screen()) {
+        @case ('admin') { <app-admin /> }
         @case ('home') { <app-home /> }
         @case ('lobby') { <app-lobby /> }
         @case ('table') { <app-table /> }
@@ -107,6 +122,37 @@ import { ModalComponent } from './ui/modal.component';
         </div>
       </app-modal>
     }
+
+    @if (loginOpen()) {
+      <app-modal [title]="'account.loginTitle' | t" (closed)="loginOpen.set(false)">
+        <p class="muted">{{ 'account.loginBody' | t }}</p>
+        <div class="login-buttons">
+          @for (p of auth.providers(); track p) {
+            <button class="btn big" [class]="'btn big login-' + p" (click)="auth.login(p)">
+              {{ 'account.with.' + p | t }}
+            </button>
+          }
+        </div>
+      </app-modal>
+    }
+
+    @if (accountOpen() && auth.me(); as me) {
+      <app-modal [title]="'account.title' | t" (closed)="accountOpen.set(false)">
+        <label class="name-field">
+          <span>{{ 'account.displayName' | t }}</span>
+          <input class="input" #dn [value]="me.displayName" maxlength="20" />
+        </label>
+        @if (renameError(); as e) { <p class="admin-error">{{ e }}</p> }
+        <p class="muted small">{{ 'account.via' | t: { provider: ('account.provider.' + me.provider | t) } }}</p>
+        <div class="modal-actions">
+          @if (me.admin) {
+            <a class="btn" href="#admin" (click)="accountOpen.set(false)">{{ 'account.admin' | t }}</a>
+          }
+          <button class="btn ghost" (click)="logout()">{{ 'account.logout' | t }}</button>
+          <button class="btn primary" (click)="rename(dn.value)">{{ 'account.save' | t }}</button>
+        </div>
+      </app-modal>
+    }
   `,
 })
 export class App {
@@ -116,13 +162,34 @@ export class App {
   readonly confirmLeave = signal(false);
   readonly copied = signal(false);
 
+  readonly auth = inject(AuthService);
+  readonly loginOpen = signal(false);
+  readonly accountOpen = signal(false);
+  readonly renameError = signal<string | null>(null);
+  /** Retour d'une connexion refusée ou annulée chez le fournisseur (/?login=error). */
+  readonly loginError = signal(new URLSearchParams(location.search).get('login') === 'error');
+  /** Page admin : #admin, hors room, réservée aux comptes admin (le serveur vérifie aussi). */
+  readonly hash = signal(location.hash);
+
   readonly inRoom = computed(() => !!this.game.room() && !!this.game.me());
+
+  constructor() {
+    if (this.loginError()) {
+      history.replaceState(null, '', location.pathname + location.hash);
+      setTimeout(() => this.loginError.set(false), 5000);
+    }
+  }
+
+  @HostListener('window:hashchange')
+  onHashChange(): void {
+    this.hash.set(location.hash);
+  }
 
   readonly screen = computed(() => {
     const room = this.game.room();
     const phase = room?.phase;
     if (!phase || !this.game.me()) {
-      return 'home';
+      return this.hash() === '#admin' && this.auth.isAdmin() ? 'admin' : 'home';
     }
     switch (phase) {
       case 'LOBBY': return 'lobby';
@@ -163,6 +230,19 @@ export class App {
   leave(): void {
     this.confirmLeave.set(false);
     this.game.leave();
+  }
+
+  async rename(name: string): Promise<void> {
+    const error = await this.auth.rename(name.trim());
+    this.renameError.set(error);
+    if (!error) {
+      this.accountOpen.set(false);
+    }
+  }
+
+  async logout(): Promise<void> {
+    this.accountOpen.set(false);
+    await this.auth.logout();
   }
 
   copyCode(code: string): void {

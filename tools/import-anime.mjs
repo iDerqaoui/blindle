@@ -14,6 +14,10 @@
 // (content/themes/anime-*.json, content/presets/anime-*.json) sont ignorés par git. Profil « private » (§8) :
 // usage entre amis, sur invitation, canal web uniquement.
 //
+// Depuis le 2026-11-27, la curation vit en base (page admin #admin) et le serveur régénère ces
+// thèmes à chaque démarrage (module curation). Ce script reste un secours hors base : il ne lit que
+// les fichiers content/curation/*.json, qui ne servent plus qu’à initialiser la base.
+//
 // Usage : node tools/import-anime.mjs [slug…]   (sans argument : tous les univers ci-dessous)
 
 import { readFile, writeFile } from 'node:fs/promises';
@@ -140,7 +144,7 @@ async function importUniverse(u) {
   const preset = {
     id: theme.id,
     name: u.name,
-    description: 'Anime Blind Bid: the drawer secretly sees the character and sells it; the others outbid blind. Score: rarity points + leftover gold − empty slots.',
+    description: 'Anime Blind Bid: the drawer secretly sees the character and sells it; the others outbid blind. Score: rarity points − empty slots (unspent gold is worth nothing).',
     theme: theme.id,
     bidMode: 'drawer',
     verdictMode: 'points',

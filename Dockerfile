@@ -1,16 +1,13 @@
-# Image unique : front Angular servi par Spring Boot, thèmes anime générés au build.
+# Image unique : front Angular servi par Spring Boot. Les thèmes anime sont générés par le serveur
+# au démarrage depuis la base PostgreSQL (module curation) : voir docs/DEPLOY.md.
 
-# 1. Front + contenu anime
+# 1. Front
 FROM node:22-alpine AS web
 WORKDIR /src
 COPY web/package.json web/package-lock.json web/
 RUN cd web && npm ci
 COPY web web
 RUN cd web && npx ng build
-COPY content content
-COPY tools tools
-# Thèmes anime (profil private, non commités) : générés depuis Tenrai (données MyAnimeList) et content/curation.
-RUN node tools/import-anime.mjs
 
 # 2. Back
 FROM maven:3.9-eclipse-temurin-17 AS back
@@ -22,7 +19,7 @@ RUN mvn -q clean install -DskipTests
 FROM eclipse-temurin:17-jre
 WORKDIR /app
 COPY --from=back /src/app/target/app-0.1.0-SNAPSHOT.jar app.jar
-COPY --from=web /src/content content
+COPY content content
 COPY --from=web /src/web/dist/blindle-web/browser static
 ENV JAVA_OPTS="-Xmx350m"
 ENV BLINDLE_ALLOWED_ORIGINS="https://*.onrender.com,https://*.koyeb.app,https://*.trycloudflare.com,https://*.discordsays.com,http://localhost:*"

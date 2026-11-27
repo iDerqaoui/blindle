@@ -640,3 +640,44 @@ button.mode:hover:not(:disabled), div.mode:not(.disabled):hover {
   .mode { flex-wrap: wrap; }
   .mode-actions { width: 100%; justify-content: flex-start; padding-left: 78px; }
 }
+
+/* Compte (barre du haut, connexion) */
+.account-chip {
+  display: inline-flex; align-items: center; gap: 8px; padding: 3px 10px 3px 3px; border-radius: 999px;
+  background: var(--panel-2); border: 1px solid var(--border); color: var(--text); cursor: pointer; font: inherit;
+}
+.account-chip:hover { border-color: var(--accent); }
+.account-chip img, .account-initial { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; }
+.account-initial { display: grid; place-items: center; background: var(--panel-3); font-weight: 700; text-transform: uppercase; }
+.account-name { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.9rem; }
+.login-buttons { display: grid; gap: 10px; margin-top: 12px; }
+.btn.login-google { background: #fff; color: #1f1f1f; border-color: #fff; }
+.btn.login-discord { background: #5865f2; color: #fff; border-color: #5865f2; }
+a.btn { text-decoration: none; display: inline-block; }
+
+/* Page admin des personnages */
+.admin { max-width: 1100px; margin: 0 auto; }
+.admin-head h1 { margin: 0 0 4px; }
+.admin-universes { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+.admin-summary { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 8px; }
+.admin-error { color: var(--danger); }
+.rarity-badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 0.78rem; font-weight: 600; background: var(--panel-3); color: var(--common); }
+.rarity-badge.rare { color: var(--rare); }
+.rarity-badge.epic { color: var(--epic); }
+.rarity-badge.legendary { color: var(--legendary); }
+.admin-add { margin: 12px 0; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.admin-add summary { cursor: pointer; font-weight: 600; }
+.admin-search { display: flex; gap: 8px; margin-top: 10px; }
+.admin-search .input { flex: 1; margin: 0; }
+.admin-results { list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 6px; }
+.admin-results li { display: flex; align-items: center; gap: 10px; }
+.admin-results img, .admin-table img { width: 34px; height: 44px; object-fit: cover; border-radius: 6px; }
+.admin-results .grow { flex: 1; }
+.admin-filter { margin: 8px 0; max-width: 320px; }
+.admin-table-wrap { overflow-x: auto; }
+.admin-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.admin-table th { text-align: left; color: var(--muted); font-weight: 500; padding: 6px; border-bottom: 1px solid var(--border); }
+.admin-table td { padding: 4px 6px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.admin-table tr.out td { opacity: 0.55; }
+.admin .input.name { margin: 0; min-width: 180px; padding: 6px 8px; }
+.admin .input.tier { margin: 0; width: auto; padding: 6px 8px; }

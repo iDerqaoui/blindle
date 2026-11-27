@@ -13,8 +13,8 @@ Jeu d'enchères à l'aveugle multijoueur en ligne (3 à 8 joueurs, ou solo contr
 - Back : Java 17, Spring Boot 3, Maven, WebSocket STOMP
 - Front : Angular (standalone components), RxJS, client STOMP
 - Contenu : thèmes et presets JSON dans `content/`, validés par JSON Schema au démarrage
-- MVP : état des rooms en mémoire, pas de base de données
-- Plus tard : PostgreSQL, Redis, Discord Activity
+- Rooms en mémoire ; PostgreSQL (Flyway) pour les comptes et la curation des personnages
+- Plus tard : Redis, Discord Activity
 
 ## Modules
 
@@ -23,6 +23,8 @@ Jeu d'enchères à l'aveugle multijoueur en ligne (3 à 8 joueurs, ou solo contr
 - `engine-modes` : `BidMode`, `VerdictMode`
 - `content` : chargement et validation des thèmes / presets
 - `realtime` : contrôleurs STOMP, rooms, timers
+- `accounts` : connexion Google / Discord, comptes, rôle admin, sécurité (ARCHITECTURE §12)
+- `curation` : personnages anime en base, page admin, génération des thèmes anime au démarrage
 - `web/` : application Angular
 
 ## Principes non négociables
@@ -43,19 +45,22 @@ Jeu d'enchères à l'aveugle multijoueur en ligne (3 à 8 joueurs, ou solo contr
 - Tests JUnit 5 obligatoires pour chaque règle et chaque mode : état initial + événement → état attendu
 - Une étape de la feuille de route par session ; petits commits clairs (GitLab)
 - Signaler toute nouvelle dépendance avant de l'ajouter
-- Dépendances ajoutées (validées) : `com.networknt:json-schema-validator` (content) ; front : Angular 21 LTS, `@stomp/stompjs` 7.1.1 (version exacte)
+- Dépendances ajoutées (validées) : `com.networknt:json-schema-validator` (content) ; `spring-boot-starter-security`, `spring-boot-starter-oauth2-client`, `spring-boot-starter-data-jpa`, `org.postgresql:postgresql`, `flyway-core` + `flyway-database-postgresql`, `com.h2database:h2` (tests) — validées le 2026-11-27 ; front : Angular 21 LTS, `@stomp/stompjs` 7.1.1 (version exacte)
+- Appels d'API qui modifient quelque chose côté front : `apiFetch` (`web/src/app/auth/auth.service.ts`), qui envoie le jeton CSRF
 - Si une étape exige de modifier `engine-*` pour un besoin propre à un thème : s'arrêter et le signaler
 
 ## Commandes
 
+- Base locale (Docker Desktop lancé) : `docker compose up -d db` ; les tests utilisent H2 en mémoire, sans réseau
 - Build + tests : `mvn verify`
 - Tests d'un module : `mvn -pl engine-core test` (ajouter `-am` pour construire ses dépendances)
 - Un test : `mvn -pl engine-rules -am test -Dtest=BudgetCapRuleTest -Dsurefire.failIfNoSpecifiedTests=false`
 - Lancer le back : `mvn -pl app -am spring-boot:run` (port 8080, STOMP sur `/ws`)
 - Jar exécutable : `mvn clean install -DskipTests` puis `java -jar app/target/app-0.1.0-SNAPSHOT.jar --blindle.content.dir=content` (le `clean` évite un jar embarquant d'anciens modules)
-- Front : `cd web && npm install && npm start` → http://localhost:4200 (proxy `/api` et `/ws` vers 8080) ; build : `npx ng build`
+- Front : `cd web && npm install && npm start` → http://localhost:4200 (proxy `/api`, `/ws`, `/oauth2`, `/login/oauth2` vers 8080) ; build : `npx ng build`
 - Minimum de joueurs par défaut : 2 ; solo : `--blindle.room.min-players=1`
-- Thèmes anime illustrés (non commités) : `node tools/import-anime.mjs` (Tenrai/MyAnimeList + rangs de puissance `content/curation/`)
+- Connexion : `GOOGLE_CLIENT_ID`/`_SECRET`, `DISCORD_CLIENT_ID`/`_SECRET`, admins `BLINDLE_ADMIN_EMAILS` (voir `docs/DEPLOY.md`) ; page admin : `#admin`
+- Thèmes anime illustrés (non commités) : générés par le serveur au démarrage depuis la base (1er démarrage : reprise de `content/curation/`, ~30 s via Tenrai) ; secours hors base : `node tools/import-anime.mjs`
 
 Java 17 retenu (décision du 2026-11-26) : pas de pattern matching dans `switch` ni de record patterns.
 
@@ -63,21 +68,14 @@ Architecture et protocole STOMP proposés à l'étape 0 : `docs/ARCHITECTURE.md`
 
 ## Étape en cours
 
-Étape 10 terminée. Hors feuille de route : mode principal « Anime Blind Bid » (mode `drawer`, thèmes MyAnimeList privés via Tenrai, rareté populaire-ou-puissant, verdict aux points, le piocheur vend, défausse payante — voir ARCHITECTURE §11). Prochaine : la demande 2 ci-dessous (la 1 est faite), puis étape 11 — Discord Activity (voir `docs/PROJECT.md` §11 et §12).
+Étape 10 terminée. Hors feuille de route : mode principal « Anime Blind Bid » (mode `drawer`, thèmes MyAnimeList privés via Tenrai, rareté populaire-ou-puissant, verdict aux points, le piocheur vend, défausse payante — voir ARCHITECTURE §11). Faits le 2026-11-27 : or non dépensé sans valeur (`PointsVerdictMode`) ; comptes Google / Discord et page admin des personnages (ARCHITECTURE §12). Prochaine : étape 11 — Discord Activity (voir `docs/PROJECT.md` §11 et §12).
 Mettre à jour cette ligne à chaque étape terminée.
 
-### À faire à la prochaine session (demandes du 2026-11-26, dans l'ordre)
+### Notes du 2026-11-27
 
-1. ~~**Or simplifié**~~ — fait le 2026-11-27 : l'or non dépensé ne compte plus dans `PointsVerdictMode`
-   (reste le départage). Bots inchangés : ils misent toujours au plus la valeur estimée.
-2. **Compte admin pour classer les personnages soi-même.** Aujourd'hui les rangs S–D sont dans
-   `content/curation/anime-*.json` (fichiers commités, appliqués par `tools/import-anime.mjs`).
-   Besoin : un accès admin (authentification à concevoir : le site n'a pas de comptes) et une page
-   pour changer le rang de puissance d'un personnage, ajouter ou retirer des personnages et voir la
-   rareté obtenue, sans relancer l'import à la main. Questions à trancher avec l'utilisateur avant de
-   coder : stockage des modifications (fichier de curation ou base), recalcul de la rareté à chaud
-   ou au redémarrage, forme de l'authentification (mot de passe unique en variable
-   d'environnement vs vrais comptes). Signaler toute nouvelle dépendance.
+- Or : les bots misent toujours au plus la valeur estimée, même quand l'or restant ne servira plus ; à revoir en jouant.
+- Connexion pas encore testée avec de vrais identifiants Google / Discord (à créer par l'utilisateur, voir `docs/DEPLOY.md`) ; page admin compilée mais pas vue dans un navigateur.
+- Le compte n'est pas encore lié au joueur en partie : il pré-remplit seulement le pseudo (base pour la reconnexion).
 
 ## Notes de passation (2026-11-26)
 
@@ -87,7 +85,7 @@ Mettre à jour cette ligne à chaque étape terminée.
 - Défi du jour rejouable à volonté (pas de compte) ; classement en mémoire. Équilibrage du prix du marché et des bots à ajuster en jouant.
 - Dépôt : GitHub `iDerqaoui/blindle` (origin). Hébergement de test : Cloudflare Tunnel (voir `docs/DEPLOY.md`).
 - Prochaines étapes convenues (2026-11-26), dans l'ordre :
-  1. Mise en ligne sur un seul serveur : front construit embarqué dans le jar (ou Nginx devant), image Docker, HTTPS/WSS, `blindle.allowed-origins`, guide de déploiement ; lancer `node tools/import-anime.mjs` sur le serveur.
+  1. Mise en ligne sur un seul serveur : front construit embarqué dans le jar (ou Nginx devant), image Docker, HTTPS/WSS, `blindle.allowed-origins`, guide de déploiement, base PostgreSQL (le serveur génère les thèmes anime au démarrage).
   2. Reconnexion (jeton qui rend sa place au joueur) et passation d'hôte quand l'hôte part.
   3. Snapshots des rooms dans Redis (survivre aux redémarrages).
   4. Classement du jour et retraits de thèmes dans un stockage partagé (Redis / PostgreSQL).

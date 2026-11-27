@@ -1,5 +1,6 @@
-import { Component, OnDestroy, computed, inject, signal } from '@angular/core';
+import { Component, OnDestroy, computed, effect, inject, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { AuthService } from '../auth/auth.service';
 import { GameService } from '../game/game.service';
 import { PresetSummary } from '../game/game.types';
 import { I18nService, TranslatePipe } from '../i18n/i18n';
@@ -195,6 +196,17 @@ export class HomeComponent implements OnDestroy {
   readonly classic = computed(() => this.game.presets().filter(p => p.bidMode !== 'drawer' && !p.daily));
   readonly hasName = computed(() => this.name().trim().length > 0);
   readonly canJoin = computed(() => this.hasName() && this.code().trim().length === 4);
+
+  constructor() {
+    // Connecté : le pseudo du compte remplit le champ s'il est vide (le pseudo tapé garde la priorité).
+    const auth = inject(AuthService);
+    effect(() => {
+      const account = auth.me();
+      if (account && !untracked(this.name).trim()) {
+        this.name.set(account.displayName);
+      }
+    });
+  }
 
   /** Choisit un univers (ou revient à l'accueil) : le fond de page suit. */
   pick(u: PresetSummary | null): void {

@@ -256,3 +256,41 @@ Chaque tâche est testable seule.
   - Bots : en verdict `points`, une carte vaut 10 pièces par point de rareté (`BotEstimator`).
   - Les montants affichés dans les règles du salon (50, 25) sont écrits dans les textes i18n :
     à aligner si on change les paramètres.
+
+## 12. Comptes et page admin des personnages (2026-11-27)
+
+Décisions prises avec l'utilisateur : base PostgreSQL dès maintenant, vrais comptes par connexion
+Google et Discord, admins désignés par liste blanche, comptes ouverts aussi aux joueurs, rareté
+recalculée au redémarrage, ajout de personnages par recherche MyAnimeList depuis la page.
+
+- Module `accounts` : Spring Security + OAuth2 client (Google sans `openid`, Discord en fournisseur
+  déclaré à la main), JPA, Flyway (`V1__accounts.sql`). Tables `user_account` et `user_identity`
+  (fournisseur + identifiant) ; deux identités partagent un compte seulement par un e-mail **vérifié**.
+  Un fournisseur sans identifiant client est masqué ; sans aucun, le site marche sans comptes.
+- Rôle admin : `blindle.admin.emails` (`BLINDLE_ADMIN_EMAILS`), e-mails vérifiés ou
+  `fournisseur:identifiant`, évalué à la connexion.
+- Sécurité : tout reste ouvert sans compte (jeu, rooms, STOMP). `/api/admin/curation/**` exige le
+  rôle admin, `PATCH /api/me` une connexion. CSRF par cookie `XSRF-TOKEN` / en-tête `X-XSRF-TOKEN`
+  (`apiFetch` côté front) ; `/api/admin/themes/**` garde son jeton `X-Admin-Token`. Une API non
+  autorisée renvoie 401, jamais de redirection. Sessions HTTP en mémoire (7 jours) : un redémarrage
+  déconnecte.
+- Endpoints : `GET /api/auth/providers`, `GET /api/me` (204 sans connexion), `PATCH /api/me`
+  (pseudo, 20 caractères), `POST /api/auth/logout` ; connexion : `/oauth2/authorization/{google|discord}`,
+  retour `/login/oauth2/code/{google|discord}`.
+- Module `curation` : tables `anime_universe` (les 8 univers, insérés par `V2__curation.sql`) et
+  `anime_character` (nom, rang S–D, ordre, favoris / image / rôle MyAnimeList en cache, auteur).
+  - Hook générique `ContentGenerator` dans `content` : `ContentRegistry` l'appelle avant de charger.
+    `AnimeThemeGenerator` y écrit `themes/` et `presets/anime-*.json` depuis la base ; le contenu
+    généré passe par la même validation. Désactivable : `blindle.curation.enabled=false` (tests).
+  - Premier démarrage : chaque univers vide est repris de `content/curation/anime-*.json`, puis
+    complété par Tenrai (`TenraiClient`, ~30 s). Ensuite la base fait foi et le démarrage ne
+    contacte Tenrai que pour des données manquantes. Tenrai injoignable : thème construit avec
+    l'existant ; moins de 20 cartes : fichiers existants conservés.
+  - `RarityCalculator` : portage exact du calcul de `tools/import-anime.mjs` (vérifié : mêmes raretés
+    sur les 8 univers).
+  - API admin `/api/admin/curation/universes[/{slug}[/characters[/{malId}]|/search?q=]]` : chaque
+    modification renvoie le classement recalculé, avec `rarity` (au prochain démarrage) et
+    `liveRarity` (parties actuelles).
+- Front : bouton « Connexion » (fournisseurs configurés seulement), puce du compte (pseudo modifiable,
+  déconnexion, lien admin), pseudo pré-rempli à l'accueil s'il est vide, page `#admin`.
+- Pas encore : lier le compte au joueur en partie (reconnexion), classement du jour par compte.
