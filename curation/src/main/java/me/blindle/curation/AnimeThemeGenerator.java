@@ -145,8 +145,9 @@ public class AnimeThemeGenerator implements ContentGenerator {
         Map<String, Object> p = new LinkedHashMap<>();
         p.put("id", id);
         p.put("name", u.name());
-        p.put("description", "Anime Blind Bid: the drawer secretly sees the character and sells it; the others "
-                + "outbid blind. Score: rarity points − empty slots (unspent gold is worth nothing).");
+        p.put("description", "Anime Blind Bid: the drawer secretly sees the character and opens the bidding; the "
+                + "others outbid blind. Buying costs gold, passing is free, but the drawer pays 150 gold to let a "
+                + "card go to the trash. Score: rarity points − empty slots (unspent gold is worth nothing).");
         p.put("theme", id);
         p.put("bidMode", "drawer");
         p.put("verdictMode", "points");
@@ -154,8 +155,7 @@ public class AnimeThemeGenerator implements ContentGenerator {
         p.put("rules", List.of(
                 Map.of("ref", "budget-cap"),
                 Map.of("ref", "anti-snipe", "params", Map.of("extendSeconds", 5)),
-                Map.of("ref", "seller-collects"),
-                Map.of("ref", "discard-fee", "params", Map.of("amount", 50))));
+                Map.of("ref", "discard-fee", "params", Map.of("amount", 150))));
         return p;
     }
 

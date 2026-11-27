@@ -73,7 +73,8 @@ export const FR: Record<string, string> = {
   'lobby.rule2': 'Il ouvre l’enchère, les autres surenchérissent ou laissent, à l’aveugle.',
   'lobby.rule3': 'La carte rejoint le tableau du gagnant. Si personne n’en veut, elle part à la poubelle, visible par tous.',
   'lobby.ruleSale': 'Le piocheur est le vendeur : le gagnant le paie. Si personne ne dépasse son ouverture, il garde la carte et paie la banque.',
-  'lobby.ruleDiscard': 'Si personne n’en veut, la carte part à la poubelle, visible par tous, et le piocheur paie 50 d’or.',
+  'lobby.ruleDiscard': 'Laisser filer une carte coûte cher : si personne n’en veut, elle part à la poubelle, visible par tous, et le piocheur paie {n} d’or.',
+  'lobby.ruleGold': 'On ne gagne jamais d’or : acheter une carte coûte son prix, passer ne coûte rien.',
   'lobby.rule4points': 'Quand toutes les équipes de {n} sont complètes : score = points des cartes − 25 par place vide. L’or non dépensé ne vaut rien (il ne sert qu’à départager).',
   'lobby.rule5points': 'Points par rareté : Commune 10 · Rare 20 · Épique 35 · Légendaire 60. Les personnages sont classés par popularité ou puissance.',
   'lobby.rule4': 'Quand les équipes de {n} sont complètes, on vote pour la meilleure.',
@@ -162,8 +163,8 @@ export const FR: Record<string, string> = {
   'table.gold': 'or',
   'table.open': 'Ouvrir à {amount} or',
   'table.bid': 'Miser {amount} or',
-  'table.passDraw': 'Laisser (−50 si invendue)',
-  'table.passDrawHint': 'Les autres peuvent encore te l’acheter. Sinon elle part à la poubelle et tu paies 50 d’or.',
+  'table.passDraw': 'Laisser (−{n} si invendue)',
+  'table.passDrawHint': 'Les autres peuvent encore l’acheter. Sinon elle part à la poubelle et tu paies {n} d’or.',
   'table.pass': 'Laisser',
 
   // Tableau

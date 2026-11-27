@@ -18,7 +18,9 @@ import me.blindle.rules.RuleCatalog;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.List;
 import java.util.Set;
 
@@ -99,11 +101,16 @@ public class GameFactory {
                 throw new IllegalArgumentException("règle « " + r.ref() + " » en double");
             }
         });
+        List<Preset.RuleRef> complete = new ArrayList<>();
         for (Preset.RuleRef ref : ruleRefs) {
             Rule rule = rules.require(ref.ref());
-            RuleParams params = RuleParams.of(ref.params());
+            // Paramètres complets : défauts de la règle, puis ceux du preset ou de l'hôte.
+            Map<String, Object> merged = new LinkedHashMap<>(rule.defaultParams());
+            merged.putAll(ref.params());
+            RuleParams params = RuleParams.of(merged);
             checkCompatibility(rule, params, theme, bidMode, refs);
             active.add(new RuleEngine.ActiveRule(rule, params));
+            complete.add(new Preset.RuleRef(ref.ref(), merged));
         }
         Set<String> rarities = new LinkedHashSet<>();
         theme.cards().forEach(c -> {
@@ -131,7 +138,7 @@ public class GameFactory {
                     + " cartes jouables");
         }
         return new GameSetup(preset, theme, new GameEngine(new RuleEngine(active)), bidMode, verdictMode,
-                deck, Set.copyOf(refs), ruleRefs, overrides);
+                deck, Set.copyOf(refs), complete, overrides);
     }
 
     private static Card withRarity(Card c, String rarity) {

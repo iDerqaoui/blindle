@@ -15,13 +15,15 @@ import java.util.Set;
 
 /**
  * {@code discard-fee} : quand un lot part à la défausse faute d'acheteur, son vendeur (le piocheur)
- * paie {@code amount} pièces à la banque, dans la limite de son or. Refuser une carte reste
- * possible, mais plus gratuit : on ne peut plus vider le paquet pour attendre les meilleures.
+ * paie {@code amount} pièces (150 par défaut) à la banque, dans la limite de son or. Refuser une carte
+ * reste possible, mais coûte cher : on ne peut plus vider le paquet pour attendre les meilleures.
  */
 @Component
 public class DiscardFeeRule implements Rule {
 
     public static final String TYPE = "discard-fee";
+    /** Laisser filer une carte doit coûter cher : 15 % d'un budget de 1000. */
+    public static final int DEFAULT_AMOUNT = 150;
 
     public record Params(int amount) {
         public Params {
@@ -31,7 +33,7 @@ public class DiscardFeeRule implements Rule {
         }
 
         public static Params from(RuleParams raw) {
-            return new Params(raw.getInt("amount", 50));
+            return new Params(raw.getInt("amount", DEFAULT_AMOUNT));
         }
     }
 
@@ -57,7 +59,7 @@ public class DiscardFeeRule implements Rule {
 
     @Override
     public Map<String, Object> defaultParams() {
-        return RuleParams.defaults("amount", 50);
+        return RuleParams.defaults("amount", DEFAULT_AMOUNT);
     }
 
     @Override

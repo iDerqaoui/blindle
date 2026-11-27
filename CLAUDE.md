@@ -113,6 +113,8 @@ joueur), stats des parties sans compte. Signaler toute nouvelle dépendance.
 ### Notes du 2026-11-27
 
 - Or : les bots misent toujours au plus la valeur estimée, même quand l'or restant ne servira plus ; à revoir en jouant.
+- Or (2026-11-27) : on ne gagne jamais d'or ; acheter coûte, passer est gratuit, le piocheur paie 150 pour laisser
+  filer une carte invendue (ARCHITECTURE §11). Les bots piocheurs ne tiennent pas encore compte de cette pénalité.
 - Connexion pas encore testée avec de vrais identifiants Google / Discord (à créer par l'utilisateur, voir `docs/DEPLOY.md`) ; page admin compilée mais pas vue dans un navigateur.
 - Le compte n'est pas encore lié au joueur en partie : il pré-remplit seulement le pseudo (base pour la reconnexion).
 

@@ -73,7 +73,8 @@ export const EN: Record<string, string> = {
   'lobby.rule2': 'The drawer opens the bidding; the others outbid or let it go, blind.',
   'lobby.rule3': 'The card joins the winner’s board. If nobody wants it, it goes to the trash, visible to all.',
   'lobby.ruleSale': 'The drawer is the seller: the winner pays the drawer. If nobody outbids the opening, the drawer keeps the card and pays the bank.',
-  'lobby.ruleDiscard': 'If nobody wants the card, it goes to the trash, visible to all, and the drawer pays 50 gold.',
+  'lobby.ruleDiscard': 'Letting a card go costs dearly: if nobody wants it, it goes to the trash, visible to all, and the drawer pays {n} gold.',
+  'lobby.ruleGold': 'You never earn gold: buying a card costs its price, passing costs nothing.',
   'lobby.rule4points': 'Once every team of {n} is complete, score = card points − 25 per empty slot. Unspent gold is worth nothing (it only breaks ties).',
   'lobby.rule5points': 'Points by rarity: Common 10 · Rare 20 · Epic 35 · Legendary 60. Characters are ranked by popularity or power.',
   'lobby.rule4': 'Once every team of {n} is complete, everyone votes for the best one.',
@@ -162,8 +163,8 @@ export const EN: Record<string, string> = {
   'table.gold': 'gold',
   'table.open': 'Open at {amount} gold',
   'table.bid': 'Bid {amount} gold',
-  'table.passDraw': 'Let it go (−50 if unsold)',
-  'table.passDrawHint': 'The others can still buy it from you. If nobody does, it goes to the trash and you pay 50 gold.',
+  'table.passDraw': 'Let it go (−{n} if unsold)',
+  'table.passDrawHint': 'The others can still buy it. If nobody does, it goes to the trash and you pay {n} gold.',
   'table.pass': 'Let it go',
 
   // Board

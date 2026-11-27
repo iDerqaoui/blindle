@@ -74,7 +74,14 @@ public final class ViewProjector {
                 deadline == null ? null : deadline.toEpochMilli(), r.now().toEpochMilli(),
                 List.copyOf(log), result, r.votes().size(), daily(r), drawer(r),
                 s.discarded().stream().map(c -> card(c, theme)).toList(), art(theme),
-                !r.setup().overrides().isEmpty(), r.setup().deck().size());
+                !r.setup().overrides().isEmpty(), r.setup().deck().size(), ruleParams(r));
+    }
+
+    /** Paramètres des règles actives (défauts compris) : le client affiche les vrais montants. */
+    private static Map<String, Map<String, Object>> ruleParams(RoomSnapshot r) {
+        Map<String, Map<String, Object>> out = new java.util.LinkedHashMap<>();
+        r.setup().activeRules().forEach(x -> out.put(x.ref(), x.params()));
+        return out;
     }
 
     /** Catalogue de personnalisation de la room, pour son hôte seul. */

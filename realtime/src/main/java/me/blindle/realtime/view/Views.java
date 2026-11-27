@@ -21,7 +21,8 @@ public final class Views {
                            List<SlotView> slots, List<PlayerSummary> players, LotView lot,
                            Long deadline, Long serverTime, List<String> log, ResultView result,
                            int votesReceived, DailyView daily, String drawerId, List<CardView> trash,
-                           ArtView art, boolean customized, int deckSize) {
+                           ArtView art, boolean customized, int deckSize,
+                           Map<String, Map<String, Object>> ruleParams) {
     }
 
     /**

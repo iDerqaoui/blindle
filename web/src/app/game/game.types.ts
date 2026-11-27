@@ -90,6 +90,8 @@ export interface RoomView {
   customized: boolean;
   /** Cartes du paquet de cette room. */
   deckSize: number;
+  /** Paramètres des règles actives, défauts compris (ex. `discard-fee` → `{ amount: 150 }`). */
+  ruleParams: Record<string, Record<string, RuleParamValue>>;
 }
 
 /** Carte du thème, telle que l'hôte la voit pour personnaliser sa room. */

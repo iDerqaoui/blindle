@@ -140,7 +140,7 @@ async function importUniverse(u) {
   };
   await writeFile(path.join(CONTENT_DIR, 'themes', `${theme.id}.json`), JSON.stringify(theme, null, 2) + '\n', 'utf8');
   // Mode principal « Anime Blind Bid » : le piocheur voit la carte, les autres surenchérissent à l'aveugle.
-  // Verdict aux points (PointsVerdictMode) ; le piocheur vend la carte (seller-collects) et paie pour la jeter (discard-fee).
+  // Verdict aux points (PointsVerdictMode) ; on ne gagne jamais d'or : acheter coûte, laisser passer est gratuit, mais le piocheur paie cher pour jeter une carte (discard-fee).
   const preset = {
     id: theme.id,
     name: u.name,
@@ -152,8 +152,7 @@ async function importUniverse(u) {
     rules: [
       { ref: 'budget-cap' },
       { ref: 'anti-snipe', params: { extendSeconds: 5 } },
-      { ref: 'seller-collects' },
-      { ref: 'discard-fee', params: { amount: 50 } },
+      { ref: 'discard-fee', params: { amount: 150 } },
     ],
   };
   await writeFile(path.join(CONTENT_DIR, 'presets', `${preset.id}.json`), JSON.stringify(preset, null, 2) + '\n', 'utf8');

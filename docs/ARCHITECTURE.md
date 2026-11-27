@@ -256,7 +256,13 @@ Chaque tâche est testable seule.
     vendeur ; nouvel événement `LotDiscarded` / hook `ON_LOT_DISCARDED` pour un lot invendu.
   - Règle `seller-collects` : le gagnant paie le piocheur ; si le piocheur garde sa carte (personne
     n'a dépassé son ouverture), il paie la banque.
-  - Règle `discard-fee` (`amount`, défaut 50) : le piocheur paie pour jeter une carte invendue.
+  - Règle `discard-fee` (`amount`, défaut 150) : le piocheur paie pour jeter une carte invendue.
+- Économie revue (2026-11-27, demande produit) : **on ne gagne jamais d'or**. Acheter coûte le prix
+  (payé à la banque, y compris par le piocheur qui garde sa carte), passer ne coûte rien, laisser filer
+  une carte invendue coûte cher au piocheur (`discard-fee` à 150). Les presets anime n'activent plus
+  `seller-collects` (la règle reste au catalogue). `RoomView.ruleParams` donne les montants réels au
+  client ; `GameSetup.activeRules` porte les paramètres complets (défauts de la règle compris).
+  Exception connue : le joker vol (`joker-steal`, preset manga-chaos) rembourse encore la victime.
   - Bots : en verdict `points`, une carte vaut 10 pièces par point de rareté (`BotEstimator`).
   - Les montants affichés dans les règles du salon (50, 25) sont écrits dans les textes i18n :
     à aligner si on change les paramètres.

@@ -61,10 +61,11 @@ import { RoomSetupComponent } from './room-setup.component';
               <li>{{ 'lobby.rule2' | t }}</li>
               @if (room.rules.includes('seller-collects')) { <li>{{ 'lobby.ruleSale' | t }}</li> }
               @if (room.rules.includes('discard-fee')) {
-                <li>{{ 'lobby.ruleDiscard' | t }}</li>
+                <li>{{ 'lobby.ruleDiscard' | t: { n: discardFee() } }}</li>
               } @else {
                 <li>{{ 'lobby.rule3' | t }}</li>
               }
+              @if (!room.rules.includes('seller-collects')) { <li>{{ 'lobby.ruleGold' | t }}</li> }
               @if (room.verdictMode === 'points') {
                 <li>{{ 'lobby.rule4points' | t: { n: room.slots.length } }}</li>
                 <li>{{ 'lobby.rule5points' | t }}</li>
@@ -109,6 +110,8 @@ export class LobbyComponent {
   readonly blindBid = computed(() => this.game.room()?.bidMode === 'drawer');
   readonly copied = signal(false);
   readonly setupOpen = signal(false);
+  /** Or payé par le piocheur pour jeter une carte invendue (règle discard-fee). */
+  readonly discardFee = computed(() => Number(this.game.room()?.ruleParams?.['discard-fee']?.['amount'] ?? 0));
   readonly preset = computed(() => this.game.presets().find(p => p.id === this.game.room()?.presetId) ?? null);
   readonly disclaimer = computed(() => this.preset()?.disclaimer ?? null);
   budget = 1000;

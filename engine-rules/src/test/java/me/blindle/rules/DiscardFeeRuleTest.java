@@ -30,7 +30,7 @@ class DiscardFeeRuleTest {
     void sellerPaysTheFeeWhenNobodyBuys() {
         GameState s = applied(rule.apply(new GameEvent.LotDiscarded(1, "p1"), started(), RuleParams.EMPTY));
 
-        assertThat(s.player("p1").orElseThrow().budget()).isEqualTo(950);
+        assertThat(s.player("p1").orElseThrow().budget()).isEqualTo(850);
         assertThat(s.player("p2").orElseThrow().budget()).isEqualTo(1000);
     }
 

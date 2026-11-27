@@ -102,8 +102,8 @@ import { TimerComponent } from '../ui/timer.component';
                   {{ (situation() === 'my-draw' ? 'table.open' : 'table.bid') | t: { amount: amount } }}
                 </button>
                 <button class="btn" (click)="game.pass()"
-                        [attr.title]="situation() === 'my-draw' && discardFee() ? ('table.passDrawHint' | t) : null">
-                  {{ (situation() === 'my-draw' && discardFee() ? 'table.passDraw' : 'table.pass') | t }}
+                        [attr.title]="situation() === 'my-draw' && discardFee() ? ('table.passDrawHint' | t: { n: discardFee() }) : null">
+                  {{ (situation() === 'my-draw' && discardFee() ? 'table.passDraw' : 'table.pass') | t: { n: discardFee() } }}
                 </button>
               }
             </div>
@@ -152,7 +152,7 @@ export class TableComponent {
   readonly minBid = computed(() => (this.leader()?.amount ?? 0) + 10);
 
   /** Jeter une carte coûte de l'or au piocheur (règle discard-fee). */
-  readonly discardFee = computed(() => this.game.room()?.rules.includes('discard-fee') ?? false);
+  readonly discardFee = computed(() => Number(this.game.room()?.ruleParams?.['discard-fee']?.['amount'] ?? 0));
 
   /** Ce que la table raconte en ce moment. */
   readonly situation = computed(() => {
