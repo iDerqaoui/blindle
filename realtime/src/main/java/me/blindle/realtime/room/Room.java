@@ -30,7 +30,9 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.LinkedHashSet;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Une partie en cours : tient le {@link GameState} courant, enchaîne les phases
@@ -45,8 +47,8 @@ public final class Room {
     static final int BOT_REVEAL_SEC = 4;
 
     private final String code;
-    private final GameSetup setup;
-    private final GameEngine engine;
+    private GameSetup setup;
+    private GameEngine engine;
     private final RoomSettings settings;
     private final TimerScheduler timers;
     private final Broadcaster broadcaster;
@@ -63,6 +65,8 @@ public final class Room {
     private final DailyContext daily;
     private Integer dailyRank;
     private final Map<String, BotStrategy> bots = new LinkedHashMap<>();
+    /** Joueurs humains dont la connexion est tombée (en partie : ils restent, les minuteries jouent pour eux). */
+    private final Set<String> disconnected = new LinkedHashSet<>();
 
     public Room(String code, long seed, GameSetup setup, RoomSettings settings, TimerScheduler timers,
                 Broadcaster broadcaster, Clock clock) {
@@ -101,17 +105,103 @@ public final class Room {
 
     public synchronized RoomSnapshot snapshot() {
         return new RoomSnapshot(code, setup, state, hostId, phaseDeadline, votes, clock.instant(), history,
-                daily == null ? null : daily.date(), dailyRank, profilesOfBots());
+                daily == null ? null : daily.date(), dailyRank, profilesOfBots(), disconnected);
     }
 
     public synchronized boolean hasPlayer(String playerId) {
         return state.player(playerId).isPresent();
     }
 
+    public synchronized boolean isHost(String playerId) {
+        return playerId != null && playerId.equals(hostId);
+    }
+
+    /** Setup courant (preset + personnalisation de l'hôte). */
+    public synchronized GameSetup setup() {
+        return setup;
+    }
+
+    // ------------------------------------------------------------------ connexion et hôte
+
+    /**
+     * La connexion d'un joueur est tombée. En salle d'attente il quitte la room ; en partie il reste,
+     * marqué déconnecté. S'il était hôte, l'hôte passe au joueur humain connecté suivant.
+     */
+    public synchronized void disconnect(String playerId) {
+        if (state.player(playerId).isEmpty() || disconnected.contains(playerId)) {
+            return;
+        }
+        if (state.phase() == Phase.LOBBY) {
+            apply(engine.removePlayer(state, playerId));
+        } else {
+            disconnected.add(playerId);
+            lastActivity = clock.instant();
+        }
+        if (playerId.equals(hostId)) {
+            hostId = nextHost(playerId);
+        }
+        publish();
+    }
+
+    /** L'hôte cède sa place à un autre joueur humain connecté. */
+    public synchronized void transferHost(String playerId, String targetId) {
+        requireHost(playerId);
+        PlayerState target = state.player(targetId)
+                .orElseThrow(() -> new GameException("UNKNOWN_PLAYER", "Joueur inconnu"));
+        if (target.bot() || disconnected.contains(targetId)) {
+            throw new GameException("BAD_HOST", "L'hôte doit être un joueur connecté");
+        }
+        hostId = targetId;
+        publish();
+    }
+
+    /** Joueur humain connecté suivant l'hôte qui part, dans l'ordre d'arrivée (en boucle) ; null s'il n'y en a pas. */
+    private String nextHost(String leaving) {
+        List<PlayerState> ps = state.players();
+        int from = 0;
+        for (int i = 0; i < ps.size(); i++) {
+            if (ps.get(i).id().equals(leaving)) {
+                from = i + 1;
+            }
+        }
+        for (int k = 0; k < ps.size(); k++) {
+            PlayerState p = ps.get((from + k) % ps.size());
+            if (!p.bot() && !p.id().equals(leaving) && !disconnected.contains(p.id())) {
+                return p.id();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * L'hôte applique une personnalisation de sa room (cartes, raretés, règles), déjà validée par
+     * la fabrique. Les manches sont ramenées au nombre de cartes du nouveau paquet si besoin.
+     */
+    public synchronized void customize(String playerId, GameSetup customized) {
+        requireHost(playerId);
+        if (daily != null) {
+            throw new GameException("DAILY_FIXED", "Le défi du jour ne se personnalise pas");
+        }
+        if (state.phase() != Phase.LOBBY) {
+            throw new GameException("WRONG_PHASE", "La partie a déjà commencé");
+        }
+        if (!customized.preset().id().equals(setup.preset().id())) {
+            throw new GameException("BAD_ROOM_SETUP", "Preset différent de celui de la room");
+        }
+        GameSettings s = state.settings();
+        GameSettings fitted = new GameSettings(s.budget(), Math.min(s.rounds(), customized.deck().size()),
+                s.teamSize(), s.hintLevels(), s.bidTimerSec());
+        apply(customized.engine().replaceContent(state, fitted, customized.theme().toSlots(), customized.deck()));
+        setup = customized;
+        engine = customized.engine();
+        publish();
+    }
+
     // ------------------------------------------------------------------ actions joueurs
 
     public synchronized void join(String playerId, String name) {
         if (state.player(playerId).isPresent()) {
+            disconnected.remove(playerId);
             broadcaster.sendTo(snapshot(), playerId);
             return;
         }

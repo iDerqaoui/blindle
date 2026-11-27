@@ -21,7 +21,26 @@ public final class Views {
                            List<SlotView> slots, List<PlayerSummary> players, LotView lot,
                            Long deadline, Long serverTime, List<String> log, ResultView result,
                            int votesReceived, DailyView daily, String drawerId, List<CardView> trash,
-                           ArtView art) {
+                           ArtView art, boolean customized, int deckSize) {
+    }
+
+    /**
+     * Ce que l'hôte peut personnaliser dans sa room, envoyé à lui seul sur {@code /user/queue/catalog}.
+     *
+     * @param rarities raretés existantes du thème (seules valeurs possibles pour une carte)
+     */
+    public record RoomCatalogView(String type, String code, List<CatalogCard> cards, List<String> rarities,
+                                  List<CatalogRule> rules) {
+    }
+
+    /** @param baseRarity rareté fixée par l'administrateur ; {@code rarity} celle de la room */
+    public record CatalogCard(String id, String name, String image, String baseRarity, String rarity,
+                              boolean trap, boolean included) {
+    }
+
+    /** @param params paramètres actifs (ou par défaut si la règle est inactive) */
+    public record CatalogRule(String type, boolean active, Map<String, Object> params,
+                              Map<String, Object> defaults, Set<String> requiredBidModes, Set<String> conflictsWith) {
     }
 
     /**
@@ -39,7 +58,7 @@ public final class Views {
 
     /** @param botProfile profil du bot (aggressive, stingy…), null pour un humain : le client traduit le nom */
     public record PlayerSummary(String id, String name, int budget, int bonus, boolean host, boolean bot, String botProfile,
-                                boolean acted, List<TeamEntry> team) {
+                                boolean acted, List<TeamEntry> team, boolean connected) {
     }
 
     /** @param paid prix payé (public : annoncé dans le journal) */

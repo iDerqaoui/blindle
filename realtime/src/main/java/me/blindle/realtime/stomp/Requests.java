@@ -32,4 +32,15 @@ public final class Requests {
 
     public record CastVote(String teamOwnerId) {
     }
+
+    public record TransferHost(String playerId) {
+    }
+
+    /**
+     * Personnalisation de la room par l'hôte. {@code rules} null : règles du preset ; liste (même vide) :
+     * exactement ces règles.
+     */
+    public record Customize(java.util.Set<String> excludedCards, java.util.Map<String, String> rarities,
+                            java.util.List<me.blindle.content.Preset.RuleRef> rules) {
+    }
 }

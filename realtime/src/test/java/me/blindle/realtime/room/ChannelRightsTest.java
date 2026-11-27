@@ -43,7 +43,8 @@ class ChannelRightsTest {
         access = new ChannelAccess(CONTENT, List.of());
         DailyChallenge daily = new DailyChallenge(rooms, RoomTest.FACTORY, new DailyLeaderboard(), clock,
                 "Europe/Paris");
-        controller = new GameController(rooms, daily, new BotCatalog(List.of()), access, CONTENT);
+        controller = new GameController(rooms, daily, new BotCatalog(List.of()), access, CONTENT,
+                RoomTest.FACTORY);
     }
 
     @Test

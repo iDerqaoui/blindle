@@ -9,6 +9,9 @@ import me.blindle.modes.bot.BotCatalog;
 import me.blindle.realtime.room.Room;
 import me.blindle.realtime.room.RoomRegistry;
 import me.blindle.realtime.solo.DailyChallenge;
+import me.blindle.realtime.game.GameFactory;
+import me.blindle.realtime.game.RoomOverrides;
+import me.blindle.realtime.view.ViewProjector;
 import me.blindle.realtime.view.Views;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,9 +37,11 @@ public class GameController {
     private final BotCatalog bots;
     private final ChannelAccess access;
     private final ContentRegistry content;
+    private final GameFactory factory;
 
     public GameController(RoomRegistry rooms, DailyChallenge daily, BotCatalog bots, ChannelAccess access,
-                          ContentRegistry content) {
+                          ContentRegistry content, GameFactory factory) {
+        this.factory = factory;
         this.access = access;
         this.content = content;
         this.rooms = rooms;
@@ -112,6 +117,37 @@ public class GameController {
     @MessageMapping("/room/{code}/forfeit")
     public void forfeit(@DestinationVariable String code, Principal player) {
         rooms.require(code).forfeit(player.getName());
+    }
+
+    /** L'hôte cède sa place à un autre joueur connecté. */
+    @MessageMapping("/room/{code}/host")
+    public void transferHost(@DestinationVariable String code, Requests.TransferHost req, Principal player) {
+        rooms.require(code).transferHost(player.getName(), req.playerId());
+    }
+
+    /** Catalogue de personnalisation (cartes du thème, règles), envoyé à l'hôte seul. */
+    @MessageMapping("/room/{code}/catalog")
+    @SendToUser(destinations = "/queue/catalog", broadcast = false)
+    public Views.RoomCatalogView catalog(@DestinationVariable String code, Principal player) {
+        Room room = rooms.require(code);
+        if (!room.isHost(player.getName())) {
+            throw new GameException("NOT_HOST", "Seul l'hôte peut faire ça");
+        }
+        return ViewProjector.catalog(room.code(), room.setup(), factory.catalog());
+    }
+
+    /** L'hôte personnalise sa room (cartes, raretés, règles) ; renvoie le catalogue à jour. */
+    @MessageMapping("/room/{code}/customize")
+    @SendToUser(destinations = "/queue/catalog", broadcast = false)
+    public Views.RoomCatalogView customize(@DestinationVariable String code, Requests.Customize req,
+                                           Principal player) {
+        Room room = rooms.require(code);
+        if (!room.isHost(player.getName())) {
+            throw new GameException("NOT_HOST", "Seul l'hôte peut faire ça");
+        }
+        var overrides = new RoomOverrides(req.excludedCards(), req.rarities(), req.rules());
+        room.customize(player.getName(), factory.customized(room.preset().id(), overrides));
+        return ViewProjector.catalog(room.code(), room.setup(), factory.catalog());
     }
 
     @MessageMapping("/room/{code}/vote")

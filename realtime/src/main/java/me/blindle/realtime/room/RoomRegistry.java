@@ -20,6 +20,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class RoomRegistry {
 
+    private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(RoomRegistry.class);
+
     private static final String ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ"; // sans I ni O
     private static final int CODE_LENGTH = 4;
     private static final Duration IDLE_TTL = Duration.ofHours(2);
@@ -71,6 +73,19 @@ public class RoomRegistry {
             throw new GameException("ROOM_NOT_FOUND", "Aucune room avec le code " + code);
         }
         return room;
+    }
+
+    /** Une connexion est tombée : chaque room où jouait ce joueur en est informée. */
+    public void disconnect(String playerId) {
+        for (Room room : rooms.values()) {
+            if (room.hasPlayer(playerId)) {
+                try {
+                    room.disconnect(playerId);
+                } catch (RuntimeException e) {
+                    LOG.warn("Room {} : déconnexion de {} mal traitée", room.code(), playerId, e);
+                }
+            }
+        }
     }
 
     public int size() {

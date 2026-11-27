@@ -11,6 +11,8 @@ import me.blindle.core.model.SlotDef;
 import me.blindle.modes.CardValuation;
 import me.blindle.modes.RarityPoints;
 import me.blindle.modes.Vote;
+import me.blindle.core.rule.Rule;
+import me.blindle.realtime.game.GameSetup;
 import me.blindle.realtime.room.Room;
 import me.blindle.realtime.room.RoomSnapshot;
 import me.blindle.realtime.solo.DailyShare;
@@ -56,7 +58,7 @@ public final class ViewProjector {
             }
             boolean acted = s.phase() == Phase.BIDDING && s.lot() != null && s.lot().hasActed(p.id());
             players.add(new Views.PlayerSummary(p.id(), p.name(), p.budget(), p.bonus(), p.id().equals(r.hostId()),
-                    p.bot(), r.botProfiles().get(p.id()), acted, team));
+                    p.bot(), r.botProfiles().get(p.id()), acted, team, !r.disconnected().contains(p.id())));
         }
         List<Views.SlotView> slots = s.slots().stream()
                 .map(x -> new Views.SlotView(x.id(), x.label(), x.requiredTags())).toList();
@@ -67,11 +69,37 @@ public final class ViewProjector {
         return new Views.RoomView("room", r.code(), s.version(), s.phase().name(),
                 r.setup().preset().id(), r.setup().preset().name(), r.setup().theme().name(),
                 r.setup().bidMode().id(), r.setup().verdictMode().id(),
-                r.setup().preset().rules().stream().map(x -> x.ref()).toList(), r.hostId(),
+                r.setup().activeRules().stream().map(x -> x.ref()).toList(), r.hostId(),
                 s.roundIndex(), s.settings().rounds(), slots, players, lot(s, r.setup().bidMode().bidsVisible(), r.setup().bidMode().drawerId(s) != null, theme),
                 deadline == null ? null : deadline.toEpochMilli(), r.now().toEpochMilli(),
                 List.copyOf(log), result, r.votes().size(), daily(r), drawer(r),
-                s.discarded().stream().map(c -> card(c, theme)).toList(), art(theme));
+                s.discarded().stream().map(c -> card(c, theme)).toList(), art(theme),
+                !r.setup().overrides().isEmpty(), r.setup().deck().size());
+    }
+
+    /** Catalogue de personnalisation de la room, pour son hôte seul. */
+    public static Views.RoomCatalogView catalog(String code, GameSetup setup, List<Rule> catalog) {
+        Theme theme = setup.theme();
+        Set<String> inDeck = new java.util.HashSet<>();
+        setup.deck().forEach(c -> inDeck.add(c.id()));
+        List<Views.CatalogCard> cards = theme.cards().stream()
+                .map(c -> new Views.CatalogCard(c.id(), c.name(), c.image(), c.rarity(),
+                        setup.overrides().rarities().getOrDefault(c.id(), c.rarity()),
+                        Boolean.TRUE.equals(c.isTrap()), inDeck.contains(c.id())))
+                .toList();
+        List<String> rarities = theme.cards().stream().map(Theme.CardDefinition::rarity)
+                .filter(java.util.Objects::nonNull).distinct().toList();
+        Map<String, Map<String, Object>> active = new java.util.LinkedHashMap<>();
+        setup.activeRules().forEach(r -> active.put(r.ref(), r.params()));
+        List<Views.CatalogRule> rules = catalog.stream().map(rule -> {
+            Map<String, Object> params = new java.util.LinkedHashMap<>(rule.defaultParams());
+            if (active.containsKey(rule.type())) {
+                params.putAll(active.get(rule.type()));
+            }
+            return new Views.CatalogRule(rule.type(), active.containsKey(rule.type()), params,
+                    rule.defaultParams(), rule.requiredBidModes(), rule.conflictsWith());
+        }).toList();
+        return new Views.RoomCatalogView("catalog", code, cards, rarities, rules);
     }
 
     public static Views.PlayerView player(RoomSnapshot r, String playerId) {
