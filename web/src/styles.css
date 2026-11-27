@@ -700,3 +700,58 @@ a.btn { text-decoration: none; display: inline-block; }
 .setup-card-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .setup-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 12px; }
 .player-offline { opacity: 0.5; }
+
+/* ------------------------------------------------------------------ défi « Who's That? Auction » */
+
+.who-banner {
+  display: flex; align-items: center; gap: 14px; max-width: 760px; margin: 0 auto 28px; padding: 14px 18px;
+  border-radius: var(--radius); border: 1px solid var(--accent); color: var(--text); text-decoration: none;
+}
+.who-banner:hover { box-shadow: 0 0 0 3px rgb(255 181 71 / 20%); }
+.who-banner > span:nth-child(2) { display: grid; gap: 2px; flex: 1; }
+.who-banner small { color: var(--muted); }
+.who-banner-icon { font-size: 2rem; }
+.who { max-width: 900px; margin: 0 auto; }
+.who-head { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
+.who-head h1 { margin: 0; }
+.who-head h1 span { color: var(--universe); }
+.who-error { background: rgb(240 96 93 / 18%); border-radius: var(--radius-sm); padding: 8px 12px; }
+.who-rules { padding-left: 0; list-style: none; display: grid; gap: 8px; }
+.who-intro .btn.big { width: 100%; margin: 8px 0; }
+.who-hud { display: flex; gap: 18px; align-items: center; font-weight: 700; margin-bottom: 14px; flex-wrap: wrap; }
+.who-slots { display: flex; gap: 6px; margin-left: auto; }
+.who-slot { width: 34px; height: 46px; border-radius: 6px; object-fit: cover; border: 2px solid var(--border); }
+.who-slot.empty { display: inline-block; background: var(--bg-2); }
+.who-slot.legendary { border-color: #f5c542; } .who-slot.epic { border-color: #b06df0; }
+.who-slot.rare { border-color: #4c9be8; }
+.who-stage { display: grid; grid-template-columns: minmax(220px, 300px) 1fr; gap: 22px; align-items: start; }
+.who-card { border-radius: var(--radius); overflow: hidden; border: 2px solid var(--universe); background: #000; }
+.who-pixel { display: block; width: 100%; aspect-ratio: 240 / 340; object-fit: cover; image-rendering: pixelated; }
+.who-timer { height: 6px; background: var(--bg-2); }
+.who-timer span { display: block; height: 100%; background: var(--accent); transition: width 0.1s linear; }
+.who-side { display: grid; gap: 10px; }
+.who-side .btn.big { width: 100%; font-size: 1.2rem; }
+.who-ladder { display: flex; gap: 6px; list-style: none; padding: 0; margin: 0; flex-wrap: wrap; }
+.who-ladder li { padding: 4px 8px; border-radius: 6px; background: var(--bg-2); color: var(--muted); font-variant-numeric: tabular-nums; }
+.who-ladder li.past { opacity: 0.45; text-decoration: line-through; }
+.who-ladder li.now { background: var(--accent); color: #1a1a1a; font-weight: 800; transform: scale(1.12); }
+.who-reveal { display: grid; grid-template-columns: minmax(200px, 280px) 1fr; gap: 22px; align-items: center;
+  padding: 18px; border-radius: var(--radius); background: var(--panel); border: 2px solid var(--border);
+  animation: who-flip 0.5s ease-out; }
+.who-reveal img { width: 100%; border-radius: var(--radius-sm); }
+.who-reveal.legendary { border-color: #f5c542; box-shadow: 0 0 40px rgb(245 197 66 / 45%); }
+.who-reveal.epic { border-color: #b06df0; box-shadow: 0 0 30px rgb(176 109 240 / 35%); }
+.who-reveal.rare { border-color: #4c9be8; }
+.who-reveal.missed img { filter: grayscale(0.7); }
+.who-called { color: var(--accent); font-weight: 800; }
+@keyframes who-flip { from { transform: rotateY(80deg) scale(0.9); opacity: 0; } to { transform: none; opacity: 1; } }
+.who-end { display: grid; gap: 14px; }
+.who-share { background: var(--bg-2); padding: 12px; border-radius: var(--radius-sm); white-space: pre-wrap; font-size: 1.1rem; }
+.who-regrets { list-style: none; padding: 0; display: grid; gap: 8px; }
+.who-regrets li { display: grid; grid-template-columns: 44px 1fr auto; gap: 10px; align-items: center; }
+.who-regrets img { width: 44px; height: 60px; object-fit: cover; border-radius: 6px; }
+@media (max-width: 640px) {
+  .who-stage, .who-reveal { grid-template-columns: 1fr; }
+  .who-slots { margin-left: 0; }
+}
+a.mode { text-decoration: none; color: inherit; }

@@ -110,6 +110,28 @@ joueur), stats des parties sans compte. Signaler toute nouvelle dépendance.
 - Fait le 2026-11-27 : passation, cession, retrait en LOBBY, personnalisation de room (cartes,
   rareté, règles) côté serveur et front. Reste : édition par l'admin de la base (points 1 à 3).
 
+### Défi du jour « Who's That? Auction » (validé le 2026-11-27)
+
+Défi quotidien solo du mode anime, choisi par l'utilisateur (remplace à terme `defi-manga` /
+`defi-pays` comme défi principal) : reconnaître des personnages flous et les acheter à l'aveugle.
+
+- **Univers du jour** : rotation des thèmes illustrés avec rareté (anime), un jour « crossover » qui
+  les mélange tous. 10 personnages, mêmes pour tout le monde (seed du jour) : 1 légendaire, 2 épiques,
+  3 rares, 4 communes si possible.
+- **Une carte à la fois** : l'image part en gros pixels et se précise par paliers (7 niveaux) ; le
+  prix monte avec chaque palier (40 → 400). Acheter quand on ose ; ne rien faire = la carte part,
+  gratuitement. 1000 d'or, 5 slots.
+- **« Call it! »** : nommer le personnage avant d'acheter (liste du roster de l'univers en
+  autocomplétion) ; nom juste = points de la carte doublés.
+- **Jackpot** : la légendaire du jour reste floue 2 paliers de plus que les autres ; l'acheter = +30.
+- **Score** : points de rareté (×2 si nommé) + jackpot − 25 par slot vide ; égalité : or restant.
+- **Fin** : écran des regrets (ce qu'on a laissé passer, à quel prix), classement du jour, grille à
+  partager sans spoiler (🟨🟪🟦⬜ achetée, ⬛ laissée, ⚡ nommée, 🎰 jackpot).
+- **Serveur seul juge** : prix et palier calculés à l'heure serveur ; images pixelisées **côté
+  serveur**, un palier n'est servi que s'il est atteint ; l'URL d'origine n'est envoyée qu'à la
+  révélation. Un essai par jour par compte (connecté) ou par navigateur (cookie).
+- Plus tard : classement en base, série de jours (streak), leurre (« decoy »), % du score maximal.
+
 ### Notes du 2026-11-27
 
 - Or : les bots misent toujours au plus la valeur estimée, même quand l'or restant ne servira plus ; à revoir en jouant.

@@ -1,6 +1,7 @@
 import { Component, HostListener, computed, inject, signal } from '@angular/core';
 import { AuthService } from './auth/auth.service';
 import { AdminComponent } from './screens/admin.component';
+import { WhoComponent } from './screens/who.component';
 import { GameService } from './game/game.service';
 import { I18nService, LANGS, Lang, TranslatePipe } from './i18n/i18n';
 import { HomeComponent } from './screens/home.component';
@@ -16,7 +17,7 @@ import { ModalComponent } from './ui/modal.component';
 @Component({
   selector: 'app-root',
   imports: [HomeComponent, LobbyComponent, AuctionComponent, TableComponent, VerdictComponent, ResultsComponent,
-    TeamBoardComponent, ModalComponent, AdminComponent, TranslatePipe],
+    TeamBoardComponent, ModalComponent, AdminComponent, WhoComponent, TranslatePipe],
   template: `
     <div class="backdrop" aria-hidden="true">
       @if (ambiance(); as a) {
@@ -95,6 +96,7 @@ import { ModalComponent } from './ui/modal.component';
     <main [class.wide]="screen() === 'table'">
       @switch (screen()) {
         @case ('admin') { <app-admin /> }
+        @case ('who') { <app-who /> }
         @case ('home') { <app-home /> }
         @case ('lobby') { <app-lobby /> }
         @case ('table') { <app-table /> }
@@ -199,6 +201,9 @@ export class App {
     const room = this.game.room();
     const phase = room?.phase;
     if (!phase || !this.game.me()) {
+      if (this.hash() === '#who') {
+        return 'who';
+      }
       return this.hash() === '#admin' && this.auth.isAdmin() ? 'admin' : 'home';
     }
     switch (phase) {

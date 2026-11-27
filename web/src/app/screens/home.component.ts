@@ -74,14 +74,14 @@ const TRAINING_BOTS = ['aggressive', 'strategist', 'bluffer'];
             </span>
           </div>
 
-          <div class="mode disabled soon">
+          <a class="mode" href="#who">
             <span class="medallion">@if (u.faces[3]; as f) { <img [src]="f" alt="" /> } @else { ☀️ }</span>
             <span class="mode-text">
-              <strong>{{ 'mode.daily' | t }}</strong>
-              <small>{{ 'mode.dailySub' | t }}</small>
+              <strong>{{ 'who.tileTitle' | t }}</strong>
+              <small>{{ 'who.tileSub' | t }}</small>
             </span>
-            <span class="pill">{{ 'mode.soon' | t }}</span>
-          </div>
+            <span class="pill pill-points">{{ 'who.tileNew' | t }}</span>
+          </a>
         </nav>
 
         @if (!hasName()) { <p class="hint-line">{{ 'home.needName' | t }}</p> }
@@ -107,6 +107,15 @@ const TRAINING_BOTS = ['aggressive', 'strategist', 'bluffer'];
         <h1>{{ 'home.title1' | t }} <span>{{ 'home.title2' | t }}</span></h1>
         <p>{{ 'home.tagline' | t }}</p>
       </section>
+
+      <a class="who-banner glass" href="#who">
+        <span class="who-banner-icon">❓</span>
+        <span>
+          <strong>{{ 'who.tileTitle' | t }}</strong>
+          <small>{{ 'who.bannerSub' | t }}</small>
+        </span>
+        <span class="btn primary small">{{ 'who.playToday' | t }}</span>
+      </a>
 
       <section class="section">
         <div class="section-head center">
