@@ -65,6 +65,20 @@ export class AuthService {
     }
   }
 
+  /** Fournisseurs externes (boutons) ; « password » est la connexion admin par mot de passe. */
+  readonly oauthProviders = computed(() => this.providers().filter(p => p !== 'password'));
+  readonly passwordLogin = computed(() => this.providers().includes('password'));
+
+  /** Connexion admin par mot de passe ; renvoie false si refusé. */
+  async loginWithPassword(password: string): Promise<boolean> {
+    const res = await apiFetch('/api/auth/admin-password', { method: 'POST', body: JSON.stringify({ password }) });
+    if (!res.ok) {
+      return false;
+    }
+    await this.load();
+    return true;
+  }
+
   login(provider: string): void {
     window.location.href = `/oauth2/authorization/${encodeURIComponent(provider)}`;
   }

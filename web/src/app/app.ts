@@ -127,12 +127,22 @@ import { ModalComponent } from './ui/modal.component';
       <app-modal [title]="'account.loginTitle' | t" (closed)="loginOpen.set(false)">
         <p class="muted">{{ 'account.loginBody' | t }}</p>
         <div class="login-buttons">
-          @for (p of auth.providers(); track p) {
+          @for (p of auth.oauthProviders(); track p) {
             <button class="btn big" [class]="'btn big login-' + p" (click)="auth.login(p)">
               {{ 'account.with.' + p | t }}
             </button>
           }
         </div>
+        @if (auth.passwordLogin()) {
+          <form class="admin-password" (submit)="$event.preventDefault(); passwordLogin(pw.value)">
+            <label class="name-field">
+              <span>{{ 'account.adminPassword' | t }}</span>
+              <input class="input" #pw type="password" autocomplete="current-password" />
+            </label>
+            @if (passwordError()) { <p class="admin-error">{{ 'account.wrongPassword' | t }}</p> }
+            <button class="btn primary" type="submit">{{ 'account.adminLogin' | t }}</button>
+          </form>
+        }
       </app-modal>
     }
 
@@ -237,6 +247,17 @@ export class App {
     this.renameError.set(error);
     if (!error) {
       this.accountOpen.set(false);
+    }
+  }
+
+  readonly passwordError = signal(false);
+
+  async passwordLogin(password: string): Promise<void> {
+    const ok = await this.auth.loginWithPassword(password);
+    this.passwordError.set(!ok);
+    if (ok) {
+      this.loginOpen.set(false);
+      location.hash = '#admin';
     }
   }
 

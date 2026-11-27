@@ -20,12 +20,18 @@ public class AuthProviders {
 
     private static final String REDIRECT = "{baseUrl}/login/oauth2/code/{registrationId}";
 
+    /** Connexion admin par mot de passe ({@code blindle.admin.password}), sans fournisseur externe. */
+    public static final String PASSWORD = "password";
+
     private final List<ClientRegistration> registrations;
+    private final boolean password;
 
     public AuthProviders(@Value("${blindle.auth.google.client-id:}") String googleId,
                          @Value("${blindle.auth.google.client-secret:}") String googleSecret,
                          @Value("${blindle.auth.discord.client-id:}") String discordId,
-                         @Value("${blindle.auth.discord.client-secret:}") String discordSecret) {
+                         @Value("${blindle.auth.discord.client-secret:}") String discordSecret,
+                         @Value("${blindle.admin.password:}") String adminPassword) {
+        this.password = !adminPassword.isBlank();
         List<ClientRegistration> list = new ArrayList<>();
         if (!googleId.isBlank()) {
             // Sans « openid » : profil lu sur l'endpoint userinfo, comme pour Discord.
@@ -57,6 +63,10 @@ public class AuthProviders {
     }
 
     public List<String> ids() {
-        return registrations.stream().map(ClientRegistration::getRegistrationId).toList();
+        List<String> ids = new ArrayList<>(registrations.stream().map(ClientRegistration::getRegistrationId).toList());
+        if (password) {
+            ids.add(PASSWORD);
+        }
+        return ids;
     }
 }

@@ -277,4 +277,8 @@ export const FR: Record<string, string> = {
   'admin.loading': 'Chargement…',
   'admin.forbidden': 'Réservé aux admins. Connecte-toi avec un compte admin.',
   'admin.offline': 'Serveur injoignable.',
+  'account.adminPassword': 'Mot de passe admin',
+  'account.adminLogin': 'Se connecter en admin',
+  'account.wrongPassword': 'Mot de passe incorrect.',
+  'account.provider.local': 'le mot de passe admin',
 };

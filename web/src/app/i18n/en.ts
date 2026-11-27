@@ -277,4 +277,8 @@ export const EN: Record<string, string> = {
   'admin.loading': 'Loading…',
   'admin.forbidden': 'Admin access only. Log in with an admin account.',
   'admin.offline': 'Server unreachable.',
+  'account.adminPassword': 'Admin password',
+  'account.adminLogin': 'Log in as admin',
+  'account.wrongPassword': 'Wrong password.',
+  'account.provider.local': 'the admin password',
 };
