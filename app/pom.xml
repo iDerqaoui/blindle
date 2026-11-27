@@ -19,6 +19,19 @@
             <groupId>me.blindle</groupId>
             <artifactId>realtime</artifactId>
         </dependency>
+        <dependency>
+            <groupId>me.blindle</groupId>
+            <artifactId>accounts</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>me.blindle</groupId>
+            <artifactId>curation</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
     <build>
         <plugins>

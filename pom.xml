@@ -24,6 +24,8 @@
         <module>engine-modes</module>
         <module>content</module>
         <module>realtime</module>
+        <module>accounts</module>
+        <module>curation</module>
         <module>app</module>
     </modules>
 
@@ -65,6 +67,16 @@
             <dependency>
                 <groupId>me.blindle</groupId>
                 <artifactId>realtime</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>me.blindle</groupId>
+                <artifactId>accounts</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>me.blindle</groupId>
+                <artifactId>curation</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
