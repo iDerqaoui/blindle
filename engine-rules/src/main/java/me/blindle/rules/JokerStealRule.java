@@ -12,6 +12,7 @@ import me.blindle.core.rule.RuleResult;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -54,6 +55,11 @@ public class JokerStealRule implements Rule {
     @Override
     public int priority() {
         return EFFECT;
+    }
+
+    @Override
+    public Map<String, Object> defaultParams() {
+        return RuleParams.defaults("multiplier", 1.5, "usesPerGame", 1);
     }
 
     @Override

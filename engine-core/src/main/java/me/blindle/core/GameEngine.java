@@ -72,6 +72,27 @@ public final class GameEngine {
         return new Tx(s.withPlayers(ps).withLog(name + " rejoint la partie")).done();
     }
 
+    /** Retire un joueur de la salle d'attente (déconnexion). */
+    public Step removePlayer(GameState s, String playerId) {
+        phases.requirePhase(s.phase(), Phase.LOBBY);
+        PlayerState gone = s.player(playerId)
+                .orElseThrow(() -> new GameException("UNKNOWN_PLAYER", "Joueur inconnu : " + playerId));
+        List<PlayerState> ps = s.players().stream().filter(p -> !p.id().equals(playerId)).toList();
+        return new Tx(s.withPlayers(ps).withLog(gone.name() + " quitte la partie")).done();
+    }
+
+    /**
+     * Remplace slots, cartes et paramètres en salle d'attente (personnalisation d'une room) :
+     * joueurs, journal et version sont conservés.
+     */
+    public Step replaceContent(GameState s, GameSettings settings, List<SlotDef> slots, List<Card> cards) {
+        phases.requirePhase(s.phase(), Phase.LOBBY);
+        GameState fresh = create(s.gameId(), s.seed(), settings, slots, cards);
+        GameState next = new GameState(s.gameId(), s.seed(), Phase.LOBBY, settings, fresh.slots(), s.players(),
+                fresh.cards(), fresh.deck(), 0, null, List.of(), s.log(), null, s.version());
+        return new Tx(next).done();
+    }
+
     public Step updateSettings(GameState s, GameSettings settings) {
         phases.requirePhase(s.phase(), Phase.LOBBY);
         return new Tx(s.withSettings(settings)).done();

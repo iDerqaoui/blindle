@@ -55,6 +55,11 @@ public class TagSynergyRule implements Rule {
     }
 
     @Override
+    public Map<String, Object> defaultParams() {
+        return RuleParams.defaults("minCount", 2, "bonus", 1);
+    }
+
+    @Override
     public void validateParams(RuleParams params) {
         Params.from(params);
     }

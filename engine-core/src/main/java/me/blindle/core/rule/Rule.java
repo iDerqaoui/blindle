@@ -4,6 +4,7 @@ import me.blindle.core.event.GameEvent;
 import me.blindle.core.event.GameHook;
 import me.blindle.core.model.GameState;
 
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -42,6 +43,14 @@ public interface Rule {
     /** Règles incompatibles avec celle-ci. */
     default Set<String> conflictsWith() {
         return Set.of();
+    }
+
+    /**
+     * Paramètres par défaut, dans l'ordre d'affichage : ce qu'un hôte voit et peut régler en activant
+     * la règle pour sa room. Vide si la règle n'a pas de paramètre.
+     */
+    default Map<String, Object> defaultParams() {
+        return Map.of();
     }
 
     /** Vérifie les paramètres au chargement du preset ; lève IllegalArgumentException s'ils sont invalides. */

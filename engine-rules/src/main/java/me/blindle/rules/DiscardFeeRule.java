@@ -10,6 +10,7 @@ import me.blindle.core.rule.RuleResult;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -52,6 +53,11 @@ public class DiscardFeeRule implements Rule {
     @Override
     public Set<String> requiredBidModes() {
         return Set.of("drawer");
+    }
+
+    @Override
+    public Map<String, Object> defaultParams() {
+        return RuleParams.defaults("amount", 50);
     }
 
     @Override

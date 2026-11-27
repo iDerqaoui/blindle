@@ -10,6 +10,7 @@ import me.blindle.core.rule.RuleResult;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -51,6 +52,11 @@ public class AntiSnipeRule implements Rule {
     @Override
     public Set<String> requiredBidModes() {
         return Set.of("open", "drawer");
+    }
+
+    @Override
+    public Map<String, Object> defaultParams() {
+        return RuleParams.defaults("extendSeconds", 5);
     }
 
     @Override

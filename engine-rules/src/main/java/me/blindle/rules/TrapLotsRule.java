@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -54,6 +55,11 @@ public class TrapLotsRule implements Rule {
     @Override
     public Set<String> requiredThemeFields() {
         return Set.of("isTrap");
+    }
+
+    @Override
+    public Map<String, Object> defaultParams() {
+        return RuleParams.defaults("frequency", 0.2, "penalty", 50);
     }
 
     @Override

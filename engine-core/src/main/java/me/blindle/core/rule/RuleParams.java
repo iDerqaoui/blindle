@@ -15,6 +15,15 @@ public record RuleParams(Map<String, Object> values) {
         values = values == null ? Map.of() : Map.copyOf(values);
     }
 
+    /** Paramètres par défaut d'une règle, dans l'ordre donné : {@code defaults("base", 50, "step", 50)}. */
+    public static Map<String, Object> defaults(Object... keyValues) {
+        Map<String, Object> out = new java.util.LinkedHashMap<>();
+        for (int i = 0; i + 1 < keyValues.length; i += 2) {
+            out.put((String) keyValues[i], keyValues[i + 1]);
+        }
+        return java.util.Collections.unmodifiableMap(out);
+    }
+
     public static RuleParams of(Map<String, ?> values) {
         return new RuleParams(new HashMap<>(values));
     }

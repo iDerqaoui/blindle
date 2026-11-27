@@ -31,6 +31,32 @@ class GameEngineTest {
             .map(b -> new LotResult(b.playerId(), b.amount()));
 
     @Test
+    void removePlayerLeavesTheLobby() {
+        GameState s = Fixtures.lobby(engine, 1, 3);
+
+        GameState after = engine.removePlayer(s, "p2").state();
+
+        assertThat(after.players()).extracting(p -> p.id()).containsExactly("p1", "p3");
+        assertThat(after.version()).isGreaterThan(s.version());
+        assertThatThrownBy(() -> engine.removePlayer(engine.start(s).state(), "p2"))
+                .isInstanceOf(GameException.class);
+    }
+
+    @Test
+    void replaceContentKeepsPlayersAndVersionGoesUp() {
+        GameState s = Fixtures.lobby(engine, 1, 3);
+
+        GameState after = engine.replaceContent(s, Fixtures.settings(2), Fixtures.slots(), Fixtures.deck(4)).state();
+
+        assertThat(after.players()).isEqualTo(s.players());
+        assertThat(after.deck()).hasSize(4);
+        assertThat(after.cards()).hasSize(4);
+        assertThat(after.settings().rounds()).isEqualTo(2);
+        assertThat(after.version()).isGreaterThan(s.version());
+        assertThat(after.phase()).isEqualTo(Phase.LOBBY);
+    }
+
+    @Test
     void startGivesBudgetsAndShufflesDeck() {
         GameState s = engine.start(Fixtures.lobby(engine, 7, 3)).state();
 
