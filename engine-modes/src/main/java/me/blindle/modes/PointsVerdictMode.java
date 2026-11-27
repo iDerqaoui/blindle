@@ -16,12 +16,11 @@ import java.util.Set;
 
 /**
  * {@code points} : score = points de rareté des cartes de l'équipe ({@link RarityPoints})
- * + 1 point par tranche de {@link #GOLD_PER_POINT} pièces restantes
  * − {@link #EMPTY_SLOT_PENALTY} par slot vide.
  * <p>
- * L'or restant vaut quelque chose (thésauriser n'est pas inutile) mais peu : 1000 pièces = 50 points,
- * contre ~115 pour une équipe moyenne. Un slot vide coûte plus qu'une commune ne rapporte : attendre
- * les légendaires en laissant filer le reste devient risqué.
+ * L'or sert uniquement à acheter : l'or non dépensé ne rapporte aucun point (il ne sert qu'à
+ * départager). Un slot vide coûte plus qu'une commune ne rapporte : attendre les légendaires en
+ * laissant filer le reste devient risqué.
  * Égalité : bonus des règles, puis budget restant, puis seed.
  * Exige {@code rarity} sur toutes les cartes.
  */
@@ -29,7 +28,6 @@ import java.util.Set;
 public class PointsVerdictMode implements VerdictMode {
 
     public static final String ID = "points";
-    public static final int GOLD_PER_POINT = 20;
     public static final int EMPTY_SLOT_PENALTY = 25;
 
     @Override
@@ -62,11 +60,7 @@ public class PointsVerdictMode implements VerdictMode {
 
     public static int score(GameState state, PlayerState player) {
         int emptySlots = Math.max(0, state.slots().size() - player.team().size());
-        return teamPoints(state, player) + goldPoints(player) - EMPTY_SLOT_PENALTY * emptySlots;
-    }
-
-    public static int goldPoints(PlayerState player) {
-        return Math.max(0, player.budget()) / GOLD_PER_POINT;
+        return teamPoints(state, player) - EMPTY_SLOT_PENALTY * emptySlots;
     }
 
     public static int teamPoints(GameState state, PlayerState player) {

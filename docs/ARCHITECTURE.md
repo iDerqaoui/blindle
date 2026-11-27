@@ -243,7 +243,8 @@ Chaque tâche est testable seule.
   max(popularité, puissance) + 0,25 × min. Top 40 par score, rareté par quotas fixes : 10 %
   légendaires, 20 % épiques, 30 % rares, 40 % communes (4/8/12/16), identiques pour tous les univers.
 - Verdict `points` (`PointsVerdictMode`, générique) : points de rareté de l'équipe
-  (`RarityPoints` : 10 / 20 / 35 / 60) + 1 point par 20 pièces restantes − 25 par slot vide ;
+  (`RarityPoints` : 10 / 20 / 35 / 60) − 25 par slot vide ; l'or non dépensé ne vaut rien
+  (simplification du 2026-11-27 : l'or sert uniquement à acheter) ;
   égalité : bonus de règles, puis or restant, puis seed. `CardView.points` exposé.
 - Refonte de l'économie (2026-11-26), contre l'attentisme « tout laisser filer, n'acheter que les
   légendaires » : le piocheur **vend** la carte (inspiré de *Modern Art*).
@@ -253,5 +254,5 @@ Chaque tâche est testable seule.
     n'a dépassé son ouverture), il paie la banque.
   - Règle `discard-fee` (`amount`, défaut 50) : le piocheur paie pour jeter une carte invendue.
   - Bots : en verdict `points`, une carte vaut 10 pièces par point de rareté (`BotEstimator`).
-  - Les montants affichés dans les règles du salon (50, 20, 25) sont écrits dans les textes i18n :
+  - Les montants affichés dans les règles du salon (50, 25) sont écrits dans les textes i18n :
     à aligner si on change les paramètres.

@@ -70,8 +70,8 @@ export class ResultsComponent {
     return { value, spent: value - score, score };
   });
 
-  /** Détail du verdict « points » : cartes + or restant / 20 − 25 par slot vide (calcul serveur : PointsVerdictMode). */
-  pointsDetail(playerId: string): { cards: number; gold: number; empty: number } | null {
+  /** Détail du verdict « points » : cartes − 25 par slot vide, l'or restant ne compte pas (calcul serveur : PointsVerdictMode). */
+  pointsDetail(playerId: string): { cards: number; empty: number } | null {
     const room = this.game.room();
     const p = room?.players.find(x => x.id === playerId);
     if (room?.verdictMode !== 'points' || !p) {
@@ -79,7 +79,7 @@ export class ResultsComponent {
     }
     const cards = p.team.reduce((sum, t) => sum + (t.card?.points ?? 0), 0);
     const filled = p.team.filter(t => t.card).length;
-    return { cards, gold: Math.floor(Math.max(0, p.budget) / 20), empty: 25 * Math.max(0, room.slots.length - filled) };
+    return { cards, empty: 25 * Math.max(0, room.slots.length - filled) };
   }
 
   readonly board = computed(() =>

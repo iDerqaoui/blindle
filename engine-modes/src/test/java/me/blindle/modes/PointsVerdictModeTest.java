@@ -15,7 +15,7 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** Équipes de 3 slots (Fixtures) : score = points des cartes + or / 20 − 25 par slot vide. */
+/** Équipes de 3 slots (Fixtures) : score = points des cartes − 25 par slot vide ; l'or restant ne compte pas. */
 class PointsVerdictModeTest {
 
     private final PointsVerdictMode mode = new PointsVerdictMode();
@@ -38,21 +38,30 @@ class PointsVerdictModeTest {
 
     private GameState verdict() {
         return lobby()
-                // p1 : légendaire + commune = 70, 0 or, 1 slot vide → 70 + 0 − 25 = 45
+                // p1 : légendaire + commune = 70, 0 or, 1 slot vide → 70 − 25 = 45
                 .withPlayer("p1", p -> p.withCardInSlot("captain", "leg").withCardInSlot("right", "com")
                         .withBudget(0))
-                // p2 : épique + rare + commune = 65, 400 or → 65 + 20 = 85
+                // p2 : épique + rare + commune = 65, 400 or (sans valeur) → 65
                 .withPlayer("p2", p -> p.withCardInSlot("captain", "epi").withCardInSlot("right", "rar")
                         .withCardInSlot("support", "com2").withBudget(400));
-        // p3 : rien, 1000 or, 3 slots vides → 50 − 75 = −25
+        // p3 : rien, 1000 or, 3 slots vides → −75
     }
 
     @Test
-    void scoreIsCardPointsPlusGoldMinusEmptySlots() {
+    void scoreIsCardPointsMinusEmptySlots() {
         GameResult r = mode.compute(verdict(), List.of());
 
-        assertThat(r.scores()).containsEntry("p1", 45).containsEntry("p2", 85).containsEntry("p3", -25);
+        assertThat(r.scores()).containsEntry("p1", 45).containsEntry("p2", 65).containsEntry("p3", -75);
         assertThat(r.ranking()).containsExactly("p2", "p1", "p3");
+    }
+
+    @Test
+    void unspentGoldIsWorthNothing() {
+        GameState s = verdict();
+        GameState rich = s.withPlayer("p2", p -> p.withBudget(1000));
+        GameState broke = s.withPlayer("p2", p -> p.withBudget(0));
+        assertThat(PointsVerdictMode.score(rich, rich.player("p2").orElseThrow())).isEqualTo(65);
+        assertThat(PointsVerdictMode.score(broke, broke.player("p2").orElseThrow())).isEqualTo(65);
     }
 
     @Test
@@ -65,13 +74,13 @@ class PointsVerdictModeTest {
 
     @Test
     void tieIsBrokenByRuleBonusThenRemainingBudget() {
-        // p1 : épique + rare + commune = 65, 410 or → 85 ; p2 : 85 avec 400 or
+        // p1 : épique + rare + commune = 65 avec 410 or ; p2 : 65 avec 400 or
         GameState s = verdict().withPlayer("p1", p -> p.withoutSlot("captain").withoutSlot("right")
                 .withCardInSlot("captain", "epi2").withCardInSlot("right", "rar2").withCardInSlot("support", "com")
                 .withBudget(410));
 
         GameResult r = mode.compute(s, List.of());
-        assertThat(r.scores()).containsEntry("p1", 85).containsEntry("p2", 85);
+        assertThat(r.scores()).containsEntry("p1", 65).containsEntry("p2", 65);
         // à égalité, le plus d'or restant gagne
         assertThat(r.ranking().subList(0, 2)).containsExactly("p1", "p2");
         // un bonus de règle passe avant l'or
