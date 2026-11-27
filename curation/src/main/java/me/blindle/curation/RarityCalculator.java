@@ -15,19 +15,32 @@ import java.util.Map;
  *       (10 % légendaires, 20 % épiques, 30 % rares, le reste communes).</li>
  * </ul>
  * Un personnage sans données MyAnimeList (favoris ou image) est hors classement.
+ * <p>
+ * Rareté imposée par l'administrateur ({@code forcedRarity}) : elle remplace le calcul, le personnage
+ * est toujours dans le paquet, et les quotas ne s'appliquent qu'aux places restantes.
  */
 public final class RarityCalculator {
 
     public static final int DECK_SIZE = 40;
     public static final Map<String, Integer> POWER = Map.of("S", 100, "A", 85, "B", 70, "C", 50, "D", 25);
-    private static final String[] RARITIES = {"legendary", "epic", "rare", "common"};
+    public static final List<String> RARITY_IDS = List.of("legendary", "epic", "rare", "common");
+    private static final String[] RARITIES = RARITY_IDS.toArray(new String[0]);
     private static final double[] CUMULATIVE = {0.1, 0.3, 0.6, 1};
 
     private RarityCalculator() {
     }
 
     /** Personnage retenu, dans l'ordre de la liste de curation. */
-    public record Candidate(int malId, String name, String tier, Integer favourites, String role, String image) {
+    public record Candidate(int malId, String name, String tier, Integer favourites, String role, String image,
+                            String forcedRarity) {
+
+        public Candidate(int malId, String name, String tier, Integer favourites, String role, String image) {
+            this(malId, name, tier, favourites, role, image, null);
+        }
+
+        boolean forced() {
+            return forcedRarity != null;
+        }
 
         boolean eligible() {
             return favourites != null && image != null && !image.contains("questionmark");
@@ -59,17 +72,60 @@ public final class RarityCalculator {
         scored.sort(Comparator.comparingDouble(Ranked::score).reversed()
                 .thenComparing(Comparator.comparingInt((Ranked r) -> r.candidate().favourites()).reversed()));
 
-        int deck = Math.min(DECK_SIZE, scored.size());
-        List<Ranked> result = new ArrayList<>();
-        for (int i = 0; i < scored.size(); i++) {
-            Ranked r = scored.get(i);
-            result.add(i < deck
-                    ? new Ranked(r.candidate(), r.popularity(), r.power(), r.score(), i, rarityOf(i, deck))
-                    : r);
+        // Quotas sur la taille du paquet ; les raretés imposées consomment d'abord leur quota.
+        long forcedCount = scored.stream().filter(r -> r.candidate().forced()).count();
+        int deck = (int) Math.max(Math.min(DECK_SIZE, scored.size()), forcedCount);
+        int[] left = new int[RARITIES.length];
+        for (int i = 0; i < deck; i++) {
+            left[RARITY_IDS.indexOf(rarityOf(i, deck))]++;
         }
+        scored.stream().filter(r -> r.candidate().forced())
+                .forEach(r -> left[RARITY_IDS.indexOf(r.candidate().forcedRarity())]--);
+        long free = deck - forcedCount;
+        List<Ranked> inDeck = new ArrayList<>();
+        List<Ranked> out = new ArrayList<>();
+        for (Ranked r : scored) {
+            if (r.candidate().forced()) {
+                inDeck.add(withRarity(r, r.candidate().forcedRarity()));
+            } else if (free > 0) {
+                free--;
+                inDeck.add(withRarity(r, nextRarity(left)));
+            } else {
+                out.add(r);
+            }
+        }
+        List<Ranked> result = new ArrayList<>();
+        for (int i = 0; i < inDeck.size(); i++) {
+            Ranked r = inDeck.get(i);
+            result.add(new Ranked(r.candidate(), r.popularity(), r.power(), r.score(), i, r.rarity()));
+        }
+        result.addAll(out);
         candidates.stream().filter(c -> !c.eligible())
                 .forEach(c -> result.add(new Ranked(c, 0, power(c.tier()), 0, -1, null)));
         return result;
+    }
+
+    private static Ranked withRarity(Ranked r, String rarity) {
+        return new Ranked(r.candidate(), r.popularity(), r.power(), r.score(), -1, rarity);
+    }
+
+    /** Rareté la plus haute dont il reste des places (dans l'ordre du score), sinon commune. */
+    private static String nextRarity(int[] left) {
+        for (int i = 0; i < left.length; i++) {
+            if (left[i] > 0) {
+                left[i]--;
+                return RARITIES[i];
+            }
+        }
+        return "common";
+    }
+
+    /** Rareté imposée valide : null (calcul), ou legendary / epic / rare / common. */
+    public static String checkRarity(String rarity) {
+        if (rarity != null && !RARITY_IDS.contains(rarity)) {
+            throw new IllegalArgumentException("Rareté inconnue : " + rarity + " " + RARITY_IDS);
+        }
+        return rarity;
     }
 
     public static String rarityOf(int rank, int total) {

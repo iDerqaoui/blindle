@@ -39,6 +39,10 @@ public class AnimeCharacter {
     private String role;
     private String image;
 
+    /** Rareté imposée par l'administrateur (null : calculée). */
+    @Column(name = "forced_rarity")
+    private String forcedRarity;
+
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
@@ -86,6 +90,15 @@ public class AnimeCharacter {
         return image;
     }
 
+    public String forcedRarity() {
+        return forcedRarity;
+    }
+
+    void forceRarity(String rarity, Instant now, UUID by) {
+        this.forcedRarity = rarity;
+        touch(now, by);
+    }
+
     public boolean hasMalData() {
         return favourites != null;
     }
@@ -112,7 +125,7 @@ public class AnimeCharacter {
     }
 
     RarityCalculator.Candidate candidate() {
-        return new RarityCalculator.Candidate(malId, name, tier, favourites, role, image);
+        return new RarityCalculator.Candidate(malId, name, tier, favourites, role, image, forcedRarity);
     }
 
     public static class Key implements Serializable {

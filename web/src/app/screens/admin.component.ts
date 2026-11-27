@@ -8,6 +8,8 @@ interface UniverseSummary { slug: string; name: string; cover: string | null; co
 interface CharacterView {
   malId: number; name: string; tier: string; favourites: number | null; role: string | null; image: string | null;
   popularity: number; power: number; score: number; rank: number; rarity: string | null; liveRarity: string | null;
+  /** Rareté imposée par l'admin (null : calculée par le score et les quotas). */
+  forcedRarity: string | null;
 }
 
 interface UniverseDetail {
@@ -89,7 +91,7 @@ const RARITIES = ['legendary', 'epic', 'rare', 'common'];
               <tr>
                 <th>#</th><th></th><th>{{ 'admin.name' | t }}</th><th>{{ 'admin.tier' | t }}</th>
                 <th title="MyAnimeList">♥</th><th>{{ 'admin.popularity' | t }}</th><th>{{ 'admin.score' | t }}</th>
-                <th>{{ 'admin.rarity' | t }}</th><th></th>
+                <th>{{ 'admin.rarity' | t }}</th><th [title]="'admin.forceHelp' | t">{{ 'admin.force' | t }}</th><th></th>
               </tr>
             </thead>
             <tbody>
@@ -119,6 +121,15 @@ const RARITIES = ['legendary', 'epic', 'rare', 'common'];
                     @if (c.liveRarity !== c.rarity) {
                       <small class="muted"> {{ 'admin.was' | t: { r: (c.liveRarity ? ('rarity.' + c.liveRarity | t) : '–') } }}</small>
                     }
+                  </td>
+                  <td>
+                    <select class="input tier" [attr.aria-label]="'admin.force' | t" [disabled]="busy()"
+                            [title]="'admin.forceHelp' | t" (change)="setRarity(c, $any($event.target).value)">
+                      <option value="auto" [selected]="!c.forcedRarity">{{ 'admin.auto' | t }}</option>
+                      @for (r of rarities; track r) {
+                        <option [value]="r" [selected]="r === c.forcedRarity">{{ 'rarity.' + r | t }}</option>
+                      }
+                    </select>
                   </td>
                   <td>
                     @if (confirmRemove() === c.malId) {
@@ -181,6 +192,11 @@ export class AdminComponent {
     this.results.set(null);
     this.confirmRemove.set(null);
     this.detail.set(await this.call<UniverseDetail>(`${API}/${slug}`));
+  }
+
+  /** Impose une rareté (hors quotas, toujours dans le paquet) ou la rend au calcul (« auto »). */
+  setRarity(c: CharacterView, rarity: string): void {
+    this.update(`${API}/${this.slug()}/characters/${c.malId}`, { method: 'PUT', body: JSON.stringify({ rarity }) });
   }
 
   setTier(c: CharacterView, tier: string): void {

@@ -44,14 +44,16 @@ public class CurationController {
     }
 
     public record CharacterView(int malId, String name, String tier, Integer favourites, String role, String image,
-                                int popularity, int power, double score, int rank, String rarity, String liveRarity) {
+                                int popularity, int power, double score, int rank, String rarity, String liveRarity,
+                                String forcedRarity) {
     }
 
     public record UniverseDetail(String slug, String name, String note, int deckSize,
                                  Map<String, Long> rarities, List<CharacterView> characters) {
     }
 
-    public record Edit(String name, String tier) {
+    /** {@code rarity} : null = inchangée, "auto" = rendue au calcul, sinon rareté imposée. */
+    public record Edit(String name, String tier, String rarity) {
     }
 
     public record Add(int malId, String name, String tier) {
@@ -74,7 +76,7 @@ public class CurationController {
             String liveRarity = live.get("c" + c.malId());
             return new CharacterView(c.malId(), c.name(), c.tier(), c.favourites(), c.role(), c.image(),
                     r.popularity(), r.power(), Math.round(r.score() * 100) / 100.0, r.rank(), r.rarity(),
-                    liveRarity == null || liveRarity.isEmpty() ? null : liveRarity);
+                    liveRarity == null || liveRarity.isEmpty() ? null : liveRarity, c.forcedRarity());
         }).toList();
         Map<String, Long> rarities = list.stream().filter(c -> c.rarity() != null)
                 .collect(Collectors.groupingBy(CharacterView::rarity, Collectors.counting()));
@@ -84,7 +86,12 @@ public class CurationController {
     @PutMapping("/{slug}/characters/{malId}")
     public UniverseDetail edit(@PathVariable String slug, @PathVariable int malId, @RequestBody Edit body,
                                @AuthenticationPrincipal BlindleUser user) {
-        curation.edit(slug, malId, body.name(), body.tier(), by(user));
+        if (body.name() != null || body.tier() != null) {
+            curation.edit(slug, malId, body.name(), body.tier(), by(user));
+        }
+        if (body.rarity() != null) {
+            curation.forceRarity(slug, malId, "auto".equals(body.rarity()) ? null : body.rarity(), by(user));
+        }
         return detail(slug);
     }
 

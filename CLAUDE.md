@@ -77,7 +77,7 @@ Mettre à jour cette ligne à chaque étape terminée.
 Aujourd'hui la page admin (`#admin`) permet seulement de changer le rang S–D et le nom d'un
 personnage anime, d'en ajouter un depuis MyAnimeList, d'en retirer un et de voir la rareté prévue.
 
-1. **Modifier les valeurs des personnages depuis l'admin** : forcer une rareté, corriger la
+1. **Modifier les valeurs des personnages depuis l'admin** (rareté imposée : faite le 2026-11-27, elle remplace le calcul, carte toujours dans le paquet, quotas sur le reste ; reste : popularité, image, indices, tags) : forcer une rareté, corriger la
    popularité, changer l'image, les indices, les tags. À trancher : une valeur forcée remplace-t-elle
    le calcul (rareté imposée hors quotas) ou l'ajuste-t-elle seulement ?
 2. **Personnaliser les cartes** de tous les thèmes (manga, pays… pas seulement anime) depuis

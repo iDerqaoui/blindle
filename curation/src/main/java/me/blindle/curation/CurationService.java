@@ -138,6 +138,12 @@ public class CurationService {
         c.edit(name == null ? null : checkName(name), tier == null ? null : checkTier(tier), clock.instant(), by);
     }
 
+    /** Impose une rareté (ou la rend au calcul avec null). */
+    @Transactional
+    public void forceRarity(String slug, int malId, String rarity, UUID by) {
+        find(slug, malId).forceRarity(RarityCalculator.checkRarity(rarity), clock.instant(), by);
+    }
+
     @Transactional
     public void remove(String slug, int malId) {
         characters.delete(find(slug, malId));

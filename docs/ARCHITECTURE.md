@@ -296,6 +296,9 @@ recalculée au redémarrage, ajout de personnages par recherche MyAnimeList depu
     complété par Tenrai (`TenraiClient`, ~30 s). Ensuite la base fait foi et le démarrage ne
     contacte Tenrai que pour des données manquantes. Tenrai injoignable : thème construit avec
     l'existant ; moins de 20 cartes : fichiers existants conservés.
+  - Rareté imposée (`forced_rarity`, `V3__forced_rarity.sql`, 2026-11-27) : `PUT …/characters/{malId}` avec
+    `{ rarity }` (`auto` = calcul). Elle remplace le calcul, la carte est toujours dans le paquet et
+    consomme d'abord le quota de sa rareté ; les quotas remplissent les places restantes.
   - `RarityCalculator` : portage exact du calcul de `tools/import-anime.mjs` (vérifié : mêmes raretés
     sur les 8 univers).
   - API admin `/api/admin/curation/universes[/{slug}[/characters[/{malId}]|/search?q=]]` : chaque

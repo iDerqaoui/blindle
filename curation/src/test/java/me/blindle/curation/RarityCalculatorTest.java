@@ -54,6 +54,50 @@ class RarityCalculatorTest {
         assertThat(byId.get(50).score()).isEqualTo(100 + 0.25 * byId.get(50).popularity());
     }
 
+    private static Candidate forced(int id, Integer favourites, String rarity) {
+        return new Candidate(id, "Perso " + id, "D", favourites, "Supporting", "https://img/" + id + ".jpg", rarity);
+    }
+
+    @Test
+    void forcedRarityReplacesTheCalculationAndQuotasFillTheRest() {
+        List<Candidate> list = cast();
+        list.set(49, forced(50, 10, "legendary")); // le moins populaire, imposé légendaire
+        list.set(0, forced(1, 100_000, "common")); // le plus populaire, imposé commun
+
+        List<Ranked> ranked = RarityCalculator.rank(list);
+        Map<Integer, Ranked> byId = ranked.stream()
+                .collect(Collectors.toMap(r -> r.candidate().malId(), Function.identity()));
+
+        assertThat(byId.get(50).rarity()).isEqualTo("legendary");
+        assertThat(byId.get(1).rarity()).isEqualTo("common");
+        // Quotas toujours respectés sur 40 cartes : le légendaire imposé prend une des 4 places.
+        Map<String, Long> counts = ranked.stream().filter(Ranked::inDeck)
+                .collect(Collectors.groupingBy(Ranked::rarity, Collectors.counting()));
+        assertThat(counts).containsEntry("legendary", 4L).containsEntry("epic", 8L)
+                .containsEntry("rare", 12L).containsEntry("common", 16L);
+        // Le 2e plus populaire (non imposé) devient le premier légendaire calculé.
+        assertThat(byId.get(2).rarity()).isEqualTo("legendary");
+        assertThat(byId.get(5).rarity()).isEqualTo("epic");
+    }
+
+    @Test
+    void forcedCharactersAlwaysMakeTheDeck() {
+        List<Candidate> list = new ArrayList<>(cast());
+        list.add(forced(99, 1, "rare"));
+
+        List<Ranked> ranked = RarityCalculator.rank(list);
+
+        assertThat(ranked).filteredOn(r -> r.candidate().malId() == 99).singleElement()
+                .matches(r -> r.inDeck() && "rare".equals(r.rarity()));
+        assertThat(ranked.stream().filter(Ranked::inDeck)).hasSize(40);
+    }
+
+    @Test
+    void unknownRarityIsRefused() {
+        assertThatThrownBy(() -> RarityCalculator.checkRarity("mythic")).isInstanceOf(IllegalArgumentException.class);
+        assertThat(RarityCalculator.checkRarity(null)).isNull();
+    }
+
     @Test
     void scoreTieIsBrokenByFavourites() {
         // même popularité arrondie (100) et même rang : le plus de favoris passe devant
