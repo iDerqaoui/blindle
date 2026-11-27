@@ -134,7 +134,9 @@ Défi quotidien solo du mode anime, choisi par l'utilisateur (remplace à terme 
 - **Serveur seul juge** : prix et palier calculés par le serveur ; images floutées **côté
   serveur**, un palier n'est servi que s'il est atteint ; l'URL d'origine n'est envoyée qu'à la
   révélation. Un essai par jour par compte (connecté) ou par navigateur (cookie).
-- Plus tard : classement en base, série de jours (streak), leurre (« decoy »), % du score maximal.
+- Faits le 2026-11-27 : classement et essai unique en base (table `who_result`), série de jours (🔥).
+  Plus tard : leurre (« decoy »), % du score maximal. Une partie interrompue par un redémarrage
+  est perdue et peut être rejouée (seul le résultat final est enregistré).
 
 ### Notes du 2026-11-27
 

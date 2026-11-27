@@ -2,7 +2,6 @@ package me.blindle.realtime.solo.who;
 
 import me.blindle.content.Theme;
 import me.blindle.core.GameException;
-import me.blindle.realtime.solo.DailyLeaderboard;
 import me.blindle.realtime.solo.who.WhoLineup.WhoCard;
 import org.junit.jupiter.api.Test;
 
@@ -140,7 +139,7 @@ class WhoTest {
         assertThat(run.outcomes()).hasSize(10);
         assertThat(run.outcomes().subList(5, 10)).allMatch(WhoRun.Outcome::skipped);
         assertThat(run.score()).isEqualTo(60 + 30 + 35 + 35 + 20 + 20); // aucun slot vide
-        assertThat(WhoController.share(run)).contains("🟨🟪🟪🟦🟦⬛⬛⬛⬛⬛").contains("🎰");
+        assertThat(run.share()).contains("🟨🟪🟪🟦🟦⬛⬛⬛⬛⬛").contains("🎰");
     }
 
     @Test
@@ -237,8 +236,10 @@ class WhoTest {
             fetched.add(url);
             return new BufferedImage(300, 400, BufferedImage.TYPE_INT_RGB);
         });
-        DailyLeaderboard board = new DailyLeaderboard();
-        WhoService who = new WhoService(daily, board, blurrer, clock, "UTC");
+        MemoryWhoResults results = new MemoryWhoResults();
+        // Ana a joué hier : sa série continue aujourd'hui.
+        results.save(new WhoResults.Result(DAY.minusDays(1), "u:1", "Ana", "U", 10, 0, "", T0.minusSeconds(86400)));
+        WhoService who = new WhoService(daily, results, blurrer, clock, "UTC");
 
         WhoRun run = who.start("u:1", "Ana");
         assertThat(who.start("u:1", "Autre")).isSameAs(run); // pas de deuxième essai
@@ -258,7 +259,33 @@ class WhoTest {
         }
         assertThat(who.find("u:1").finished()).isTrue();
         assertThat(who.find("u:1").rank()).isEqualTo(1);
-        assertThat(board.size(DAY, WhoService.LEADERBOARD_ID)).isEqualTo(1);
+        assertThat(results.count(DAY)).isEqualTo(1);
+        assertThat(who.find("u:1").streak()).isEqualTo(2);
+        assertThat(who.find("u:1").share()).contains("🔥2");
         assertThat(fetched).containsExactly("https://img.test/0.jpg");
+
+        // Redémarrage : la partie en mémoire est perdue, le résultat enregistré interdit un 2e essai.
+        WhoService restarted = new WhoService(daily, results, blurrer, clock, "UTC");
+        assertThatThrownBy(() -> restarted.start("u:1", "Ana")).hasFieldOrPropertyWithValue("code", "WHO_FINISHED");
+        assertThat(restarted.mine("u:1")).hasValueSatisfying(m -> {
+            assertThat(m.rank()).isEqualTo(1);
+            assertThat(m.streak()).isEqualTo(2);
+        });
+        assertThat(restarted.start("u:2", "Bob").index()).isZero(); // un autre joueur, lui, peut jouer
+    }
+
+    @Test
+    void rankingByScoreThenGoldLeftAndStreaksStopAtAGap() {
+        MemoryWhoResults results = new MemoryWhoResults();
+        results.save(new WhoResults.Result(DAY, "a", "A", "U", 100, 50, "", T0));
+        results.save(new WhoResults.Result(DAY, "b", "B", "U", 100, 300, "", T0.plusSeconds(5)));
+        int rank = results.save(new WhoResults.Result(DAY, "c", "C", "U", 120, 0, "", T0.plusSeconds(9)));
+
+        assertThat(rank).isEqualTo(1);
+        assertThat(results.top(DAY, 10)).extracting(e -> e.name()).containsExactly("C", "B", "A");
+
+        List<LocalDate> days = List.of(DAY, DAY.minusDays(1), DAY.minusDays(2), DAY.minusDays(4));
+        assertThat(WhoResults.streakOf(days, DAY)).isEqualTo(3);
+        assertThat(WhoResults.streakOf(days, DAY.plusDays(1))).isZero();
     }
 }

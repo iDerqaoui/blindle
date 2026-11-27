@@ -47,8 +47,13 @@ public class WhoController {
     // ------------------------------------------------------------------ vues
 
     /** Accueil : univers du jour, déjà joué ou non, classement. */
+    /**
+     * Accueil du défi. {@code started} : une partie est en cours en mémoire ; {@code mine} : mon résultat du
+     * jour, s'il est enregistré (rejouer est alors impossible, même après un redémarrage).
+     */
     public record Summary(boolean available, String date, String universe, String color, boolean started,
-                          boolean finished, int players, List<DailyLeaderboard.Entry> leaderboard) {
+                          boolean finished, int players, List<DailyLeaderboard.Entry> leaderboard,
+                          WhoService.Mine mine) {
     }
 
     /**
@@ -58,7 +63,7 @@ public class WhoController {
     public record RunView(String date, String universe, String color, int total, int index, int budget,
                           int slots, List<Integer> prices, long serverTime,
                           LiveView live, OutcomeView last, List<OutcomeView> team, boolean finished,
-                          int score, Integer rank, String share, List<OutcomeView> outcomes,
+                          int score, Integer rank, int streak, String share, List<OutcomeView> outcomes,
                           List<DailyLeaderboard.Entry> leaderboard, List<String> roster) {
     }
 
@@ -85,13 +90,14 @@ public class WhoController {
     @GetMapping
     public Summary summary(HttpServletRequest req) {
         if (!who.daily().available()) {
-            return new Summary(false, who.today().toString(), null, null, false, false, 0, List.of());
+            return new Summary(false, who.today().toString(), null, null, false, false, 0, List.of(), null);
         }
         WhoLineup lineup = who.daily().lineup(who.today());
-        WhoRun run = who.find(keyOrNull(req));
+        String key = keyOrNull(req);
+        WhoRun run = who.find(key);
+        WhoService.Mine mine = who.mine(key).orElse(null);
         return new Summary(true, lineup.date().toString(), lineup.universe(), lineup.color(), run != null,
-                run != null && run.finished(), who.leaderboard().size(who.today(), WhoService.LEADERBOARD_ID),
-                who.top(TOP));
+                mine != null || (run != null && run.finished()), who.players(), who.top(TOP), mine);
     }
 
     @PostMapping("/start")
@@ -172,7 +178,7 @@ public class WhoController {
         List<Integer> prices = Arrays.stream(WhoRun.PRICES).boxed().toList();
         return new RunView(lineup.date().toString(), lineup.universe(), lineup.color(), lineup.cards().size(),
                 run.index(), run.budget(), WhoRun.SLOTS, prices, now.toEpochMilli(), liveView, last, team, finished,
-                run.score(), run.rank(), finished ? share(run) : null,
+                run.score(), run.rank(), run.streak(), finished ? run.share() : null,
                 finished ? outcomes.stream().map(WhoController::outcome).toList() : null,
                 finished ? who.top(TOP) : null, lineup.roster());
     }
@@ -182,40 +188,6 @@ public class WhoController {
         return new OutcomeView(o.index(), c.name(), c.image(), c.rarity(), c.universe(),
                 RarityPoints.POINTS.getOrDefault(c.rarity(), 0), o.bought(), o.price(), o.level(), o.called(),
                 o.jackpot(), o.skipped(), o.misses());
-    }
-
-    /** Grille à partager, sans spoiler : une case par carte. */
-    static String share(WhoRun run) {
-        StringBuilder grid = new StringBuilder();
-        int called = 0;
-        boolean jackpot = false;
-        for (Outcome o : run.outcomes()) {
-            if (!o.bought()) {
-                grid.append("⬛");
-                continue;
-            }
-            grid.append(switch (o.card().rarity()) {
-                case "legendary" -> "🟨";
-                case "epic" -> "🟪";
-                case "rare" -> "🟦";
-                default -> "⬜";
-            });
-            if (o.called()) {
-                grid.append("⚡");
-                called++;
-            }
-            jackpot |= o.jackpot();
-        }
-        List<String> tail = new ArrayList<>();
-        tail.add(run.score() + " pts");
-        if (called > 0) {
-            tail.add("⚡" + called);
-        }
-        if (jackpot) {
-            tail.add("🎰");
-        }
-        return "Blindle · Who's That? · " + run.lineup().universe() + " · " + run.lineup().date() + "\n"
-                + grid + "\n" + String.join(" · ", tail);
     }
 
     // ------------------------------------------------------------------ identité
@@ -230,7 +202,7 @@ public class WhoController {
         Cookie cookie = new Cookie(COOKIE, id);
         cookie.setHttpOnly(true);
         cookie.setPath("/");
-        cookie.setMaxAge(3 * 24 * 3600);
+        cookie.setMaxAge(400 * 24 * 3600); // la série de jours suit le navigateur
         cookie.setAttribute("SameSite", "Lax");
         cookie.setSecure(req.isSecure());
         res.addCookie(cookie);

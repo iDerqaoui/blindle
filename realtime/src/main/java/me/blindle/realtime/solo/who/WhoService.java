@@ -15,25 +15,25 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Défi « Who's That? » : un essai par jour et par joueur ({@code key} : compte connecté ou cookie du
- * navigateur), en mémoire. Chaque appel relit l'heure serveur ; une carte expirée part d'elle-même.
+ * navigateur). La partie en cours vit en mémoire ; le résultat final est enregistré ({@link WhoResults})
+ * pour le classement, l'essai unique et la série de jours, même après un redémarrage.
  */
 @Component
 public class WhoService {
 
-    public static final String LEADERBOARD_ID = "who";
     static final int MAX_NAME = 20;
 
     private final WhoDaily daily;
-    private final DailyLeaderboard leaderboard;
+    private final WhoResults results;
     private final Blurrer blurrer;
     private final Clock clock;
     private final ZoneId zone;
     private final Map<String, WhoRun> runs = new ConcurrentHashMap<>();
 
-    public WhoService(WhoDaily daily, DailyLeaderboard leaderboard, Blurrer blurrer, Clock clock,
+    public WhoService(WhoDaily daily, WhoResults results, Blurrer blurrer, Clock clock,
                       @org.springframework.beans.factory.annotation.Value("${blindle.daily.zone:Europe/Paris}") String zone) {
         this.daily = daily;
-        this.leaderboard = leaderboard;
+        this.results = results;
         this.blurrer = blurrer;
         this.clock = clock;
         this.zone = ZoneId.of(zone);
@@ -51,8 +51,20 @@ public class WhoService {
         return daily;
     }
 
-    public DailyLeaderboard leaderboard() {
-        return leaderboard;
+    public int players() {
+        return results.count(today());
+    }
+
+    /** Résultat enregistré aujourd'hui pour ce joueur (même si le serveur a redémarré depuis). */
+    public record Mine(int score, int rank, int streak, String share) {
+    }
+
+    public java.util.Optional<Mine> mine(String key) {
+        if (key == null) {
+            return java.util.Optional.empty();
+        }
+        LocalDate date = today();
+        return results.find(date, key).map(r -> new Mine(r.score(), results.rank(r), results.streak(key, date), r.share()));
     }
 
     /** Partie du jour de ce joueur, ou null s'il n'a pas encore joué. */
@@ -70,6 +82,9 @@ public class WhoService {
     public WhoRun start(String key, String name) {
         LocalDate date = today();
         runs.keySet().removeIf(k -> !k.startsWith(date + "|") && !k.startsWith(date.minusDays(1) + "|"));
+        if (!runs.containsKey(id(date, key)) && results.find(date, key).isPresent()) {
+            throw new GameException("WHO_FINISHED", "Tu as déjà joué le défi du jour");
+        }
         WhoRun run = runs.computeIfAbsent(id(date, key), k -> new WhoRun(key, cleanName(name), daily.lineup(date)));
         synchronized (run) {
             if (run.index() < 0) {
@@ -135,16 +150,18 @@ public class WhoService {
         return blurrer.render(url, served);
     }
 
-    public List<me.blindle.realtime.solo.DailyLeaderboard.Entry> top(int limit) {
-        return leaderboard.top(today(), LEADERBOARD_ID, limit);
+    public List<DailyLeaderboard.Entry> top(int limit) {
+        return results.top(today(), limit);
     }
 
-    /** Fin de partie : score envoyé une seule fois au classement du jour. */
+    /** Fin de partie : série du jour, puis résultat enregistré une seule fois. */
     private void refresh(WhoRun run) {
         run.live(now());
         if (run.finished() && run.rank() == null) {
-            run.rank(leaderboard.submit(run.lineup().date(), LEADERBOARD_ID,
-                    new DailyLeaderboard.Entry(run.name(), run.score())));
+            LocalDate date = run.lineup().date();
+            run.streak(results.streak(run.key(), date.minusDays(1)) + 1);
+            run.rank(results.save(new WhoResults.Result(date, run.key(), run.name(), run.lineup().universe(),
+                    run.score(), run.budget(), run.share(), now())));
         }
     }
 

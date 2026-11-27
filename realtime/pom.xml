@@ -35,6 +35,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-websocket</artifactId>
         </dependency>
+        <!-- Résultats du défi Who's That? en base (dépendance déjà validée, cf. accounts) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
         <!-- Flou gaussien du défi Who's That? (Apache 2.0), validé le 2026-11-27 -->
         <dependency>
             <groupId>com.jhlabs</groupId>

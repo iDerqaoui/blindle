@@ -8,6 +8,8 @@ interface LeaderEntry { name: string; score: number; }
 interface WhoSummary {
   available: boolean; date: string; universe: string | null; color: string | null;
   started: boolean; finished: boolean; players: number; leaderboard: LeaderEntry[];
+  /** Mon résultat du jour, déjà enregistré : on ne rejoue pas. */
+  mine: { score: number; rank: number; streak: number; share: string } | null;
 }
 
 interface LiveView {
@@ -25,7 +27,7 @@ interface RunView {
   date: string; universe: string; color: string | null; total: number; index: number; budget: number; slots: number;
   prices: number[]; serverTime: number;
   live: LiveView | null; last: OutcomeView | null; team: OutcomeView[]; finished: boolean;
-  score: number; rank: number | null; share: string | null; outcomes: OutcomeView[] | null;
+  score: number; rank: number | null; streak: number; share: string | null; outcomes: OutcomeView[] | null;
   leaderboard: LeaderEntry[] | null; roster: string[];
 }
 
@@ -55,6 +57,26 @@ const API = '/api/daily/who';
         @if (summary(); as s) {
           @if (!s.available) {
             <div class="panel narrow"><p class="muted">{{ 'who.unavailable' | t }}</p></div>
+          } @else if (s.mine; as mine) {
+            <div class="who-end">
+              <div class="panel narrow">
+                <p class="eyebrow">{{ 'who.alreadyPlayed' | t }}</p>
+                <h2>{{ 'who.score' | t: { n: mine.score } }}</h2>
+                <p class="muted">{{ 'who.rank' | t: { n: mine.rank } }} · {{ i18n.plural('home.dailyGames', s.players) }}</p>
+                @if (mine.streak >= 2) { <p class="who-streak">🔥 {{ 'who.streak' | t: { n: mine.streak } }}</p> }
+                <pre class="who-share">{{ mine.share }}</pre>
+                <button class="btn primary" (click)="copy(mine.share)">{{ (copied() ? 'lobby.copied' : 'who.share') | t }}</button>
+                <p class="muted small">{{ 'who.comeBack' | t }}</p>
+              </div>
+              @if (s.leaderboard.length) {
+                <div class="panel narrow">
+                  <h3>{{ 'who.leaderboard' | t }}</h3>
+                  <ol class="ranking">
+                    @for (e of s.leaderboard; track $index) { <li><span>{{ e.name }}</span><span>{{ e.score }}</span></li> }
+                  </ol>
+                </div>
+              }
+            </div>
           } @else {
             <div class="panel narrow who-intro">
               <ul class="who-rules">
@@ -153,6 +175,7 @@ const API = '/api/daily/who';
               <div class="panel">
                 <h2>{{ 'who.score' | t: { n: r.score } }}</h2>
                 @if (r.rank) { <p class="muted">{{ 'who.rank' | t: { n: r.rank } }}</p> }
+                @if (r.streak >= 2) { <p class="who-streak">🔥 {{ 'who.streak' | t: { n: r.streak } }}</p> }
                 @if (r.share; as share) {
                   <pre class="who-share">{{ share }}</pre>
                   <button class="btn primary" (click)="copy(share)">{{ (copied() ? 'lobby.copied' : 'who.share') | t }}</button>

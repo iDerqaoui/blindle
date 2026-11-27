@@ -352,6 +352,10 @@ recalculée au redémarrage, ajout de personnages par recherche MyAnimeList depu
 - `Blurrer` : images téléchargées depuis l'URL des cartes (jamais une URL du client), recadrées
   240×340, flou gaussien JH Labs (`com.jhlabs:filters`, rayon 36 → 0), PNG en cache. Le serveur sert au plus le palier atteint ;
   l'URL d'origine n'est envoyée qu'à la révélation.
-- Joueur : compte connecté (`Principal`) sinon cookie `blindle_who` (HttpOnly, 3 jours) ; un essai par
-  jour, parties et classement (`DailyLeaderboard`, id `who`) en mémoire.
+- Joueur : compte connecté (`Principal`) sinon cookie `blindle_who` (HttpOnly, 400 jours). La partie en
+  cours vit en mémoire ; le résultat final va en base (`WhoResults` → `JpaWhoResults`, table `who_result`,
+  migration `V4__who_results.sql` du module realtime) : classement du jour (score, puis or restant, puis
+  premier arrivé), essai unique même après redémarrage (`WHO_FINISHED`), série de jours consécutifs
+  (🔥 dans la grille dès 2 jours). `GET /api/daily/who` renvoie `mine` (score, rang, série, grille) si
+  le joueur a déjà joué. `MemoryWhoResults` pour les tests.
 - Front : écran `#who` (`who.component.ts`), saisie avec suggestions déroulantes (2 lettres, 6 noms),, bandeau à l'accueil et tuile « défi du jour » des univers.

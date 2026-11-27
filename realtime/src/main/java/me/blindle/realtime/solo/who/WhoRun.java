@@ -47,6 +47,7 @@ public final class WhoRun {
     private boolean live;
     private int budget = BUDGET;
     private Integer rank;
+    private int streak;
     /** Mauvais noms proposés pour la carte en jeu (chacun la rend plus nette d'un palier). */
     private final List<String> wrong = new ArrayList<>();
 
@@ -94,6 +95,52 @@ public final class WhoRun {
 
     void rank(int rank) {
         this.rank = rank;
+    }
+
+    /** Jours consécutifs joués, aujourd'hui compris (connu en fin de partie). */
+    public int streak() {
+        return streak;
+    }
+
+    void streak(int streak) {
+        this.streak = streak;
+    }
+
+    /** Grille à partager, sans spoiler : une case par carte, puis score, noms trouvés, jackpot, série. */
+    public String share() {
+        StringBuilder grid = new StringBuilder();
+        int called = 0;
+        boolean jackpot = false;
+        for (Outcome o : outcomes) {
+            if (!o.bought()) {
+                grid.append("⬛");
+                continue;
+            }
+            grid.append(switch (o.card().rarity()) {
+                case "legendary" -> "🟨";
+                case "epic" -> "🟪";
+                case "rare" -> "🟦";
+                default -> "⬜";
+            });
+            if (o.called()) {
+                grid.append("⚡");
+                called++;
+            }
+            jackpot |= o.jackpot();
+        }
+        List<String> tail = new ArrayList<>();
+        tail.add(score() + " pts");
+        if (called > 0) {
+            tail.add("⚡" + called);
+        }
+        if (jackpot) {
+            tail.add("🎰");
+        }
+        if (streak >= 2) {
+            tail.add("🔥" + streak);
+        }
+        return "Blindle · Who's That? · " + lineup.universe() + " · " + lineup.date() + "\n"
+                + grid + "\n" + String.join(" · ", tail);
     }
 
     /** Une carte est à l'écran (après {@link #settle}). */
