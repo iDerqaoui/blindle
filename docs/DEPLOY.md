@@ -65,7 +65,7 @@ Alternative équivalente : Koyeb (free, Docker, WebSocket, `*.koyeb.app`) avec u
 
 ## Option C — Serveur dédié + domaine, déploiement automatique (production)
 
-Un VPS (Hetzner, DigitalOcean, OVH… Ubuntu 24.04, 2 vCPU / 4 Go) : `deploy/docker-compose.prod.yml`
+Un VPS (Hetzner CX23 x86 ou CAX11 Arm, DigitalOcean, OVH… Ubuntu 24.04, 2 vCPU / 4 Go ; image x86 et Arm) : `deploy/docker-compose.prod.yml`
 lance l'application, PostgreSQL (volume persistant, sauvegarde quotidienne) et Caddy (HTTPS
 Let's Encrypt automatique, WebSocket). Chaque push sur `main` : tests → image
 `ghcr.io/<compte>/blindle:<sha>` → déploiement par SSH (`.github/workflows/ci-deploy.yml`), avec
