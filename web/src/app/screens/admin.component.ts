@@ -2,6 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { apiError, apiFetch } from '../auth/auth.service';
 import { I18nService, TranslatePipe } from '../i18n/i18n';
+import { AdminThemesComponent } from './admin-themes.component';
 
 interface UniverseSummary { slug: string; name: string; cover: string | null; color: string | null; characters: number; }
 
@@ -30,13 +31,23 @@ const RARITIES = ['legendary', 'epic', 'rare', 'common'];
  */
 @Component({
   selector: 'app-admin',
-  imports: [FormsModule, TranslatePipe],
+  imports: [FormsModule, TranslatePipe, AdminThemesComponent],
   template: `
     <section class="panel admin">
       <header class="admin-head">
-        <h1>{{ 'admin.title' | t }}</h1>
-        <p class="muted">{{ 'admin.restartNote' | t }}</p>
+        <h1>{{ 'admin.page' | t }}</h1>
+        <nav class="admin-tabs" role="tablist">
+          <button class="chip" role="tab" [class.active]="tab() === 'anime'" [attr.aria-selected]="tab() === 'anime'"
+                  (click)="tab.set('anime')">{{ 'admin.title' | t }}</button>
+          <button class="chip" role="tab" [class.active]="tab() === 'themes'" [attr.aria-selected]="tab() === 'themes'"
+                  (click)="tab.set('themes')">{{ 'adminThemes.title' | t }}</button>
+        </nav>
       </header>
+
+      @if (tab() === 'themes') {
+        <app-admin-themes />
+      } @else {
+      <p class="muted">{{ 'admin.restartNote' | t }}</p>
 
       <nav class="admin-universes" [attr.aria-label]="'admin.universes' | t">
         @for (u of universes(); track u.slug) {
@@ -147,6 +158,7 @@ const RARITIES = ['legendary', 'epic', 'rare', 'common'];
       } @else if (!error()) {
         <p class="muted">{{ 'admin.loading' | t }}</p>
       }
+      }
     </section>
   `,
 })
@@ -155,6 +167,8 @@ export class AdminComponent {
   readonly tiers = TIERS;
   readonly rarities = RARITIES;
 
+  /** Onglet : personnages anime (curation) ou cartes des autres thèmes. */
+  readonly tab = signal<'anime' | 'themes'>('anime');
   readonly universes = signal<UniverseSummary[]>([]);
   readonly slug = signal<string | null>(null);
   readonly detail = signal<UniverseDetail | null>(null);
