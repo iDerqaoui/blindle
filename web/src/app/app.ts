@@ -12,12 +12,20 @@ import { VerdictComponent } from './screens/verdict.component';
 import { ResultsComponent } from './screens/results.component';
 import { TeamBoardComponent } from './ui/team-board.component';
 import { ModalComponent } from './ui/modal.component';
+import { LegalComponent, LegalPage } from './screens/legal.component';
 
-/** Coque : barre du haut (room, langue, quitter) et écran selon la phase reçue du serveur. */
+const NOTICE_KEY = 'blindle.notice';
+const LEGAL_PAGES: LegalPage[] = ['terms', 'privacy', 'legal'];
+
+/**
+ * Coque : barre du haut (logo → accueil, room, langue, compte), écran selon la phase reçue du
+ * serveur ou la page demandée (#admin, #who, #terms, #privacy, #legal), pied de page légal et
+ * bandeau d'entrée (cookies nécessaires seulement, droits des illustrations).
+ */
 @Component({
   selector: 'app-root',
   imports: [HomeComponent, LobbyComponent, AuctionComponent, TableComponent, VerdictComponent, ResultsComponent,
-    TeamBoardComponent, ModalComponent, AdminComponent, WhoComponent, TranslatePipe],
+    TeamBoardComponent, ModalComponent, AdminComponent, WhoComponent, LegalComponent, TranslatePipe],
   template: `
     <div class="backdrop" aria-hidden="true">
       @if (ambiance(); as a) {
@@ -42,9 +50,8 @@ import { ModalComponent } from './ui/modal.component';
     </div>
 
     <header class="topbar">
-      <button class="brand" (click)="inRoom() ? confirmLeave.set(true) : null" [disabled]="!inRoom()"
-              [attr.aria-label]="'app.home' | t">
-        <span class="brand-mark">B</span><span class="brand-name">Blindle</span>
+      <button class="brand" (click)="goHome()" [attr.aria-label]="'app.home' | t">
+        <img class="brand-mark" src="icon.svg" alt="" width="34" height="34" /><span class="brand-name">Blindle</span>
       </button>
 
       @if (game.room(); as room) {
@@ -79,8 +86,9 @@ import { ModalComponent } from './ui/modal.component';
             @else { <span class="account-initial">{{ me.displayName.charAt(0) }}</span> }
             <span class="account-name">{{ me.displayName }}</span>
           </button>
-        } @else if (auth.providers().length) {
-          <button class="btn ghost small" (click)="loginOpen.set(true)">{{ 'account.login' | t }}</button>
+        } @else {
+          <button class="btn ghost small" (click)="openLogin('login')">{{ 'account.login' | t }}</button>
+          <button class="btn primary small signup" (click)="openLogin('signup')">{{ 'account.signup' | t }}</button>
         }
       </div>
     </header>
@@ -95,6 +103,7 @@ import { ModalComponent } from './ui/modal.component';
 
     <main [class.wide]="screen() === 'table'">
       @switch (screen()) {
+        @case ('legal') { <app-legal [page]="legalPage()!" /> }
         @case ('admin') { <app-admin /> }
         @case ('who') { <app-who [theme]="whoTheme()" /> }
         @case ('home') { <app-home /> }
@@ -115,6 +124,28 @@ import { ModalComponent } from './ui/modal.component';
       }
     </main>
 
+    @if (!inRoom() || screen() === 'legal') {
+      <footer class="site-footer">
+        <p class="footer-rights">{{ 'footer.rights' | t }}</p>
+        <nav class="footer-links">
+          <a href="#terms">{{ 'legal.terms.title' | t }}</a>
+          <a href="#privacy">{{ 'legal.privacy.title' | t }}</a>
+          <a href="#legal">{{ 'legal.legal.title' | t }}</a>
+          <a href="mailto:contact@blindle.app">{{ 'footer.contact' | t }}</a>
+        </nav>
+      </footer>
+    }
+
+    @if (!noticeSeen()) {
+      <div class="entry-notice" role="region" [attr.aria-label]="'notice.ok' | t">
+        <p>{{ 'notice.text' | t }}
+          <a href="#privacy">{{ 'legal.privacy.title' | t }}</a> ·
+          <a href="#terms">{{ 'legal.terms.title' | t }}</a>
+        </p>
+        <button class="btn primary small" (click)="dismissNotice()">{{ 'notice.ok' | t }}</button>
+      </div>
+    }
+
     @if (confirmLeave()) {
       <app-modal [title]="'leave.title' | t" (closed)="confirmLeave.set(false)">
         <p>{{ 'leave.body' | t: { code: game.room()?.code } }}</p>
@@ -126,24 +157,24 @@ import { ModalComponent } from './ui/modal.component';
     }
 
     @if (loginOpen()) {
-      <app-modal [title]="'account.loginTitle' | t" (closed)="loginOpen.set(false)">
-        <p class="muted">{{ 'account.loginBody' | t }}</p>
-        <div class="login-buttons">
-          @for (p of auth.oauthProviders(); track p) {
-            <button class="btn big" [class]="'btn big login-' + p" (click)="auth.login(p)">
-              {{ 'account.with.' + p | t }}
-            </button>
-          }
-        </div>
-        @if (auth.passwordLogin()) {
-          <form class="admin-password" (submit)="$event.preventDefault(); passwordLogin(pw.value)">
-            <label class="name-field">
-              <span>{{ 'account.adminPassword' | t }}</span>
-              <input class="input" #pw type="password" autocomplete="current-password" />
-            </label>
-            @if (passwordError()) { <p class="admin-error">{{ 'account.wrongPassword' | t }}</p> }
-            <button class="btn primary" type="submit">{{ 'account.adminLogin' | t }}</button>
-          </form>
+      <app-modal [title]="(loginMode() === 'signup' ? 'account.signupTitle' : 'account.loginTitle') | t"
+                 (closed)="loginOpen.set(false)">
+        <p class="muted">{{ (loginMode() === 'signup' ? 'account.signupBody' : 'account.loginBody') | t }}</p>
+        @if (auth.oauthProviders().length) {
+          <div class="login-buttons">
+            @for (p of auth.oauthProviders(); track p) {
+              <button class="btn big" [class]="'btn big login-' + p" (click)="auth.login(p)">
+                {{ 'account.with.' + p | t }}
+              </button>
+            }
+          </div>
+          <p class="muted small">
+            {{ 'account.agree' | t }}
+            <a href="#terms" (click)="loginOpen.set(false)">{{ 'legal.terms.title' | t }}</a> ·
+            <a href="#privacy" (click)="loginOpen.set(false)">{{ 'legal.privacy.title' | t }}</a>
+          </p>
+        } @else {
+          <p class="admin-error">{{ 'account.noProvider' | t }}</p>
         }
       </app-modal>
     }
@@ -162,6 +193,17 @@ import { ModalComponent } from './ui/modal.component';
           }
           <button class="btn ghost" (click)="logout()">{{ 'account.logout' | t }}</button>
           <button class="btn primary" (click)="rename(dn.value)">{{ 'account.save' | t }}</button>
+        </div>
+        <div class="account-danger">
+          @if (confirmDelete()) {
+            <p>{{ 'account.deleteConfirm' | t }}</p>
+            <div class="modal-actions">
+              <button class="btn" (click)="confirmDelete.set(false)">{{ 'account.deleteNo' | t }}</button>
+              <button class="btn danger" (click)="deleteAccount()">{{ 'account.deleteYes' | t }}</button>
+            </div>
+          } @else {
+            <button class="btn ghost small danger-text" (click)="confirmDelete.set(true)">{{ 'account.delete' | t }}</button>
+          }
         </div>
       </app-modal>
     }
@@ -183,6 +225,17 @@ export class App {
   /** Page admin : #admin, hors room, réservée aux comptes admin (le serveur vérifie aussi). */
   readonly hash = signal(location.hash);
 
+  /** Fenêtre de connexion : « Se connecter » ou « S'inscrire » (même parcours Google / Discord). */
+  readonly loginMode = signal<'login' | 'signup'>('login');
+  readonly confirmDelete = signal(false);
+  /** Bandeau d'entrée (cookies nécessaires, droits des illustrations) déjà fermé sur ce navigateur. */
+  readonly noticeSeen = signal(storageGet(NOTICE_KEY) === '1');
+  /** Page légale demandée (#terms, #privacy, #legal), sinon null. */
+  readonly legalPage = computed(() => {
+    const page = this.hash().slice(1) as LegalPage;
+    return LEGAL_PAGES.includes(page) ? page : null;
+  });
+
   readonly inRoom = computed(() => !!this.game.room() && !!this.game.me());
   /** Défi Who's That? : univers choisi (#who/<thème>), ou null pour la liste des univers. */
   readonly whoTheme = computed(() => {
@@ -203,6 +256,10 @@ export class App {
   }
 
   readonly screen = computed(() => {
+    // Pages légales : accessibles partout (la room continue en arrière-plan, « retour » la rend).
+    if (this.legalPage()) {
+      return 'legal';
+    }
     const room = this.game.room();
     const phase = room?.phase;
     if (!phase || !this.game.me()) {
@@ -250,6 +307,7 @@ export class App {
   leave(): void {
     this.confirmLeave.set(false);
     this.game.leave();
+    this.clearHash();
   }
 
   async rename(name: string): Promise<void> {
@@ -260,15 +318,44 @@ export class App {
     }
   }
 
-  readonly passwordError = signal(false);
+  openLogin(mode: 'login' | 'signup'): void {
+    this.loginMode.set(mode);
+    this.loginOpen.set(true);
+  }
 
-  async passwordLogin(password: string): Promise<void> {
-    const ok = await this.auth.loginWithPassword(password);
-    this.passwordError.set(!ok);
-    if (ok) {
-      this.loginOpen.set(false);
-      location.hash = '#admin';
+  async deleteAccount(): Promise<void> {
+    const error = await this.auth.deleteAccount();
+    this.confirmDelete.set(false);
+    this.renameError.set(error);
+    if (!error) {
+      this.accountOpen.set(false);
     }
+  }
+
+  /** Logo : retour à l'accueil (en room : confirmation, puisque quitter fait perdre sa place). */
+  goHome(): void {
+    if (this.inRoom() && !this.legalPage()) {
+      this.confirmLeave.set(true);
+      return;
+    }
+    this.clearHash();
+  }
+
+  dismissNotice(): void {
+    this.noticeSeen.set(true);
+    try {
+      localStorage.setItem(NOTICE_KEY, '1');
+    } catch {
+      // stockage indisponible : le bandeau reviendra à la prochaine visite
+    }
+  }
+
+  private clearHash(): void {
+    if (location.hash) {
+      history.pushState(null, '', location.pathname + location.search);
+    }
+    this.hash.set('');
+    window.scrollTo({ top: 0 });
   }
 
   async logout(): Promise<void> {
@@ -281,5 +368,13 @@ export class App {
       this.copied.set(true);
       setTimeout(() => this.copied.set(false), 1500);
     });
+  }
+}
+
+function storageGet(key: string): string | null {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
   }
 }

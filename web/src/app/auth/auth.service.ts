@@ -65,18 +65,20 @@ export class AuthService {
     }
   }
 
-  /** Fournisseurs externes (boutons) ; « password » est la connexion admin par mot de passe. */
-  readonly oauthProviders = computed(() => this.providers().filter(p => p !== 'password'));
-  readonly passwordLogin = computed(() => this.providers().includes('password'));
+  /** Fournisseurs configurés sur le serveur (Google, Discord) : un bouton chacun. */
+  readonly oauthProviders = computed(() => this.providers());
 
-  /** Connexion admin par mot de passe ; renvoie false si refusé. */
-  async loginWithPassword(password: string): Promise<boolean> {
-    const res = await apiFetch('/api/auth/admin-password', { method: 'POST', body: JSON.stringify({ password }) });
+  /** Supprime le compte et ses données (RGPD) ; renvoie un message d'erreur ou null. */
+  async deleteAccount(): Promise<string | null> {
+    const res = await apiFetch('/api/me', { method: 'DELETE' });
     if (!res.ok) {
-      return false;
+      return apiError(res);
     }
-    await this.load();
-    return true;
+    this.me.set(null);
+    if (location.hash === '#admin') {
+      location.hash = '';
+    }
+    return null;
   }
 
   login(provider: string): void {

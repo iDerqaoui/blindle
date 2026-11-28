@@ -2,7 +2,7 @@ import { Component, OnDestroy, computed, effect, inject, signal, untracked } fro
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../auth/auth.service';
 import { GameService } from '../game/game.service';
-import { PresetSummary } from '../game/game.types';
+import { PresetSummary, PublicRoom } from '../game/game.types';
 import { I18nService, TranslatePipe } from '../i18n/i18n';
 import { FEATURES } from '../features';
 
@@ -36,13 +36,20 @@ const TRAINING_BOTS = ['aggressive', 'strategist', 'bluffer'];
         </label>
 
         <nav class="mode-list" [attr.aria-label]="'home.modes' | t">
-          <button class="mode" [disabled]="!hasName()" (click)="create(u.id)">
+          <div class="mode" [class.disabled]="!hasName()">
             <span class="medallion">@if (u.faces[0]; as f) { <img [src]="f" alt="" /> } @else { 👥 }</span>
             <span class="mode-text">
               <strong>{{ 'mode.friends' | t }}</strong>
-              <small>{{ 'mode.friendsSub' | t }}</small>
+              <small>{{ (publicRoom() ? 'mode.friendsPublicSub' : 'mode.friendsSub') | t }}</small>
             </span>
-          </button>
+            <span class="mode-actions">
+              <label class="switch" [title]="'lobby.publicHelp' | t">
+                <input type="checkbox" [checked]="publicRoom()" (change)="publicRoom.set($any($event.target).checked)" />
+                <span>{{ 'lobby.public' | t }}</span>
+              </label>
+              <button class="btn primary small" [disabled]="!hasName()" (click)="create(u.id)">{{ 'mode.create' | t }}</button>
+            </span>
+          </div>
 
           <div class="mode" [class.disabled]="!hasName()">
             <span class="medallion">@if (u.faces[1]; as f) { <img [src]="f" alt="" /> } @else { 🤖 }</span>
@@ -149,6 +156,26 @@ const TRAINING_BOTS = ['aggressive', 'strategist', 'bluffer'];
                  [attr.aria-label]="'home.joinCode' | t" />
           <button class="btn" [disabled]="!canJoin()" (click)="join()">{{ 'home.join' | t }}</button>
         </div>
+        <p class="muted small">{{ 'rooms.privateHint' | t }}</p>
+
+        <h3 class="rooms-title">{{ 'rooms.title' | t }} <small class="muted">{{ 'rooms.sub' | t }}</small></h3>
+        @if (publicRooms().length === 0) {
+          <p class="muted small">{{ 'rooms.none' | t }}</p>
+        } @else {
+          <ul class="room-list">
+            @for (r of publicRooms(); track r.code) {
+              <li>
+                <span class="room-list-main">
+                  <strong>{{ r.themeName }}</strong>
+                  <small class="muted">{{ 'rooms.meta' | t: { preset: r.presetName, host: r.hostName } }}</small>
+                </span>
+                <span class="pill">{{ 'rooms.players' | t: { n: r.humans, max: r.maxPlayers } }}</span>
+                <button class="btn primary small" [disabled]="!hasName()" (click)="joinPublic(r.code)">{{ 'home.join' | t }}</button>
+              </li>
+            }
+          </ul>
+          @if (!hasName()) { <p class="muted small">{{ 'home.needName' | t }}</p> }
+        }
       </section>
 
       @if (features.otherModes) {
@@ -199,6 +226,11 @@ export class HomeComponent implements OnDestroy {
   readonly code = signal('');
   readonly botCount = signal(2);
   readonly universe = signal<PresetSummary | null>(null);
+  /** Création : room publique (listée sur l'accueil) ou privée (par défaut). */
+  readonly publicRoom = signal(false);
+  /** Rooms publiques en attente de joueurs, rafraîchies tant que l'accueil est affiché. */
+  readonly publicRooms = signal<PublicRoom[]>([]);
+  private readonly roomsTimer = setInterval(() => this.loadRooms(), 5000);
 
   readonly universes = computed(() => this.game.presets().filter(p => p.bidMode === 'drawer'));
   readonly others = computed(() => this.universes().filter(u => u.id !== this.universe()?.id));
@@ -215,6 +247,26 @@ export class HomeComponent implements OnDestroy {
         this.name.set(account.displayName);
       }
     });
+    this.loadRooms();
+  }
+
+  async loadRooms(): Promise<void> {
+    if (document.hidden) {
+      return;
+    }
+    try {
+      const res = await fetch('/api/rooms');
+      if (res.ok) {
+        this.publicRooms.set(await res.json());
+      }
+    } catch {
+      // serveur injoignable : la liste reste telle quelle
+    }
+  }
+
+  joinPublic(code: string): void {
+    this.remember();
+    this.game.joinRoom(code, this.name().trim());
   }
 
   /** Choisit un univers (ou revient à l'accueil) : le fond de page suit. */
@@ -226,7 +278,7 @@ export class HomeComponent implements OnDestroy {
 
   create(presetId: string): void {
     this.remember();
-    this.game.createRoom(this.name().trim(), presetId);
+    this.game.createRoom(this.name().trim(), presetId, [], this.publicRoom());
   }
 
   createWithBots(presetId: string): void {
@@ -245,6 +297,7 @@ export class HomeComponent implements OnDestroy {
   }
 
   ngOnDestroy(): void {
+    clearInterval(this.roomsTimer);
     // En room, c'est l'univers de la room qui habille le fond.
     this.game.previewArt.set(null);
   }

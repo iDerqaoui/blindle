@@ -64,12 +64,7 @@ code { background: var(--panel-2); padding: 2px 6px; border-radius: 6px; font-si
   display: inline-flex; align-items: center; gap: 10px;
   background: none; border: 0; color: var(--text); cursor: pointer; padding: 0;
 }
-.brand:disabled { cursor: default; }
-.brand-mark {
-  display: grid; place-items: center; width: 32px; height: 32px; border-radius: 9px;
-  background: linear-gradient(135deg, var(--accent), #ff7a59); color: var(--accent-ink);
-  font-weight: 900; font-size: 1.1rem;
-}
+.brand-mark { width: 34px; height: 34px; flex: none; filter: drop-shadow(0 2px 6px rgb(0 0 0 / 45%)); }
 .brand-name { font-weight: 800; letter-spacing: 0.02em; font-size: 1.1rem; }
 .room-info { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .room-universe { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -651,8 +646,6 @@ button.mode:hover:not(:disabled), div.mode:not(.disabled):hover {
 .account-initial { display: grid; place-items: center; background: var(--panel-3); font-weight: 700; text-transform: uppercase; }
 .account-name { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.9rem; }
 .login-buttons { display: grid; gap: 10px; margin-top: 12px; }
-.admin-password { display: grid; gap: 10px; margin-top: 16px; justify-items: start; }
-.admin-password .name-field { margin: 0; width: 100%; }
 .btn.login-google { background: #fff; color: #1f1f1f; border-color: #fff; }
 .btn.login-discord { background: #5865f2; color: #fff; border-color: #5865f2; }
 a.btn { text-decoration: none; display: inline-block; }
@@ -793,3 +786,98 @@ a.mode { text-decoration: none; color: inherit; }
 .who-universe:hover { box-shadow: 0 0 0 3px color-mix(in srgb, var(--universe) 35%, transparent); }
 .who-universe img { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; border-radius: var(--radius-sm); }
 .who-universe-name { font-weight: 800; }
+
+/* ------------------------------------------------------------------ rooms publiques, visibilité (2026-11-28) */
+
+.switch { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 600; }
+.switch input { width: 18px; height: 18px; accent-color: var(--accent); margin: 0; }
+.visibility { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 10px; position: relative; z-index: 1; }
+.rooms-title { margin: 22px 0 8px; font-size: 1.05rem; }
+.rooms-title small { font-weight: 400; font-size: 0.85rem; }
+.room-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.room-list li {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+  background: var(--panel-2); border: 1px solid var(--border); border-radius: var(--radius-sm);
+}
+.room-list-main { display: grid; gap: 2px; flex: 1; min-width: 0; }
+.room-list-main strong, .room-list-main small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.room-list .btn { margin: 0; }
+
+/* ------------------------------------------------------------------ pages légales, pied de page, bandeau */
+
+.legal-page { max-width: 760px; margin: 0 auto; line-height: 1.6; }
+.legal-page h1 { margin: 10px 0 4px; }
+.legal-page h2 { font-size: 1.1rem; margin: 22px 0 6px; }
+.legal-page p { margin: 0 0 10px; color: var(--text); }
+.legal-links, .footer-links { display: flex; flex-wrap: wrap; gap: 6px 18px; }
+.legal-links { margin-top: 24px; padding-top: 14px; border-top: 1px solid var(--border); }
+.legal-page a, .site-footer a, .entry-notice a { color: var(--accent); }
+.site-footer {
+  position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 18px 16px 96px;
+  color: var(--muted); font-size: 0.82rem; text-align: center; display: grid; gap: 8px; justify-items: center;
+}
+.footer-rights { margin: 0; max-width: 640px; }
+.footer-links { justify-content: center; }
+.entry-notice {
+  position: fixed; z-index: 45; left: 16px; right: 16px; bottom: 16px; margin: 0 auto; max-width: 760px;
+  display: flex; align-items: center; gap: 14px; padding: 14px 16px;
+  background: rgb(24 26 38 / 96%); border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: var(--shadow); backdrop-filter: blur(8px); font-size: 0.88rem; line-height: 1.45;
+  padding-bottom: max(14px, env(safe-area-inset-bottom));
+}
+.entry-notice p { margin: 0; flex: 1; }
+.entry-notice .btn { margin: 0; flex: none; }
+.signup { margin: 0; }
+.topbar-end .btn { margin: 0; }
+.account-danger { margin-top: 18px; padding-top: 12px; border-top: 1px solid var(--border); }
+.account-danger p { margin: 0; }
+.danger-text { color: var(--danger); }
+
+/* ------------------------------------------------------------------ mobile (passe du 2026-11-28) */
+
+/* Champs à 16 px minimum sur téléphone : iOS ne zoome plus à la saisie. */
+@media (max-width: 760px) {
+  .input, select, textarea { font-size: 16px; }
+}
+@media (max-width: 640px) {
+  .topbar { gap: 8px; padding: 8px 10px; padding-top: max(8px, env(safe-area-inset-top)); }
+  .topbar-end { gap: 6px; }
+  .topbar-end .btn.small { padding: 6px 10px; }
+  .lang-select { padding: 4px 6px; }
+  .lang-select > span[aria-hidden] { display: none; }
+  .account-name { display: none; }
+  .room-universe { max-width: 30vw; }
+  .room-code-chip small { display: none; }
+  main { padding: 14px 10px 32px; }
+  .panel { padding: 14px; }
+  .hero { padding: 16px 0 20px; }
+  .join-row { flex-wrap: wrap; max-width: none; }
+  .join-row .input:not(.code-input) { flex: 1 1 100%; }
+  .join-row .code-input { flex: 1 1 auto; min-width: 0; }
+  .room-list li { flex-wrap: wrap; }
+  .room-list-main { flex-basis: 100%; }
+  .room-list .btn { margin-left: auto; }
+  .modal-backdrop { padding: 10px; align-items: end; }
+  .modal { max-height: calc(100dvh - 20px); padding: 16px; }
+  .modal-actions { flex-wrap: wrap; }
+  .modal-actions .btn { flex: 1 1 auto; margin: 0; }
+  .entry-notice { flex-direction: column; align-items: stretch; left: 8px; right: 8px; bottom: 8px; }
+  .entry-notice .btn { width: 100%; }
+  .admin-table-wrap, .who-share, .share { -webkit-overflow-scrolling: touch; }
+  .admin-form-grid { grid-template-columns: 1fr 1fr; }
+  .admin-hints li { flex-wrap: wrap; }
+  .legal-page { font-size: 0.95rem; }
+}
+@media (max-width: 400px) {
+  .status-dot { display: none; }
+  .topbar-end .btn.small { padding: 6px 8px; font-size: 0.8rem; }
+  .mode-actions { padding-left: 0; }
+  .medallion { width: 52px; height: 52px; }
+  .mode-text strong { font-size: 1.1rem; }
+  .admin-form-grid { grid-template-columns: 1fr; }
+}
+/* Écrans tactiles : cibles d'au moins 40 px. */
+@media (pointer: coarse) {
+  .btn, .chip, .room-code-chip { min-height: 40px; }
+  .btn.small { min-height: 36px; }
+}

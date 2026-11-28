@@ -111,11 +111,17 @@ export class GameService {
 
   // ------------------------------------------------------------------ actions
 
-  /** @param bots profils de bots à ajouter dès que la room est créée (partie « contre des bots ») */
-  createRoom(name: string, presetId: string, bots: string[] = []): void {
+  /**
+   * @param bots profils de bots à ajouter dès que la room est créée (partie « contre des bots »)
+   * @param publicRoom room listée sur l'accueil (sinon privée : on la rejoint avec son code)
+   */
+  createRoom(name: string, presetId: string, bots: string[] = [], publicRoom = false): void {
     this.pendingBots = [...bots];
-    this.send('/app/room.create', { name, presetId });
+    this.send('/app/room.create', { name, presetId, publicRoom });
   }
+
+  /** L'hôte rend sa room publique (listée sur l'accueil) ou privée. */
+  setPublic(publicRoom: boolean): void { this.sendToRoom('visibility', { publicRoom }); }
 
   startDaily(name: string, presetId: string): void {
     this.send('/app/daily.start', { name, presetId });

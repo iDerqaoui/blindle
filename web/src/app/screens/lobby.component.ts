@@ -20,6 +20,17 @@ import { RoomSetupComponent } from './room-setup.component';
             <button class="room-code" (click)="copy(room.code)" [title]="'app.copyCode' | t">{{ room.code }}</button>
             <span class="muted small">{{ (copied() ? 'lobby.copied' : 'lobby.clickToCopy') | t }}</span>
           </div>
+          <div class="visibility">
+            @if (isHost()) {
+              <label class="switch" [title]="'lobby.publicHelp' | t">
+                <input type="checkbox" [checked]="room.publicRoom" (change)="game.setPublic($any($event.target).checked)" />
+                <span>{{ 'lobby.public' | t }}</span>
+              </label>
+            }
+            <span class="pill" [class.pill-points]="room.publicRoom">
+              {{ (room.publicRoom ? 'lobby.isPublic' : 'lobby.isPrivate') | t }}
+            </span>
+          </div>
         </div>
       </section>
 

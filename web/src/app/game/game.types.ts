@@ -61,6 +61,8 @@ export interface ResultView { ranking: string[]; scores: Record<string, number>;
 export interface RoomView {
   type: 'room';
   code: string;
+  /** Room publique : listée sur l'accueil tant qu'elle attend des joueurs. */
+  publicRoom: boolean;
   version: number;
   phase: Phase;
   presetId: string;
@@ -191,3 +193,9 @@ export interface DailySummary {
 }
 
 export interface BotProfile { profile: string; label: string; }
+
+/** Une room publique qui attend des joueurs (GET /api/rooms). */
+export interface PublicRoom {
+  code: string; presetId: string; presetName: string; themeId: string; themeName: string;
+  hostName: string; humans: number; players: number; maxPlayers: number; createdAt: string;
+}
