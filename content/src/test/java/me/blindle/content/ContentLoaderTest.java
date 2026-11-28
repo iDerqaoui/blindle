@@ -113,6 +113,31 @@ class ContentLoaderTest {
     }
 
     @Test
+    void storedDocumentReplacesTheFileWithTheSameIdAndIsValidatedLikeIt(@TempDir Path dir) throws IOException {
+        String theme = """
+                { "id": "t", "name": "%s",
+                  "rights": { "profile": "free", "channels": ["web"], "visibility": "private", "imagePolicy": "none" },
+                  "defaultSlots": [ { "id": "a", "label": "A" } ],
+                  "cards": [ { "id": "c", "name": "C", %s
+                    "hints": [ { "level": 1, "type": "text", "text": "x" }, { "level": 2, "type": "text", "text": "y" } ] } ] }
+                """;
+        write(dir, "themes/any-file-name.json", theme.formatted("Fichier", ""));
+        Files.createDirectories(dir.resolve("presets"));
+        com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+
+        ContentLoader.Content edited = loader.load(dir, new ContentLoader.Overrides(
+                java.util.Map.of("t", mapper.readTree(theme.formatted("Base", ""))), java.util.Map.of()));
+        assertThat(edited.themes()).hasSize(1);
+        assertThat(edited.themes().get("t").name()).isEqualTo("Base");
+
+        ContentLoader.Overrides invalid = new ContentLoader.Overrides(
+                java.util.Map.of("t", mapper.readTree(theme.formatted("Base", "\"image\": \"x.png\","))), java.util.Map.of());
+        assertThatThrownBy(() -> loader.load(dir, invalid))
+                .isInstanceOfSatisfying(ContentValidationException.class, e -> assertThat(e.errors())
+                        .singleElement().asString().startsWith("base:t : ").contains("imagePolicy"));
+    }
+
+    @Test
     void missingFoldersAreExplicit(@TempDir Path dir) {
         assertThatThrownBy(() -> loader.load(dir))
                 .hasMessageContaining("Dossier introuvable");

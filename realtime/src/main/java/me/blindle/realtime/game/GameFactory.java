@@ -1,5 +1,7 @@
 package me.blindle.realtime.game;
 
+import me.blindle.content.ContentCheck;
+import me.blindle.content.ContentLoader;
 import me.blindle.content.ContentRegistry;
 import me.blindle.content.ContentValidationException;
 import me.blindle.content.Preset;
@@ -26,10 +28,11 @@ import java.util.Set;
 
 /**
  * Assemble un {@link GameSetup} à partir d'un preset. Au démarrage, vérifie que chaque preset
- * référence des règles et des modes existants, compatibles avec son thème.
+ * référence des règles et des modes existants, compatibles avec son thème ; refait ce contrôle sur
+ * tout contenu édité par l'administrateur avant qu'il soit servi ({@link ContentCheck}).
  */
 @Component
-public class GameFactory {
+public class GameFactory implements ContentCheck {
 
     private final ContentRegistry content;
     private final RuleCatalog rules;
@@ -43,17 +46,27 @@ public class GameFactory {
     }
 
     private void validateAll() {
+        List<String> errors = check(content.presets(), id -> content.theme(id).orElse(null));
+        if (!errors.isEmpty()) {
+            throw new ContentValidationException(errors);
+        }
+    }
+
+    @Override
+    public List<String> check(ContentLoader.Content candidate) {
+        return check(candidate.presets().values(), candidate.themes()::get);
+    }
+
+    private List<String> check(java.util.Collection<Preset> presets, java.util.function.Function<String, Theme> themes) {
         List<String> errors = new ArrayList<>();
-        for (Preset preset : content.presets()) {
+        for (Preset preset : presets) {
             try {
-                setup(preset.id());
+                setup(preset, themes.apply(preset.theme()), RoomOverrides.NONE);
             } catch (RuntimeException e) {
                 errors.add("preset « " + preset.id() + " » : " + e.getMessage());
             }
         }
-        if (!errors.isEmpty()) {
-            throw new ContentValidationException(errors);
-        }
+        return errors;
     }
 
     public GameSetup setup(String presetId) {
@@ -82,8 +95,13 @@ public class GameFactory {
     private GameSetup setup(String presetId, RoomOverrides overrides) {
         Preset preset = content.preset(presetId)
                 .orElseThrow(() -> new GameException("UNKNOWN_PRESET", "Preset inconnu : " + presetId));
-        Theme theme = content.theme(preset.theme())
-                .orElseThrow(() -> new IllegalStateException("Thème introuvable : " + preset.theme()));
+        return setup(preset, content.theme(preset.theme()).orElse(null), overrides);
+    }
+
+    private GameSetup setup(Preset preset, Theme theme, RoomOverrides overrides) {
+        if (theme == null) {
+            throw new IllegalStateException("Thème introuvable : " + preset.theme());
+        }
         BidMode bidMode = modes.bidMode(preset.bidMode());
         VerdictMode verdictMode = modes.verdictMode(preset.verdictMode());
         if (preset.daily() && !ValueVerdictMode.ID.equals(verdictMode.id())) {

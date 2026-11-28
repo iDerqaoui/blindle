@@ -53,6 +53,12 @@ public class AnimeThemeGenerator implements ContentGenerator {
         }
     }
 
+    /** Les thèmes {@code anime-*} s'éditent par la curation des personnages (même désactivée). */
+    @Override
+    public boolean generates(String themeId) {
+        return themeId.startsWith("anime-");
+    }
+
     /** Régénère un univers, même si la génération au démarrage est désactivée. */
     public void generate(Path contentDir, String slug) {
         int seeded = curation.seedFromFile(slug, contentDir.resolve("curation").resolve("anime-" + slug + ".json"));

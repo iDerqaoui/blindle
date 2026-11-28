@@ -34,39 +34,84 @@ public final class ContentLoader {
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     private final SchemaValidator schemas = new SchemaValidator();
 
+    /**
+     * Documents qui remplacent (même identifiant) ou complètent les fichiers : contenu édité par
+     * l'administrateur et gardé en base. Ils passent par la même validation que les fichiers.
+     */
+    public record Overrides(Map<String, JsonNode> themes, Map<String, JsonNode> presets) {
+        public static final Overrides NONE = new Overrides(Map.of(), Map.of());
+
+        public Overrides {
+            themes = Map.copyOf(themes);
+            presets = Map.copyOf(presets);
+        }
+    }
+
+    /** Document à valider : nom affiché dans les erreurs, contenu lu (null si illisible). */
+    private record Source(String name, JsonNode node) {
+    }
+
     public Content load(Path dir) {
+        return load(dir, Overrides.NONE);
+    }
+
+    public Content load(Path dir, Overrides overrides) {
         List<String> errors = new ArrayList<>();
         Map<String, Theme> themes = new LinkedHashMap<>();
         Map<String, Preset> presets = new LinkedHashMap<>();
 
-        for (Path file : jsonFiles(dir.resolve("themes"), errors)) {
-            Theme theme = parse(file, Theme.class, true, errors);
+        for (Source source : sources(dir.resolve("themes"), overrides.themes(), errors)) {
+            Theme theme = parse(source, Theme.class, true, errors);
             if (theme == null) {
                 continue;
             }
             if (themes.containsKey(theme.id())) {
-                errors.add(file.getFileName() + " : thème « " + theme.id() + " » déjà défini");
+                errors.add(source.name() + " : thème « " + theme.id() + " » déjà défini");
                 continue;
             }
-            checkTheme(file.getFileName().toString(), theme, errors);
+            checkTheme(source.name(), theme, errors);
             themes.put(theme.id(), theme);
         }
-        for (Path file : jsonFiles(dir.resolve("presets"), errors)) {
-            Preset preset = parse(file, Preset.class, false, errors);
+        for (Source source : sources(dir.resolve("presets"), overrides.presets(), errors)) {
+            Preset preset = parse(source, Preset.class, false, errors);
             if (preset == null) {
                 continue;
             }
             if (presets.containsKey(preset.id())) {
-                errors.add(file.getFileName() + " : preset « " + preset.id() + " » déjà défini");
+                errors.add(source.name() + " : preset « " + preset.id() + " » déjà défini");
                 continue;
             }
-            checkPreset(file.getFileName().toString(), preset, themes, errors);
+            checkPreset(source.name(), preset, themes, errors);
             presets.put(preset.id(), preset);
         }
         if (!errors.isEmpty()) {
             throw new ContentValidationException(errors);
         }
         return new Content(themes, presets);
+    }
+
+    /** Fichiers du dossier, sauf ceux qu'un document de même {@code id} remplace, puis ces documents. */
+    private List<Source> sources(Path dir, Map<String, JsonNode> overrides, List<String> errors) {
+        List<Source> out = new ArrayList<>();
+        for (Path file : jsonFiles(dir, errors)) {
+            String name = file.getFileName().toString();
+            JsonNode node;
+            try {
+                node = mapper.readTree(file.toFile());
+            } catch (IOException e) {
+                String detail = e instanceof com.fasterxml.jackson.core.JsonProcessingException jpe
+                        ? jpe.getOriginalMessage() : e.getMessage();
+                errors.add(name + " : JSON illisible (" + detail + ")");
+                continue;
+            }
+            JsonNode id = node == null ? null : node.get("id");
+            if (id == null || !id.isTextual() || !overrides.containsKey(id.asText())) {
+                out.add(new Source(name, node));
+            }
+        }
+        overrides.entrySet().stream().sorted(Map.Entry.comparingByKey())
+                .forEach(e -> out.add(new Source("base:" + e.getKey(), e.getValue())));
+        return out;
     }
 
     private List<Path> jsonFiles(Path dir, List<String> errors) {
@@ -82,10 +127,14 @@ public final class ContentLoader {
         }
     }
 
-    private <T> T parse(Path file, Class<T> type, boolean theme, List<String> errors) {
-        String name = file.getFileName().toString();
+    private <T> T parse(Source source, Class<T> type, boolean theme, List<String> errors) {
+        String name = source.name();
+        JsonNode node = source.node();
+        if (node == null || node.isMissingNode()) {
+            errors.add(name + " : document vide");
+            return null;
+        }
         try {
-            JsonNode node = mapper.readTree(file.toFile());
             List<String> schemaErrors = theme ? schemas.validateTheme(node) : schemas.validatePreset(node);
             if (!schemaErrors.isEmpty()) {
                 schemaErrors.forEach(e -> errors.add(name + " : " + e));

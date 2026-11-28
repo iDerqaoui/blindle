@@ -26,7 +26,7 @@ public class SecurityConfig {
                                                    AccountUserService users) throws Exception {
         http
                 .authorizeHttpRequests(a -> a
-                        .requestMatchers("/api/admin/curation/**").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/curation/**", "/api/admin/content/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/me").authenticated()
                         .anyRequest().permitAll())
                 .csrf(c -> c

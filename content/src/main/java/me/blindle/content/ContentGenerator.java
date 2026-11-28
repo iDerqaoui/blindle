@@ -11,4 +11,9 @@ import java.nio.file.Path;
 public interface ContentGenerator {
 
     void generate(Path contentDir);
+
+    /** Ce thème est-il produit par ce générateur ? (il s'édite alors à sa source, pas comme un thème écrit à la main) */
+    default boolean generates(String themeId) {
+        return false;
+    }
 }
