@@ -75,7 +75,7 @@ retour à l'image précédente si la nouvelle ne répond pas.
 2. **Clé de déploiement** (sur son PC, hors du dépôt) :
    `ssh-keygen -t ed25519 -f ~/.ssh/blindle-deploy -C github-actions -N ""`
 3. **Serveur** (une fois, en root) :
-   `ssh root@<ip> 'bash -s' < deploy/setup-server.sh "$(cat ~/.ssh/blindle-deploy.pub)"`
+   `ssh root@<ip> "DEPLOY_KEY='$(cat ~/.ssh/blindle-deploy.pub)' bash -s" < deploy/setup-server.sh` (Git Bash)
 4. **Secrets** : `ssh deploy@<ip>`, créer `/opt/blindle/.env` d'après `deploy/.env.example`, puis `chmod 600 .env`.
 5. **GitHub** → Settings → Secrets and variables → Actions :
    - Variables : `DEPLOY_HOST` (IP), `BLINDLE_DOMAIN` (ex. `blindle.app`), facultatif `DEPLOY_USER` (défaut `deploy`) ;

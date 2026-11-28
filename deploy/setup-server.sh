@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 # Préparation unique d'un serveur Ubuntu 24.04 neuf, en root :
-#   ssh root@<ip> 'bash -s' < deploy/setup-server.sh "<clé publique SSH de déploiement>"
+#   ssh root@<ip> "DEPLOY_KEY='$(cat ~/.ssh/blindle-deploy.pub)' bash -s" < deploy/setup-server.sh
 # Installe Docker, crée l'utilisateur « deploy » (clé fournie, membre du groupe docker), ferme tout
 # sauf SSH / HTTP / HTTPS, active les mises à jour de sécurité et la sauvegarde quotidienne.
 set -euo pipefail
-DEPLOY_KEY="${1:?usage : setup-server.sh \"ssh-ed25519 AAAA… github-actions\"}"
+# Clé publique : variable DEPLOY_KEY, ou arguments (ssh les découpe aux espaces : on les rejoint)
+DEPLOY_KEY="${DEPLOY_KEY:-$*}"
+[ -n "$DEPLOY_KEY" ] || { echo "usage : setup-server.sh \"ssh-ed25519 AAAA… github-actions\"" >&2; exit 1; }
 
 apt-get update
 apt-get install -y ca-certificates curl ufw unattended-upgrades
