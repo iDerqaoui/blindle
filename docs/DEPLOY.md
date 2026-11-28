@@ -65,41 +65,28 @@ Alternative équivalente : Koyeb (free, Docker, WebSocket, `*.koyeb.app`) avec u
 
 ## Option C — Serveur dédié + domaine, déploiement automatique (production)
 
-Un VPS (Hetzner, DigitalOcean, OVH… Ubuntu 24.04, 2 vCPU / 4 Go) : lance l'application, PostgreSQL (volume persistant, sauvegarde quotidienne) et Caddy (HTTPS
-Let's Encrypt automatique, WebSocket). Chaque push sur  : tests → image
- → déploiement par SSH (), avec retour
-à l'image précédente si la nouvelle ne répond pas.
+Un VPS (Hetzner, DigitalOcean, OVH… Ubuntu 24.04, 2 vCPU / 4 Go) : `deploy/docker-compose.prod.yml`
+lance l'application, PostgreSQL (volume persistant, sauvegarde quotidienne) et Caddy (HTTPS
+Let's Encrypt automatique, WebSocket). Chaque push sur `main` : tests → image
+`ghcr.io/<compte>/blindle:<sha>` → déploiement par SSH (`.github/workflows/ci-deploy.yml`), avec
+retour à l'image précédente si la nouvelle ne répond pas.
 
-1. **Domaine** : DNS   et  → IP du serveur (chez Cloudflare : « DNS only », nuage gris).
-2. **Clé de déploiement** (sur son PC) : Generating public/private ed25519 key pair.
-Your identification has been saved in blindle-deploy
-Your public key has been saved in blindle-deploy.pub
-The key fingerprint is:
-SHA256:AOEu2nHW8cZ0mPwEqa3nEzxkeQ7W5kV2qqiGfg3E3JY github-actions
-The key's randomart image is:
-+--[ED25519 256]--+
-|    o.  ..       |
-|   . . ..+  o .  |
-|    .oo+=+oo o   |
-|   . .=*E++ o    |
-|  o +..BSB.o     |
-| o =  o.* +      |
-|. .  . * o       |
-|    . + +        |
-|   ..o   .       |
-+----[SHA256]-----+.
-3. **Serveur** (une fois, en root) : .
-4. **Secrets** : , créer  d'après  ().
+1. **Domaine** : DNS `A` pour `@` et `www` → IP du serveur (chez Cloudflare : « DNS only », nuage gris).
+2. **Clé de déploiement** (sur son PC, hors du dépôt) :
+   `ssh-keygen -t ed25519 -f ~/.ssh/blindle-deploy -C github-actions -N ""`
+3. **Serveur** (une fois, en root) :
+   `ssh root@<ip> 'bash -s' < deploy/setup-server.sh "$(cat ~/.ssh/blindle-deploy.pub)"`
+4. **Secrets** : `ssh deploy@<ip>`, créer `/opt/blindle/.env` d'après `deploy/.env.example`, puis `chmod 600 .env`.
 5. **GitHub** → Settings → Secrets and variables → Actions :
-   - Variables :  (IP),  (ex. ), facultatif  (défaut ) ;
-   - Secrets :  (contenu de , la clé privée), conseillé
-      (sortie de , sinon lue au premier déploiement).
-6. Pousser sur  (ou Actions → CI / Deploy → Run workflow). Premier démarrage : ~30 s de Tenrai.
-7. Google / Discord : déclarer  (et ).
+   - Variables : `DEPLOY_HOST` (IP), `BLINDLE_DOMAIN` (ex. `blindle.me`), facultatif `DEPLOY_USER` (défaut `deploy`) ;
+   - Secrets : `DEPLOY_SSH_KEY` (contenu de `~/.ssh/blindle-deploy`, la clé privée), conseillé
+     `DEPLOY_KNOWN_HOSTS` (sortie de `ssh-keyscan <ip>` ; sinon lue au premier déploiement).
+6. Pousser sur `main` (ou Actions → CI / Deploy → Run workflow). Premier démarrage : ~30 s de Tenrai.
+7. Google / Discord : déclarer `https://<domaine>/login/oauth2/code/google` (et `/discord`).
 
-Sans , le workflow ne fait que tester et publier l'image. Un redéploiement efface les
+Sans `DEPLOY_HOST`, le workflow ne fait que tester et publier l'image. Un redéploiement efface les
 rooms en cours (en mémoire), pas la base. Avant d'ouvrir au public : les univers anime (images
-MyAnimeList, profil ) sont réservés au jeu entre amis (§8).
+MyAnimeList, profil `private`) sont réservés au jeu entre amis (§8).
 
 ## Discord
 
