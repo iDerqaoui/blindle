@@ -14,11 +14,14 @@ public class AccountService {
     private final UserAccountRepository accounts;
     private final UserIdentityRepository identities;
     private final Clock clock;
+    private final org.springframework.context.ApplicationEventPublisher events;
 
-    public AccountService(UserAccountRepository accounts, UserIdentityRepository identities, Clock clock) {
+    public AccountService(UserAccountRepository accounts, UserIdentityRepository identities, Clock clock,
+                          org.springframework.context.ApplicationEventPublisher events) {
         this.accounts = accounts;
         this.identities = identities;
         this.clock = clock;
+        this.events = events;
     }
 
     /**
@@ -64,5 +67,18 @@ public class AccountService {
         UserAccount account = accounts.findById(id).orElseThrow();
         account.rename(n);
         return account;
+    }
+
+    /**
+     * Suppression du compte (RGPD) : identités Google / Discord comprises (cascade), puis chaque
+     * module efface ses données liées ({@link AccountDeletedEvent}).
+     */
+    @Transactional
+    public void delete(UUID id) {
+        accounts.findById(id).ifPresent(a -> {
+            identities.deleteAll(identities.findByAccountId(id));
+            accounts.delete(a);
+            events.publishEvent(new AccountDeletedEvent(id));
+        });
     }
 }

@@ -30,8 +30,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * Cartes des thèmes écrits à la main éditées en base : validées comme un fichier, servies aussitôt
  * aux nouvelles rooms, et le fichier revient quand on oublie la version en base.
  */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = "blindle.admin.password=s3cret-test")
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class ThemeAdminIntegrationTest {
 
     private static final String THEME = "manga-shonen";
@@ -47,6 +46,8 @@ class ThemeAdminIntegrationTest {
     GameFactory factory;
     @Autowired
     ThemeDocumentRepository documents;
+    @Autowired
+    me.blindle.accounts.UserAccountRepository accounts;
 
     private final ObjectMapper mapper = new ObjectMapper();
 
@@ -160,20 +161,12 @@ class ThemeAdminIntegrationTest {
         assertThat(card("op-luffy").name()).isEqualTo("Luffy API");
     }
 
-    /** Session admin (mot de passe) avec jeton CSRF, pour les requêtes qui modifient. */
+    /** Session d'un compte qui a le rôle ADMIN en base. */
     private HttpHeaders adminSession() {
-        List<String> cookies = rest.getForEntity("/api/me", String.class).getHeaders().get(HttpHeaders.SET_COOKIE);
-        String xsrf = cookies.stream().filter(c -> c.startsWith("XSRF-TOKEN=")).findFirst().orElseThrow()
-                .split(";")[0].substring("XSRF-TOKEN=".length());
-        HttpHeaders h = new HttpHeaders();
-        h.setContentType(MediaType.APPLICATION_JSON);
-        h.add(HttpHeaders.COOKIE, "XSRF-TOKEN=" + xsrf);
-        h.add("X-XSRF-TOKEN", xsrf);
-        ResponseEntity<String> login = rest.exchange("/api/auth/admin-password", HttpMethod.POST,
-                new HttpEntity<>("{\"password\":\"s3cret-test\"}", h), String.class);
-        String session = login.getHeaders().get(HttpHeaders.SET_COOKIE).stream()
-                .filter(c -> c.startsWith("JSESSIONID=")).findFirst().orElseThrow().split(";")[0];
-        h.set(HttpHeaders.COOKIE, "XSRF-TOKEN=" + xsrf + "; " + session);
-        return h;
+        me.blindle.accounts.UserAccount admin = new me.blindle.accounts.UserAccount(java.util.UUID.randomUUID(), "Admin", null,
+                java.time.Instant.now());
+        admin.role(me.blindle.accounts.UserAccount.ADMIN);
+        accounts.save(admin);
+        return TestLogin.session(rest, admin.id());
     }
 }

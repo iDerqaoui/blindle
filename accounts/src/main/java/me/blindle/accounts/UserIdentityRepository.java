@@ -7,4 +7,6 @@ import java.util.List;
 public interface UserIdentityRepository extends JpaRepository<UserIdentity, UserIdentity.Key> {
 
     List<UserIdentity> findByEmailAndEmailVerifiedTrue(String email);
+
+    List<UserIdentity> findByAccountId(java.util.UUID accountId);
 }

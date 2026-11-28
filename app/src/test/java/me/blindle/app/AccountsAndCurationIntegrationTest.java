@@ -76,6 +76,12 @@ class AccountsAndCurationIntegrationTest {
     AnimeCharacterRepository characters;
     @Autowired
     AccountService accounts;
+    @Autowired
+    me.blindle.accounts.UserAccountRepository accountRepository;
+    @Autowired
+    me.blindle.accounts.UserIdentityRepository identityRepository;
+    @Autowired
+    org.springframework.jdbc.core.JdbcTemplate jdbc;
 
     @TempDir
     Path content;
@@ -163,6 +169,46 @@ class AccountsAndCurationIntegrationTest {
         assertThat(rest.getForObject("/api/auth/providers", List.class)).isEmpty();
         // le jeu reste ouvert sans compte
         assertThat(rest.getForEntity("/api/presets", String.class).getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
+
+    @Test
+    void adminRoleComesFromTheDatabase() {
+        UserAccount player = accounts.signIn(new OAuthProfile("google", "p-" + UUID.randomUUID(), null, false, "Joueur", null));
+        assertThat(player.admin()).isFalse();
+        org.springframework.http.HttpHeaders asPlayer = TestLogin.session(rest, player.id());
+        assertThat(rest.exchange("/api/admin/curation/universes", org.springframework.http.HttpMethod.GET,
+                new org.springframework.http.HttpEntity<>(asPlayer), String.class).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+
+        UserAccount admin = accountRepository.findById(player.id()).orElseThrow();
+        admin.role(UserAccount.ADMIN);
+        accountRepository.save(admin);
+        org.springframework.http.HttpHeaders asAdmin = TestLogin.session(rest, player.id());
+        ResponseEntity<Map> me = rest.exchange("/api/me", org.springframework.http.HttpMethod.GET,
+                new org.springframework.http.HttpEntity<>(asAdmin), Map.class);
+        assertThat(me.getBody()).containsEntry("admin", true);
+        assertThat(rest.exchange("/api/admin/curation/universes", org.springframework.http.HttpMethod.GET,
+                new org.springframework.http.HttpEntity<>(asAdmin), String.class).getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
+
+    @Test
+    void deletingTheAccountErasesItsIdentitiesAndDailyResults() {
+        UserAccount a = accounts.signIn(new OAuthProfile("discord", "del-" + UUID.randomUUID(), null, false, "Bye", null));
+        String key = "u:" + a.id();
+        jdbc.update("insert into who_result (played_on, theme, player_key, name, universe, score, gold_left, share, finished_at) "
+                + "values (current_date, 'anime-naruto', ?, 'Bye', 'Naruto', 10, 0, 'x', current_timestamp)", key);
+        String count = "select count(*) from who_result where player_key = ?";
+        assertThat(jdbc.queryForObject(count, Integer.class, key)).isEqualTo(1);
+
+        org.springframework.http.HttpHeaders h = TestLogin.session(rest, a.id());
+        assertThat(rest.exchange("/api/me", org.springframework.http.HttpMethod.DELETE,
+                new org.springframework.http.HttpEntity<>(h), String.class).getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+
+        assertThat(accountRepository.findById(a.id())).isEmpty();
+        assertThat(identityRepository.findByAccountId(a.id())).isEmpty();
+        assertThat(jdbc.queryForObject(count, Integer.class, key)).isZero();
+        // la session est fermée
+        assertThat(rest.exchange("/api/me", org.springframework.http.HttpMethod.GET,
+                new org.springframework.http.HttpEntity<>(h), String.class).getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
     }
 
     @Test

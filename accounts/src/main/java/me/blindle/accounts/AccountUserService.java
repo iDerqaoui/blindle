@@ -6,16 +6,13 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Component;
 
-/** Après l'échange OAuth2 : lit le profil du fournisseur, ouvre ou crée le compte, fixe le rôle. */
+/** Après l'échange OAuth2 : lit le profil du fournisseur, ouvre ou crée le compte, reprend son rôle (en base). */
 @Component
 public class AccountUserService extends DefaultOAuth2UserService {
 
     private final AccountService accounts;
-    private final AdminAllowList admins;
-
-    public AccountUserService(AccountService accounts, AdminAllowList admins) {
+    public AccountUserService(AccountService accounts) {
         this.accounts = accounts;
-        this.admins = admins;
     }
 
     @Override
@@ -26,6 +23,6 @@ public class AccountUserService extends DefaultOAuth2UserService {
 
     BlindleUser toUser(OAuthProfile profile) {
         UserAccount account = accounts.signIn(profile);
-        return new BlindleUser(account.id(), profile.provider(), admins.isAdmin(profile));
+        return new BlindleUser(account.id(), profile.provider(), account.admin());
     }
 }

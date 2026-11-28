@@ -3,6 +3,7 @@ package me.blindle.accounts;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -15,7 +16,8 @@ import java.util.List;
 /**
  * Connexion côté front : {@code GET /api/auth/providers} liste les boutons à afficher, la connexion
  * elle-même est une redirection vers {@code /oauth2/authorization/<fournisseur>}, la déconnexion un
- * {@code POST /api/auth/logout}. {@code GET /api/me} : le compte connecté, ou 204 sans connexion.
+ * {@code POST /api/auth/logout}. {@code GET /api/me} : le compte connecté, ou 204 sans connexion ;
+ * {@code DELETE /api/me} supprime le compte.
  */
 @RestController
 @RequestMapping("/api")
@@ -60,6 +62,18 @@ public class AuthController {
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
+    }
+
+    /** Suppression du compte et de ses données (RGPD), puis fin de la session. */
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> delete(@AuthenticationPrincipal BlindleUser user, jakarta.servlet.http.HttpServletRequest request)
+            throws jakarta.servlet.ServletException {
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        }
+        accounts.delete(user.accountId());
+        request.logout();
+        return ResponseEntity.noContent().build();
     }
 
     private static Me view(UserAccount a, BlindleUser user) {

@@ -103,7 +103,7 @@ jobs:
           fi
           printf 'Host *\n  IdentityFile ~/.ssh/id_deploy\n  IdentitiesOnly yes\n' > ~/.ssh/config
       - name: Fichiers de déploiement
-        run: scp deploy/docker-compose.prod.yml deploy/Caddyfile deploy/deploy.sh deploy/backup.sh "$USER_AT_HOST:/opt/blindle/"
+        run: scp deploy/docker-compose.prod.yml deploy/Caddyfile deploy/deploy.sh deploy/backup.sh deploy/make-admin.sh "$USER_AT_HOST:/opt/blindle/"
       - name: Déploiement
         env:
           IMAGE: ${{ needs.image.outputs.image }}

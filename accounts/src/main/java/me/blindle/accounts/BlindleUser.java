@@ -11,8 +11,8 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Utilisateur connecté, gardé en session : son compte, son fournisseur et son rôle (fixé à la
- * connexion d'après {@link AdminAllowList}). Le pseudo, modifiable, est relu en base.
+ * Utilisateur connecté, gardé en session : son compte, son fournisseur et son rôle (lu en base à la
+ * connexion : un changement de rôle vaut à la connexion suivante). Le pseudo, modifiable, est relu en base.
  */
 public record BlindleUser(UUID accountId, String provider, boolean admin) implements OAuth2User, Serializable {
 

@@ -28,6 +28,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(a -> a
                         .requestMatchers("/api/admin/curation/**", "/api/admin/content/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/me").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/me").authenticated()
                         .anyRequest().permitAll())
                 .csrf(c -> c
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())

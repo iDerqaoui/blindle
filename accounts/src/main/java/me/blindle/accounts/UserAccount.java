@@ -27,6 +27,13 @@ public class UserAccount {
     @Column(name = "last_login_at", nullable = false)
     private Instant lastLoginAt;
 
+    /** {@link #PLAYER} ou {@link #ADMIN}, changé seulement en base (deploy/make-admin.sh). */
+    @Column(nullable = false)
+    private String role = PLAYER;
+
+    public static final String PLAYER = "PLAYER";
+    public static final String ADMIN = "ADMIN";
+
     protected UserAccount() {
     }
 
@@ -48,6 +55,15 @@ public class UserAccount {
 
     public String avatarUrl() {
         return avatarUrl;
+    }
+
+    public boolean admin() {
+        return ADMIN.equals(role);
+    }
+
+    /** Pour les tests et l'outillage ; en production le rôle se donne en base. */
+    public void role(String role) {
+        this.role = role;
     }
 
     void rename(String name) {

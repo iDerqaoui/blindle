@@ -13,6 +13,9 @@ public interface WhoResultRepository extends JpaRepository<WhoResultRow, WhoResu
 
     long countByPlayedOnAndTheme(LocalDate playedOn, String theme);
 
+    /** Effacement des résultats d'un joueur (compte supprimé). */
+    long deleteByPlayerKey(String playerKey);
+
     @Query("select count(r) from WhoResultRow r where r.playedOn = :d and r.theme = :theme and "
             + "(r.score > :score or (r.score = :score and r.goldLeft > :gold))")
     long countBetter(@Param("d") LocalDate date, @Param("theme") String theme, @Param("score") int score, @Param("gold") int goldLeft);

@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Blindle — icône d'enchères mystères</title>
+  <desc id="desc">Un marteau d'enchères doré au-dessus d'une boîte mystère violette.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#28105D"/><stop offset="1" stop-color="#090719"/></linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#FFF1A6"/><stop offset=".42" stop-color="#FFC342"/><stop offset="1" stop-color="#D97818"/></linearGradient>
+    <linearGradient id="violet" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#9B5CFF"/><stop offset="1" stop-color="#5420B7"/></linearGradient>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="9" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <circle cx="256" cy="256" r="238" fill="url(#bg)" stroke="#7D3CE5" stroke-width="13"/>
+  <circle cx="256" cy="256" r="215" fill="none" stroke="#B58BFF" stroke-opacity=".18" stroke-width="2"/>
+  <!-- mystery cards -->
+  <g stroke="#E5D6FF" stroke-width="9" stroke-linejoin="round">
+    <rect x="82" y="212" width="105" height="148" rx="15" fill="#39206F" transform="rotate(-17 134 286)"/>
+    <rect x="326" y="202" width="105" height="148" rx="15" fill="#39206F" transform="rotate(15 378 276)"/>
+  </g>
+  <g fill="none" stroke="#B995FF" stroke-width="8" stroke-linecap="round" opacity=".9">
+    <path d="M119 267q17-26 34 0t-17 26q-17 0-17-17"/>
+    <path d="M355 263l15-18 15 18 15-18"/>
+  </g>
+  <!-- mystery box -->
+  <path d="M112 286 256 235l144 51v137q0 15-15 20l-129 43-129-43q-15-5-15-20Z" fill="#170D35" stroke="url(#violet)" stroke-width="12" stroke-linejoin="round"/>
+  <path d="m112 286 144 52 144-52M256 338v148" fill="none" stroke="#8D50EF" stroke-width="10" stroke-linejoin="round"/>
+  <path d="m112 286 144 52 144-52-144-51Z" fill="#422078" stroke="#A66CFF" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M256 355c-30 0-48 17-48 42 0 17 10 29 26 36v12h44v-20c0-18 25-25 25-51 0-11-7-19-18-19-12 0-19 7-22 18-2-11-3-18-7-18Z" fill="url(#gold)" filter="url(#glow)"/>
+  <circle cx="256" cy="466" r="8" fill="#FFE59A"/>
+  <!-- auction gavel -->
+  <g transform="rotate(-34 270 150)" stroke="#3A1747" stroke-width="10" stroke-linejoin="round">
+    <rect x="245" y="93" width="44" height="178" rx="19" fill="url(#gold)"/>
+    <rect x="190" y="64" width="154" height="62" rx="22" fill="url(#gold)"/>
+    <path d="M202 76h130M254 111v138" fill="none" stroke="#FFF0B5" stroke-width="7" stroke-linecap="round" opacity=".8"/>
+    <rect x="228" y="232" width="78" height="33" rx="13" fill="#B85B20"/>
+  </g>
+  <!-- impact sparks -->
+  <g fill="#FFD66E" filter="url(#glow)"><path d="m104 174 14 28 28 14-28 14-14 28-14-28-28-14 28-14Z"/><path d="m392 143 9 18 18 9-18 9-9 18-9-18-18-9 18-9Z"/><circle cx="160" cy="115" r="7"/><circle cx="367" cy="90" r="7"/></g>
+</svg>
