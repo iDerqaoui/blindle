@@ -159,6 +159,7 @@ Défi quotidien solo du mode anime, choisi par l'utilisateur (remplace à terme 
 - Reconnexion : faite le 2026-11-27 (jeton par onglet, 15 s de grâce) ; rooms toujours en mémoire.
 - Défi du jour rejouable à volonté (pas de compte) ; classement en mémoire. Équilibrage du prix du marché et des bots à ajuster en jouant.
 - Dépôt : GitHub `iDerqaoui/blindle` (origin). Hébergement de test : Cloudflare Tunnel (voir `docs/DEPLOY.md`).
+- Mise en ligne (2026-11-28) : domaine `blindle.app` acheté chez Cloudflare (renouvellement 14,20 $/an), `contact@blindle.app` transféré par Cloudflare Email Routing (testé). Déploiement prévu : VPS Hetzner + `deploy/` + GitHub Actions (`docs/DEPLOY.md`, option C) ; serveur pas encore créé.
 - Prochaines étapes convenues (2026-11-26), dans l'ordre :
   1. Mise en ligne sur un seul serveur : front construit embarqué dans le jar (ou Nginx devant), image Docker, HTTPS/WSS, `blindle.allowed-origins`, guide de déploiement, base PostgreSQL (le serveur génère les thèmes anime au démarrage).
   2. ~~Reconnexion (jeton qui rend sa place au joueur) et passation d'hôte quand l'hôte part.~~ Faite le 2026-11-27.
