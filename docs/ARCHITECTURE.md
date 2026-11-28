@@ -388,3 +388,37 @@ modifications valent **à chaud pour les nouvelles rooms** (les rooms ouvertes g
   indices ordonnés), erreurs du serveur affichées telles quelles.
 - Limites : un défi du jour sur un thème modifié dans la journée change de cartes pour les joueurs
   suivants ; le thème entier (nom, droits, slots) ne s'édite pas encore, seulement ses cartes.
+
+## 16. Rooms publiques, rôle admin en base, pages légales, mobile (2026-11-28)
+
+Décisions de l'utilisateur : comptes Google + Discord seuls ; rôle admin en base, sans mot de passe
+de secours ; rooms privées par défaut ; éditeur « Musashi », particulier ; site utilisable sur mobile.
+
+- **Rôle admin** : colonne `user_account.role` (`PLAYER` / `ADMIN`, `V7__account_role.sql`), lu à la
+  connexion (`AccountUserService` → `BlindleUser.admin`) : un changement vaut à la connexion suivante.
+  `deploy/make-admin.sh <e-mail> [ADMIN|PLAYER]` sur le serveur. `AdminAllowList`,
+  `AdminPasswordController`, `blindle.admin.emails` et `blindle.admin.password` sont supprimés.
+- **Suppression de compte** : `DELETE /api/me` (connecté) → `AccountService.delete` (compte et
+  identités) puis `AccountDeletedEvent` ; `app/AccountCleanup` efface les résultats Who's That? (clé
+  `u:<compte>`) dans la même transaction ; la session est fermée.
+- **Tests** : `app/src/test/.../TestLogin` (jamais livré) ouvre une session pour un compte de la base
+  (`GET /test/login?account=`), avec cookie et jeton CSRF.
+- **Rooms publiques** : `Room.listed` (faux par défaut), `Room.setListed` (hôte seulement, jamais en
+  défi du jour), STOMP `/app/room/{code}/visibility {publicRoom}`, `CreateRoom.publicRoom`,
+  `RoomView.publicRoom`. `Room.listing` : publique, en LOBBY, places libres, hôte connecté.
+  `GET /api/rooms` (`PresetController`) : rooms listées jouables sur le canal du demandeur, les plus
+  récentes d'abord. Les rooms privées se rejoignent toujours par code.
+- **Front** : logo `icon.svg` (+ PNG 180 / 192 / 512, `site.webmanifest`) ; le logo ramène à l'accueil
+  (en room : confirmation) ; accueil : liste des rooms publiques (rafraîchie toutes les 5 s, onglet
+  visible) et case « Publique » à la création ; salle d'attente : bascule publique / privée de l'hôte ;
+  Connexion et S'inscrire (même parcours OAuth, acceptation des CGU ; sans fournisseur configuré :
+  message « bientôt ») ; « Supprimer mon compte » avec confirmation.
+- **Légal** : `#terms`, `#privacy`, `#legal` (`legal.component.ts`, sections `legal.<page>.s<n>.h/.p`
+  dans les traductions, paragraphes séparés par une ligne vide) ; pied de page (droits, liens,
+  contact) hors room ; bandeau d'entrée (cookies nécessaires seulement, illustrations aux ayants
+  droit) fermé par « Compris », mémorisé (`blindle.notice`). Pas de bannière de consentement : aucun
+  cookie non nécessaire. Textes : modèle, pas un avis juridique.
+- **Mobile** : champs à 16 px (pas de zoom iOS), barre du haut compacte, rangées qui passent à la
+  ligne, fenêtres en bas d'écran, bandeau empilé, cibles tactiles de 40 px, zones sûres (encoche).
+  Vérifié en 390 px (captures Edge headless dans un cadre de 390 px : la fenêtre headless ne descend
+  pas sous ~500 px).

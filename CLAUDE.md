@@ -60,7 +60,7 @@ Jeu d'enchères à l'aveugle multijoueur en ligne (3 à 8 joueurs, ou solo contr
 - Jar exécutable : `mvn clean install -DskipTests` puis `java -jar app/target/app-0.1.0-SNAPSHOT.jar --blindle.content.dir=content` (le `clean` évite un jar embarquant d'anciens modules)
 - Front : `cd web && npm install && npm start` → http://localhost:4200 (proxy `/api`, `/ws`, `/oauth2`, `/login/oauth2` vers 8080) ; build : `npx ng build`
 - Minimum de joueurs par défaut : 2 ; solo : `--blindle.room.min-players=1`
-- Connexion : `GOOGLE_CLIENT_ID`/`_SECRET`, `DISCORD_CLIENT_ID`/`_SECRET`, admins `BLINDLE_ADMIN_EMAILS` (voir `docs/DEPLOY.md`) ; page admin : `#admin`
+- Connexion : `GOOGLE_CLIENT_ID`/`_SECRET`, `DISCORD_CLIENT_ID`/`_SECRET` (voir `docs/DEPLOY.md`) ; admin = rôle `ADMIN` en base (`user_account.role`), donné sur le serveur par `/opt/blindle/make-admin.sh <e-mail>` après une première connexion ; page admin : `#admin`
 - Thèmes anime illustrés (non commités) : générés par le serveur au démarrage depuis la base (1er démarrage : reprise de `content/curation/`, ~30 s via Tenrai) ; secours hors base : `node tools/import-anime.mjs`
 
 Java 17 retenu (décision du 2026-11-26) : pas de pattern matching dans `switch` ni de record patterns.
@@ -70,10 +70,28 @@ Architecture et protocole STOMP proposés à l'étape 0 : `docs/ARCHITECTURE.md`
 ## Étape en cours
 
 Étape 10 terminée. Hors feuille de route : mode principal « Anime Blind Bid » (mode `drawer`, thèmes MyAnimeList privés via Tenrai, rareté populaire-ou-puissant, verdict aux points, on ne gagne jamais d'or, laisser filer une carte coûte 150 au piocheur — voir ARCHITECTURE §11). Faits le 2026-11-27 : or non dépensé sans valeur (`PointsVerdictMode`) ; comptes Google / Discord et page admin des personnages (ARCHITECTURE §12) ; personnalisation de
-room par l'hôte et passation d'hôte (ARCHITECTURE §13). Prochaine : les demandes ci-dessous, puis étape 11 — Discord Activity (voir `docs/PROJECT.md` §11 et §12). Admin sans Google/Discord : `BLINDLE_ADMIN_PASSWORD`.
+room par l'hôte et passation d'hôte (ARCHITECTURE §13). Prochaine : les demandes ci-dessous, puis étape 11 — Discord Activity (voir `docs/PROJECT.md` §11 et §12).
 Mettre à jour cette ligne à chaque étape terminée.
 
-### À faire à la prochaine session (demandes du 2026-11-27)
+### En cours (2026-11-28) : demandes de l'utilisateur après la mise en ligne
+
+Faits le 2026-11-28 (ARCHITECTURE §16) : icône (`web/public/icon.svg`, tirée de `blindle-icon.svg`),
+logo → accueil, rooms publiques (privées par défaut, liste sur l'accueil) et privées par code, pages
+CGU / confidentialité et cookies / mentions légales (éditeur « Musashi », particulier), bandeau
+d'entrée (cookies nécessaires, illustrations aux ayants droit), Connexion et S'inscrire (Google +
+Discord seuls), suppression de compte, rôle admin en base (`make-admin.sh`, plus de mot de passe
+admin), passe mobile (vérifiée en 390 px).
+
+Reste, côté utilisateur : créer les identifiants Google et Discord et les mettre dans
+`/opt/blindle/.env` (sans eux, Connexion / S'inscrire affichent « bientôt ») ; se connecter une fois,
+puis `ssh -i ~/.ssh/blindle-admin root@2.29.209.86 /opt/blindle/make-admin.sh <e-mail>`.
+À vérifier sur un vrai téléphone : salle d'attente, table de jeu, défi Who's That?, page admin.
+Textes légaux : modèle rédigé par Claude, pas un avis juridique.
+
+Leçon de session : ne jamais passer de texte contenant des accents graves (`) dans `node -e "…"` ou
+`sed` sous bash (substitution de commande) ; écrire les fichiers avec l'outil d'écriture.
+
+### À faire ensuite (demandes du 2026-11-27)
 
 Aujourd'hui la page admin (`#admin`) permet seulement de changer le rang S–D et le nom d'un
 personnage anime, d'en ajouter un depuis MyAnimeList, d'en retirer un et de voir la rareté prévue.
@@ -100,8 +118,8 @@ nouvelle dépendance.
 
 ### Deux niveaux de contrôle : administrateur et hôte (demande du 2026-11-27)
 
-- **Administrateur principal** (le propriétaire du site, via `BLINDLE_ADMIN_EMAILS` ou
-  `BLINDLE_ADMIN_PASSWORD`) : définit la **base commune à toutes les rooms** : classement de
+- **Administrateur principal** (le propriétaire du site : compte au rôle `ADMIN` en base depuis le
+  2026-11-28) : définit la **base commune à toutes les rooms** : classement de
   puissance S–D et rareté, cartes des thèmes, presets (budget, règles, paramètres, modes). C'est
   le contenu de référence (base + `content/`) ; les points 1 à 3 ci-dessus en relèvent.
 - **Hôte d'une room** : personnalise **sa room seulement**, en salle d'attente (LOBBY), sans
