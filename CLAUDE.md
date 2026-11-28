@@ -24,7 +24,8 @@ Jeu d'enchères à l'aveugle multijoueur en ligne (3 à 8 joueurs, ou solo contr
 - `content` : chargement et validation des thèmes / presets
 - `realtime` : contrôleurs STOMP, rooms, timers
 - `accounts` : connexion Google / Discord, comptes, rôle admin, sécurité (ARCHITECTURE §12)
-- `curation` : personnages anime en base, page admin, génération des thèmes anime au démarrage
+- `curation` : personnages anime en base, page admin, génération des thèmes anime au démarrage ;
+  cartes des autres thèmes éditées en base (package `themes`, rechargement à chaud)
 - `web/` : application Angular
 
 ## Principes non négociables
@@ -80,17 +81,22 @@ personnage anime, d'en ajouter un depuis MyAnimeList, d'en retirer un et de voir
 1. **Modifier les valeurs des personnages depuis l'admin** (rareté imposée : faite le 2026-11-27, elle remplace le calcul, carte toujours dans le paquet, quotas sur le reste ; reste : popularité, image, indices, tags) : forcer une rareté, corriger la
    popularité, changer l'image, les indices, les tags. À trancher : une valeur forcée remplace-t-elle
    le calcul (rareté imposée hors quotas) ou l'ajuste-t-elle seulement ?
-2. **Personnaliser les cartes** de tous les thèmes (manga, pays… pas seulement anime) depuis
-   l'admin, en base plutôt que dans `content/`. Garder la validation JSON Schema et le champ `rights`.
+2. ~~**Personnaliser les cartes** de tous les thèmes (manga, pays… pas seulement anime) depuis
+   l'admin, en base plutôt que dans `content/`.~~ Fait le 2026-11-28 (ARCHITECTURE §15) : cartes en
+   base (`theme_document`), validées comme un fichier, à chaud pour les nouvelles rooms. Reste : nom,
+   droits et slots du thème, création d'un thème entier.
 3. **Personnaliser les modes de jeu (presets)** depuis l'admin : budget, manches, taille d'équipe,
    minuteurs, règles actives et paramètres (`discard-fee`, `anti-snipe`…), modes d'enchère et de
-   verdict. À trancher : à chaud (nouvelles rooms) ou au redémarrage comme la curation.
+   verdict. Tranché (2026-11-28) : à chaud pour les nouvelles rooms (même mécanisme que §15 :
+   `ContentOverlay.overrides().presets()`).
 4. **Statistiques des joueurs** : parties, victoires, scores, cartes préférées par compte ; vue admin
    (comptes, activité), peut-être un profil joueur. Prérequis : lier le compte connecté au joueur en
    partie (aujourd'hui il ne fait que pré-remplir le pseudo) et enregistrer les résultats en base.
 
-Questions à poser avant de coder : ordre de priorité, qui voit les stats (admin seul ou chaque
-joueur), stats des parties sans compte. Signaler toute nouvelle dépendance.
+Réponses du 2026-11-28 : le point 2 d'abord (fait) ; stats visibles par chaque joueur (son profil)
+et par l'admin (tous les comptes) ; parties sans compte suivies par cookie de navigateur, fusionnées
+au premier passage connecté ; presets à chaud. Ordre des points 1, 3, 4 : à redemander. Signaler toute
+nouvelle dépendance.
 
 ### Deux niveaux de contrôle : administrateur et hôte (demande du 2026-11-27)
 

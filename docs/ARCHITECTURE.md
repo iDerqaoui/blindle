@@ -361,3 +361,30 @@ recalculée au redémarrage, ajout de personnages par recherche MyAnimeList depu
   (🔥 dans la grille dès 2 jours). `GET /api/daily/who` renvoie `mine` (score, rang, série, grille) si
   le joueur a déjà joué. `MemoryWhoResults` pour les tests.
 - Front : écran `#who` (`who.component.ts`), saisie avec suggestions déroulantes (2 lettres, 6 noms),, bandeau à l'accueil et tuile « défi du jour » des univers.
+
+## 15. Cartes des thèmes éditées en base (2026-11-28)
+
+Point 2 des demandes du 2026-11-27, choisi en premier par l'utilisateur. Décisions : les
+modifications valent **à chaud pour les nouvelles rooms** (les rooms ouvertes gardent leur
+`GameSetup`) ; les thèmes générés (anime) restent édités par leur curation (§12).
+
+- `content` : `ContentLoader.load(dir, Overrides)` : un document en base remplace le fichier de même
+  `id` (ou ajoute un thème / preset) et passe par la même validation (schéma, droits, presets) ; ses
+  erreurs sont préfixées `base:<id>`. `ContentOverlay` fournit ces documents, `ContentCheck` ajoute
+  des contrôles (implémenté par `GameFactory` : règles, modes, verdict de chaque preset).
+  `ContentRegistry.preview(changes)` valide un contenu candidat sans le servir (`NullNode` = retirer
+  le document), `reload()` le remplace seulement s'il est valide (sans relancer les générateurs).
+  `ContentGenerator.generates(id)` désigne les thèmes générés (`anime-*`). Au démarrage, des
+  documents en base devenus invalides sont ignorés (journalisés) : le serveur part sur les fichiers.
+- `curation` (package `themes`) : table `theme_document` (`V6__theme_documents.sql`, document JSON
+  complet, auteur, date). `ThemeStore` (overlay), `ThemeEditor` : part du document en base sinon du
+  thème servi, remplace / ajoute / retire une carte, valide via `preview`, enregistre, recharge.
+  « Revenir au fichier » supprime la ligne.
+- API admin (rôle admin, CSRF) `/api/admin/content/themes` : `GET` (liste), `GET /{id}`,
+  `POST /{id}/cards`, `PUT /{id}/cards/{cardId}` (l'identifiant peut changer), `DELETE /{id}/cards/{cardId}`,
+  `DELETE /{id}/stored`. Refus de validation : 400 avec `errors` (liste complète).
+- Front : onglet « Cartes des thèmes » de `#admin` (`admin-themes.component.ts`) : liste, formulaire
+  (identifiant, nom, tags, rareté, stats des `attributes`, image si `imagePolicy` le permet, piège,
+  indices ordonnés), erreurs du serveur affichées telles quelles.
+- Limites : un défi du jour sur un thème modifié dans la journée change de cartes pour les joueurs
+  suivants ; le thème entier (nom, droits, slots) ne s'édite pas encore, seulement ses cartes.
