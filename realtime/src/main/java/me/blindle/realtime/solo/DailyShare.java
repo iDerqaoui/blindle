@@ -50,7 +50,7 @@ public final class DailyShare {
         for (RoundOutcome o : r.history()) {
             sb.append(row(s, o, playerId)).append('\n');
         }
-        sb.append("blindle.me");
+        sb.append("blindle.app");
         return sb.toString();
     }
 

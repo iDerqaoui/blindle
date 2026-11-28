@@ -1,4 +1,4 @@
-# Blindle (blindle.me)
+# Blindle (blindle.app)
 
 Jeu d'enchères à l'aveugle multijoueur en ligne (3 à 8 joueurs, ou solo contre des bots).
 

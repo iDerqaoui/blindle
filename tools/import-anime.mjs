@@ -131,7 +131,7 @@ async function importUniverse(u) {
       visibility: 'private',
       imagePolicy: 'any',
       disclaimer: 'Characters and artwork © their respective owners, via MyAnimeList (Tenrai API). Private play among friends, not affiliated.',
-      takedownContact: 'contact@blindle.me',
+      takedownContact: 'contact@blindle.app',
     },
     art: { cover, banner: null, color: u.color },
     defaultSlots: [1, 2, 3, 4, 5].map(i => ({ id: `slot-${i}`, label: `Carte ${i}` })),

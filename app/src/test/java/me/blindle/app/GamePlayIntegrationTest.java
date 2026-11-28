@@ -111,7 +111,7 @@ class GamePlayIntegrationTest {
         assertThat(end.get("bidMode")).isEqualTo("market");
         Map<?, ?> daily = (Map<?, ?>) end.get("daily");
         assertThat(daily.get("rank")).isEqualTo(1);
-        assertThat((String) daily.get("share")).startsWith("Blindle · Défi du jour").endsWith("blindle.me");
+        assertThat((String) daily.get("share")).startsWith("Blindle · Défi du jour").endsWith("blindle.app");
 
         List<?> summaries = rest.getForObject("/api/daily", List.class);
         Map<?, ?> manga = (Map<?, ?>) summaries.stream()

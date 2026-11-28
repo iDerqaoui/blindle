@@ -78,7 +78,7 @@ retour à l'image précédente si la nouvelle ne répond pas.
    `ssh root@<ip> 'bash -s' < deploy/setup-server.sh "$(cat ~/.ssh/blindle-deploy.pub)"`
 4. **Secrets** : `ssh deploy@<ip>`, créer `/opt/blindle/.env` d'après `deploy/.env.example`, puis `chmod 600 .env`.
 5. **GitHub** → Settings → Secrets and variables → Actions :
-   - Variables : `DEPLOY_HOST` (IP), `BLINDLE_DOMAIN` (ex. `blindle.me`), facultatif `DEPLOY_USER` (défaut `deploy`) ;
+   - Variables : `DEPLOY_HOST` (IP), `BLINDLE_DOMAIN` (ex. `blindle.app`), facultatif `DEPLOY_USER` (défaut `deploy`) ;
    - Secrets : `DEPLOY_SSH_KEY` (contenu de `~/.ssh/blindle-deploy`, la clé privée), conseillé
      `DEPLOY_KNOWN_HOSTS` (sortie de `ssh-keyscan <ip>` ; sinon lue au premier déploiement).
 6. Pousser sur `main` (ou Actions → CI / Deploy → Run workflow). Premier démarrage : ~30 s de Tenrai.

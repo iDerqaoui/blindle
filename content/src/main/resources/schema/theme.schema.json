@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://blindle.me/schema/theme.schema.json",
+  "$id": "https://blindle.app/schema/theme.schema.json",
   "title": "Thème Blindle",
   "type": "object",
   "required": ["id", "name", "rights", "defaultSlots", "cards"],

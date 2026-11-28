@@ -1,4 +1,4 @@
-# Blindle (blindle.me) — Spécification complète, étapes et prompts
+# Blindle (blindle.app) — Spécification complète, étapes et prompts
 
 > Document de référence du projet. À placer dans `docs/PROJECT.md`.
 > `CLAUDE.md` (racine) en est le résumé chargé à chaque session ; ce fichier-ci est la source de vérité.
@@ -492,7 +492,7 @@ Documente dans docs/ la config du Developer Portal (URL mappings) et le tunnel H
 
 ## 13. Nom et domaine
 
-- **Nom du jeu : Blindle** — domaine **blindle.me**.
+- **Nom du jeu : Blindle** — domaine **blindle.app** (acheté le 2026-11-28 ; blindle.me abandonné).
 - Clin d'œil aux jeux quotidiens type Wordle : cohérent avec le futur défi du jour (§7).
 - Nom générique, compatible avec tous les thèmes.
 - À réserver aussi : pseudo « blindle » sur Discord, X, TikTok.

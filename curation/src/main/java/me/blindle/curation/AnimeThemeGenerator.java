@@ -95,7 +95,7 @@ public class AnimeThemeGenerator implements ContentGenerator {
         rights.put("imagePolicy", "any");
         rights.put("disclaimer", "Characters and artwork © their respective owners, via MyAnimeList (Tenrai API). "
                 + "Private play among friends, not affiliated.");
-        rights.put("takedownContact", "contact@blindle.me");
+        rights.put("takedownContact", "contact@blindle.app");
 
         Map<String, Object> art = new LinkedHashMap<>();
         art.put("cover", u.cover());

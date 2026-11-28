@@ -9,7 +9,7 @@
     "visibility": "private",
     "imagePolicy": "none",
     "disclaimer": "Jeu de fans, non affilié aux ayants droit. Les personnages appartiennent à leurs auteurs et éditeurs.",
-    "takedownContact": "contact@blindle.me"
+    "takedownContact": "contact@blindle.app"
   },
   "defaultSlots": [
     { "id": "captain", "label": "Capitaine" },

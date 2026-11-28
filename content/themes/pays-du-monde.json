@@ -9,7 +9,7 @@
     "visibility": "public",
     "imagePolicy": "none",
     "disclaimer": "Indices et notes rédigés maison, à but ludique.",
-    "takedownContact": "contact@blindle.me"
+    "takedownContact": "contact@blindle.app"
   },
   "defaultSlots": [
     { "id": "escapade", "label": "Escapade" },

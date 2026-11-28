@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://blindle.me/schema/preset.schema.json",
+  "$id": "https://blindle.app/schema/preset.schema.json",
   "title": "Preset Blindle",
   "type": "object",
   "required": ["id", "name", "theme", "bidMode", "verdictMode", "settings"],

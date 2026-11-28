@@ -10,7 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class RightsPolicyTest {
 
     private static Theme.Rights rights(String profile, List<String> channels, String visibility, String images) {
-        return new Theme.Rights(profile, channels, visibility, images, "Avertissement", "contact@blindle.me");
+        return new Theme.Rights(profile, channels, visibility, images, "Avertissement", "contact@blindle.app");
     }
 
     @Test

@@ -102,7 +102,7 @@ class DailyChallengeTest {
         assertThat(lines.subList(2, lines.size() - 1)).hasSize(s.settings().rounds())
                 .allSatisfy(row -> assertThat(row.codePoints().count()).isEqualTo(4)
                         .as("ligne %s", row));
-        assertThat(lines.get(lines.size() - 1)).isEqualTo("blindle.me");
+        assertThat(lines.get(lines.size() - 1)).isEqualTo("blindle.app");
         s.cards().values().forEach(c -> assertThat(view.share()).doesNotContain(c.name()));
 
         // Classement du jour : deux parties, meilleur score d'abord.
