@@ -6,7 +6,15 @@ public final class Requests {
     private Requests() {
     }
 
-    public record CreateRoom(String name, String presetId) {
+    /** {@code publicRoom} : listée sur l'accueil (null ou false : privée, code seulement). */
+    public record CreateRoom(String name, String presetId, Boolean publicRoom) {
+        /** Room privée. */
+        public CreateRoom(String name, String presetId) {
+            this(name, presetId, null);
+        }
+    }
+
+    public record SetVisibility(boolean publicRoom) {
     }
 
     public record StartDaily(String name, String presetId) {

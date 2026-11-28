@@ -67,6 +67,9 @@ public final class Room {
     private final Map<String, BotStrategy> bots = new LinkedHashMap<>();
     /** Joueurs humains dont la connexion est tombée, et depuis quand (en partie, les minuteries jouent pour eux). */
     private final Map<String, Instant> disconnected = new LinkedHashMap<>();
+    /** Room publique : listée sur l'accueil tant qu'elle attend des joueurs. Privée par défaut (code seulement). */
+    private boolean listed;
+    private final Instant createdAt;
 
     public Room(String code, long seed, GameSetup setup, RoomSettings settings, TimerScheduler timers,
                 Broadcaster broadcaster, Clock clock) {
@@ -89,6 +92,7 @@ public final class Room {
         this.state = engine.create(code, seed, setup.preset().settings().toGameSettings(),
                 setup.theme().toSlots(), setup.deck());
         this.lastActivity = clock.instant();
+        this.createdAt = this.lastActivity;
     }
 
     public String code() {
@@ -105,7 +109,7 @@ public final class Room {
 
     public synchronized RoomSnapshot snapshot() {
         return new RoomSnapshot(code, setup, state, hostId, phaseDeadline, votes, clock.instant(), history,
-                daily == null ? null : daily.date(), dailyRank, profilesOfBots(), disconnected.keySet());
+                daily == null ? null : daily.date(), dailyRank, profilesOfBots(), disconnected.keySet(), listed);
     }
 
     public synchronized boolean hasPlayer(String playerId) {
@@ -228,6 +232,36 @@ public final class Room {
         setup = customized;
         engine = customized.engine();
         publish();
+    }
+
+    // ------------------------------------------------------------------ visibilité
+
+    /** L'hôte rend sa room publique (listée) ou privée (code seulement). Jamais pour un défi du jour. */
+    public synchronized void setListed(String playerId, boolean listed) {
+        requireHost(playerId);
+        if (daily != null) {
+            throw new GameException("DAILY_IS_SOLO", "Le défi du jour se joue seul");
+        }
+        this.listed = listed;
+        publish();
+    }
+
+    /** Résumé pour la liste des rooms publiques, si celle-ci y figure (publique, en attente, places libres). */
+    public synchronized java.util.Optional<PublicRoom> listing(int maxPlayers) {
+        long humans = state.players().stream().filter(p -> !p.bot()).count();
+        if (!listed || daily != null || state.phase() != Phase.LOBBY || humans >= maxPlayers || hostId == null
+                || disconnected.containsKey(hostId)) {
+            return java.util.Optional.empty();
+        }
+        String host = state.player(hostId).map(p -> p.name()).orElse("?");
+        return java.util.Optional.of(new PublicRoom(code, setup.preset().id(), setup.preset().name(),
+                setup.theme().id(), setup.theme().name(), host, (int) humans, state.players().size(), maxPlayers,
+                createdAt));
+    }
+
+    /** Une ligne de la liste des rooms publiques. */
+    public record PublicRoom(String code, String presetId, String presetName, String themeId, String themeName,
+                             String hostName, int humans, int players, int maxPlayers, Instant createdAt) {
     }
 
     // ------------------------------------------------------------------ actions joueurs

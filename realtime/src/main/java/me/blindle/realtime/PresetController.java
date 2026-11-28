@@ -32,9 +32,12 @@ public class PresetController {
     private final BotCatalog bots;
     private final ChannelAccess access;
     private final ChannelAuthenticator channels;
+    private final me.blindle.realtime.room.RoomRegistry rooms;
 
     public PresetController(GameFactory factory, DailyChallenge daily, DailyLeaderboard leaderboard,
-                            BotCatalog bots, ChannelAccess access, ChannelAuthenticator channels) {
+                            BotCatalog bots, ChannelAccess access, ChannelAuthenticator channels,
+                            me.blindle.realtime.room.RoomRegistry rooms) {
+        this.rooms = rooms;
         this.access = access;
         this.channels = channels;
         this.bots = bots;
@@ -62,6 +65,18 @@ public class PresetController {
                     p.bidMode(), p.verdictMode(), p.daily(), p.settings(), setup.theme().rights().disclaimer(),
                     art(setup.theme()), setup.theme().cards().size(), faces(setup.theme()));
         }).toList();
+    }
+
+    /**
+     * Rooms publiques qui attendent des joueurs, jouables sur le canal du demandeur. Les rooms
+     * privées n'y sont jamais : on les rejoint avec leur code.
+     */
+    @GetMapping("/rooms")
+    public List<me.blindle.realtime.room.Room.PublicRoom> rooms(HttpServletRequest request) {
+        Channel channel = channelOf(request);
+        return rooms.publicRooms().stream()
+                .filter(r -> factory.presets().stream().anyMatch(p -> p.id().equals(r.presetId()) && access.allows(p, channel)))
+                .toList();
     }
 
     public record BotProfile(String profile, String label) {

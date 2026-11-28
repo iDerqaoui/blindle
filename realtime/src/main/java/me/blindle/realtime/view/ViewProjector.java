@@ -74,7 +74,7 @@ public final class ViewProjector {
                 deadline == null ? null : deadline.toEpochMilli(), r.now().toEpochMilli(),
                 List.copyOf(log), result, r.votes().size(), daily(r), drawer(r),
                 s.discarded().stream().map(c -> card(c, theme)).toList(), art(theme),
-                !r.setup().overrides().isEmpty(), r.setup().deck().size(), ruleParams(r));
+                !r.setup().overrides().isEmpty(), r.setup().deck().size(), ruleParams(r), r.listed());
     }
 
     /** Paramètres des règles actives (défauts compris) : le client affiche les vrais montants. */

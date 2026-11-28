@@ -22,7 +22,7 @@ public final class Views {
                            Long deadline, Long serverTime, List<String> log, ResultView result,
                            int votesReceived, DailyView daily, String drawerId, List<CardView> trash,
                            ArtView art, boolean customized, int deckSize,
-                           Map<String, Map<String, Object>> ruleParams) {
+                           Map<String, Map<String, Object>> ruleParams, boolean publicRoom) {
     }
 
     /**

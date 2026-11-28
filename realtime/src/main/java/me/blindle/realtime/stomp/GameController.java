@@ -60,6 +60,9 @@ public class GameController {
         }
         Room room = rooms.create(req.presetId());
         room.join(player.getName(), req.name());
+        if (Boolean.TRUE.equals(req.publicRoom())) {
+            room.setListed(player.getName(), true);
+        }
         return session(room, player);
     }
 
@@ -92,6 +95,11 @@ public class GameController {
     @MessageMapping("/room/{code}/sync")
     public void sync(@DestinationVariable String code, Principal player) {
         rooms.require(code).sync(player.getName());
+    }
+
+    @MessageMapping("/room/{code}/visibility")
+    public void visibility(@DestinationVariable String code, Requests.SetVisibility req, Principal player) {
+        rooms.require(code).setListed(player.getName(), req.publicRoom());
     }
 
     @MessageMapping("/room/{code}/settings")

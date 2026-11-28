@@ -88,6 +88,15 @@ public class RoomRegistry {
         }
     }
 
+    /** Rooms publiques qui attendent des joueurs, les plus récentes d'abord. */
+    public java.util.List<Room.PublicRoom> publicRooms() {
+        return rooms.values().stream()
+                .map(r -> r.listing(settings.maxPlayers()))
+                .flatMap(java.util.Optional::stream)
+                .sorted(java.util.Comparator.comparing(Room.PublicRoom::createdAt).reversed())
+                .toList();
+    }
+
     public int size() {
         return rooms.size();
     }

@@ -18,11 +18,13 @@ import java.util.Set;
  * @param dailyRank rang obtenu au classement du défi du jour, une fois la partie terminée
  * @param botProfiles profil de chaque bot (identifiant du joueur → profil), pour traduire son nom
  * @param disconnected joueurs humains déconnectés en cours de partie
+ * @param listed       room publique (listée sur l'accueil)
  */
 public record RoomSnapshot(String code, GameSetup setup, GameState state, String hostId,
                            Instant phaseDeadline, List<Vote> votes, Instant now,
                            List<RoundOutcome> history, LocalDate dailyDate, Integer dailyRank,
-                           Map<String, String> botProfiles, Set<String> disconnected) {
+                           Map<String, String> botProfiles, Set<String> disconnected,
+                           boolean listed) {
 
     public RoomSnapshot {
         votes = List.copyOf(votes);
