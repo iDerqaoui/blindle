@@ -25,6 +25,8 @@ compose pull app
 compose up -d --remove-orphans
 if healthy; then
   echo "$IMAGE" > .current-image
+  # image courante aussi dans .env : les commandes docker compose à la main marchent sans export
+  sed -i "/^BLINDLE_IMAGE=/d" .env && echo "BLINDLE_IMAGE=$IMAGE" >> .env
   docker image prune -f >/dev/null
   echo "Déployé : $IMAGE"
   exit 0
