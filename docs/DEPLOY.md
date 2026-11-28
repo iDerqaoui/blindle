@@ -63,6 +63,44 @@ Limites du plan gratuit : mise en veille après 15 min sans trafic (~1 min de r�
 
 Alternative équivalente : Koyeb (free, Docker, WebSocket, `*.koyeb.app`) avec une base Neon.
 
+## Option C — Serveur dédié + domaine, déploiement automatique (production)
+
+Un VPS (Hetzner, DigitalOcean, OVH… Ubuntu 24.04, 2 vCPU / 4 Go) : lance l'application, PostgreSQL (volume persistant, sauvegarde quotidienne) et Caddy (HTTPS
+Let's Encrypt automatique, WebSocket). Chaque push sur  : tests → image
+ → déploiement par SSH (), avec retour
+à l'image précédente si la nouvelle ne répond pas.
+
+1. **Domaine** : DNS   et  → IP du serveur (chez Cloudflare : « DNS only », nuage gris).
+2. **Clé de déploiement** (sur son PC) : Generating public/private ed25519 key pair.
+Your identification has been saved in blindle-deploy
+Your public key has been saved in blindle-deploy.pub
+The key fingerprint is:
+SHA256:AOEu2nHW8cZ0mPwEqa3nEzxkeQ7W5kV2qqiGfg3E3JY github-actions
+The key's randomart image is:
++--[ED25519 256]--+
+|    o.  ..       |
+|   . . ..+  o .  |
+|    .oo+=+oo o   |
+|   . .=*E++ o    |
+|  o +..BSB.o     |
+| o =  o.* +      |
+|. .  . * o       |
+|    . + +        |
+|   ..o   .       |
++----[SHA256]-----+.
+3. **Serveur** (une fois, en root) : .
+4. **Secrets** : , créer  d'après  ().
+5. **GitHub** → Settings → Secrets and variables → Actions :
+   - Variables :  (IP),  (ex. ), facultatif  (défaut ) ;
+   - Secrets :  (contenu de , la clé privée), conseillé
+      (sortie de , sinon lue au premier déploiement).
+6. Pousser sur  (ou Actions → CI / Deploy → Run workflow). Premier démarrage : ~30 s de Tenrai.
+7. Google / Discord : déclarer  (et ).
+
+Sans , le workflow ne fait que tester et publier l'image. Un redéploiement efface les
+rooms en cours (en mémoire), pas la base. Avant d'ouvrir au public : les univers anime (images
+MyAnimeList, profil ) sont réservés au jeu entre amis (§8).
+
 ## Discord
 
 - Simple : coller l'URL dans un salon Discord, chacun ouvre le lien.

@@ -1,0 +1,10 @@
+# HTTPS automatique pour le domaine de .env (certificat Let's Encrypt renouvelé par Caddy).
+# Caddy transmet X-Forwarded-Proto/Host : adresses de retour OAuth et origine WebSocket correctes.
+{$BLINDLE_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy app:8080
+}
+
+www.{$BLINDLE_DOMAIN} {
+	redir https://{$BLINDLE_DOMAIN}{uri} permanent
+}

@@ -1,0 +1,55 @@
+# Production : application + PostgreSQL + Caddy (HTTPS automatique Let's Encrypt, WebSocket compris).
+# Sur le serveur, dans /opt/blindle : ce fichier, Caddyfile, deploy.sh, backup.sh et .env (secrets,
+# jamais commité ; modèle : .env.example). Déploiement : ./deploy.sh <image>  (fait par GitHub Actions).
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: blindle
+      POSTGRES_USER: blindle
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD manquant dans .env}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U blindle -d blindle"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  app:
+    image: ${BLINDLE_IMAGE:?BLINDLE_IMAGE manquant (deploy.sh le renseigne)}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/blindle
+      SPRING_DATASOURCE_USERNAME: blindle
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      BLINDLE_ALLOWED_ORIGINS: https://${BLINDLE_DOMAIN}
+    # seulement en local sur le serveur (vérification de santé de deploy.sh) ; le public passe par Caddy
+    ports:
+      - "127.0.0.1:8080:8080"
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - app
+    environment:
+      BLINDLE_DOMAIN: ${BLINDLE_DOMAIN:?BLINDLE_DOMAIN manquant dans .env}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  db-data:
+  caddy-data:
+  caddy-config:

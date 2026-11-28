@@ -1,0 +1,4 @@
+# Scripts et fichiers lus sur le serveur Linux : toujours en LF
+*.sh text eol=lf
+deploy/Caddyfile text eol=lf
+deploy/*.yml text eol=lf
