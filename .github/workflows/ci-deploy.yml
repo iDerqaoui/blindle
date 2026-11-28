@@ -24,14 +24,14 @@ jobs:
           distribution: temurin
           java-version: '17'
           cache: maven
-      - name: Back : build et tests (H2 en mémoire, sans réseau)
+      - name: "Back : build et tests (H2 en mémoire, sans réseau)"
         run: mvn -B -ntp verify
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: npm
           cache-dependency-path: web/package-lock.json
-      - name: Front : build
+      - name: "Front : build"
         working-directory: web
         run: |
           npm ci
